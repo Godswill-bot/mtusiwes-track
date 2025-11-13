@@ -58,6 +58,44 @@ export type Database = {
           },
         ]
       }
+      photos: {
+        Row: {
+          created_at: string | null
+          day_of_week: string
+          description: string | null
+          id: string
+          image_url: string
+          uploaded_at: string | null
+          week_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: string
+          description?: string | null
+          id?: string
+          image_url: string
+          uploaded_at?: string | null
+          week_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          uploaded_at?: string | null
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -85,6 +123,7 @@ export type Database = {
       stamps: {
         Row: {
           created_at: string
+          forwarded_at: string | null
           id: string
           image_path: string | null
           ip_address: string | null
@@ -99,6 +138,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          forwarded_at?: string | null
           id?: string
           image_path?: string | null
           ip_address?: string | null
@@ -113,6 +153,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          forwarded_at?: string | null
           id?: string
           image_path?: string | null
           ip_address?: string | null
@@ -161,6 +202,8 @@ export type Database = {
           period_of_training: string
           phone: string
           products_services: string
+          school_supervisor_email: string | null
+          school_supervisor_name: string | null
           updated_at: string
           user_id: string
         }
@@ -182,6 +225,8 @@ export type Database = {
           period_of_training: string
           phone: string
           products_services: string
+          school_supervisor_email?: string | null
+          school_supervisor_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -203,6 +248,8 @@ export type Database = {
           period_of_training?: string
           phone?: string
           products_services?: string
+          school_supervisor_email?: string | null
+          school_supervisor_name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -264,10 +311,14 @@ export type Database = {
           comments: string | null
           created_at: string
           end_date: string
+          forwarded_to_school: boolean | null
           friday_activity: string | null
           id: string
           monday_activity: string | null
+          rejection_reason: string | null
           saturday_activity: string | null
+          school_approved_at: string | null
+          school_supervisor_comments: string | null
           start_date: string
           status: Database["public"]["Enums"]["submission_status"]
           student_id: string
@@ -282,10 +333,14 @@ export type Database = {
           comments?: string | null
           created_at?: string
           end_date: string
+          forwarded_to_school?: boolean | null
           friday_activity?: string | null
           id?: string
           monday_activity?: string | null
+          rejection_reason?: string | null
           saturday_activity?: string | null
+          school_approved_at?: string | null
+          school_supervisor_comments?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["submission_status"]
           student_id: string
@@ -300,10 +355,14 @@ export type Database = {
           comments?: string | null
           created_at?: string
           end_date?: string
+          forwarded_to_school?: boolean | null
           friday_activity?: string | null
           id?: string
           monday_activity?: string | null
+          rejection_reason?: string | null
           saturday_activity?: string | null
+          school_approved_at?: string | null
+          school_supervisor_comments?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["submission_status"]
           student_id?: string

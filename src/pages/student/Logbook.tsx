@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { format, addDays, startOfWeek } from "date-fns";
 import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PhotoUpload } from "@/components/PhotoUpload";
 
 interface Week {
   id: string;
@@ -30,6 +31,7 @@ const Logbook = () => {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [currentWeek, setCurrentWeek] = useState(1);
   const [weekData, setWeekData] = useState<Week | null>(null);
+  const [photos, setPhotos] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -73,6 +75,7 @@ const Logbook = () => {
 
       if (data) {
         setWeekData(data);
+        fetchPhotos(data.id);
       } else {
         // Create new week
         const today = new Date();
@@ -93,12 +96,36 @@ const Logbook = () => {
           comments: "",
           status: "draft",
         });
+        setPhotos({});
       }
     } catch (error) {
       toast.error("Error loading week data");
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPhotos = async (weekId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("photos")
+        .select("*")
+        .eq("week_id", weekId)
+        .order("uploaded_at", { ascending: true });
+
+      if (error) throw error;
+
+      const photosByDay: Record<string, any[]> = {};
+      data?.forEach((photo) => {
+        if (!photosByDay[photo.day_of_week]) {
+          photosByDay[photo.day_of_week] = [];
+        }
+        photosByDay[photo.day_of_week].push(photo);
+      });
+      setPhotos(photosByDay);
+    } catch (error) {
+      console.error("Error fetching photos:", error);
     }
   };
 
@@ -228,9 +255,9 @@ const Logbook = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].map((day) => (
-                  <div key={day} className="space-y-2">
+                  <div key={day} className="space-y-3 p-4 border border-border rounded-lg">
                     <div className="flex items-center justify-between">
-                      <label className="font-medium capitalize">{day}</label>
+                      <label className="font-medium capitalize text-lg">{day}</label>
                       <span className="text-sm text-muted-foreground">
                         {format(addDays(new Date(weekData.start_date), ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].indexOf(day)), "MMM dd")}
                       </span>
@@ -242,6 +269,15 @@ const Logbook = () => {
                       rows={3}
                       disabled={!canEdit}
                     />
+                    {weekData.id && (
+                      <PhotoUpload
+                        weekId={weekData.id}
+                        day={day}
+                        photos={photos[day] || []}
+                        onPhotosChange={() => fetchPhotos(weekData.id)}
+                        disabled={!canEdit}
+                      />
+                    )}
                   </div>
                 ))}
 

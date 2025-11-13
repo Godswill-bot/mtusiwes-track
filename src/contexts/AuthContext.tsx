@@ -10,6 +10,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   userRole: AppRole | null;
+  profile: { full_name: string; role: string } | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, role: AppRole) => Promise<{ error: any }>;
@@ -22,6 +23,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string; role: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -62,16 +64,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
         .single();
       
-      if (error) throw error;
-      setUserRole(data.role as AppRole);
+      if (roleError) throw roleError;
+      setUserRole(roleData.role as AppRole);
+
+      // Fetch profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("full_name, role")
+        .eq("id", userId)
+        .single();
+      
+      if (profileError) throw profileError;
+      setProfile(profileData);
     } catch (error) {
-      console.error("Error fetching user role:", error);
+      console.error("Error fetching user data:", error);
     }
   };
 
@@ -126,6 +138,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserRole(null);
+      setProfile(null);
       
       toast.success("Successfully signed out");
       navigate("/auth");
@@ -140,6 +153,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         session,
         userRole,
+        profile,
         loading,
         signIn,
         signUp,

@@ -27,6 +27,8 @@ const PreSiwes = () => {
     industry_supervisor_name: "",
     industry_supervisor_email: "",
     industry_supervisor_phone: "",
+    school_supervisor_name: "",
+    school_supervisor_email: "",
     period_of_training: "",
     other_info: "",
     phone: "",
@@ -236,6 +238,34 @@ const PreSiwes = () => {
                         value={formData.industry_supervisor_phone}
                         onChange={(e) => handleChange("industry_supervisor_phone", e.target.value)}
                         placeholder="+234 xxx xxx xxxx"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 space-y-4">
+                  <h3 className="font-semibold text-lg">School Supervisor Information</h3>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="school_supervisor_name">School Supervisor Name *</Label>
+                      <Input
+                        id="school_supervisor_name"
+                        value={formData.school_supervisor_name}
+                        onChange={(e) => handleChange("school_supervisor_name", e.target.value)}
+                        required
+                        placeholder="Dr. Jane Smith"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="school_supervisor_email">School Supervisor Email</Label>
+                      <Input
+                        id="school_supervisor_email"
+                        type="email"
+                        value={formData.school_supervisor_email}
+                        onChange={(e) => handleChange("school_supervisor_email", e.target.value)}
+                        placeholder="supervisor@mtu.edu.ng"
                       />
                     </div>
                   </div>

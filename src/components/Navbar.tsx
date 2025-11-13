@@ -4,7 +4,7 @@ import { LogOut, BookOpen, User } from "lucide-react";
 import mtuLogo from "@/assets/mtu-logo.png";
 
 export const Navbar = () => {
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, profile, signOut } = useAuth();
 
   const getRoleDisplay = (role: string | null) => {
     if (!role) return "";
@@ -25,10 +25,14 @@ export const Navbar = () => {
 
           {user && (
             <div className="flex items-center space-x-4">
-              <div className="hidden md:flex items-center space-x-2 text-sm">
-                <User className="h-4 w-4 text-primary" />
-                <span className="font-medium">{getRoleDisplay(userRole)}</span>
-              </div>
+              {profile && (
+                <div className="hidden md:flex items-center space-x-2 px-3 py-1 bg-primary/10 rounded-full">
+                  <User className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    {profile.full_name} ({getRoleDisplay(profile.role)})
+                  </span>
+                </div>
+              )}
               <Button onClick={signOut} variant="outline" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
