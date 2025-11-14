@@ -11,6 +11,7 @@ import StudentDashboard from "./pages/student/Dashboard";
 import PreSiwes from "./pages/student/PreSiwes";
 import Logbook from "./pages/student/Logbook";
 import SupervisorDashboard from "./pages/supervisor/Dashboard";
+import WeeklyReportView from "./pages/supervisor/WeeklyReportView";
 import AdminDashboard from "./pages/admin/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -59,6 +60,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/supervisor/week/:weekId" 
+              element={
+                <ProtectedRoute allowedRoles={["industry_supervisor", "school_supervisor"]}>
+                  <WeeklyReportView />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
               path="/admin/dashboard" 
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
