@@ -35,8 +35,16 @@ export const PhotoUpload = ({ weekId, day, photos, onPhotosChange, disabled }: P
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+    // Validate file size (3MB max)
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error("File size must be less than 3MB");
+      return;
+    }
+
+    // Validate file type (JPG/PNG only)
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      toast.error("Only JPG and PNG files are allowed");
       return;
     }
 
@@ -105,7 +113,7 @@ export const PhotoUpload = ({ weekId, day, photos, onPhotosChange, disabled }: P
         <Card className="p-4 bg-muted/30">
           <div className="space-y-3">
             <Label htmlFor={`photo-${day}`} className="text-sm font-medium">
-              Add Photo (Max 5)
+              Add Photo (Max 5, JPG/PNG only, 3MB max)
             </Label>
             <Textarea
               placeholder="Describe what you did (optional)..."
@@ -118,7 +126,7 @@ export const PhotoUpload = ({ weekId, day, photos, onPhotosChange, disabled }: P
               <Input
                 id={`photo-${day}`}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png"
                 onChange={handleFileUpload}
                 disabled={uploading}
                 className="flex-1"

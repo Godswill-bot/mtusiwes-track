@@ -43,7 +43,9 @@ const SupervisorDashboard = () => {
   });
 
   useEffect(() => {
-    if (userRole && !["industry_supervisor", "school_supervisor"].includes(userRole)) {
+    if (userRole && userRole === "school_supervisor") {
+      navigate("/supervisor/school/dashboard");
+    } else if (userRole && !["industry_supervisor", "school_supervisor"].includes(userRole)) {
       navigate("/");
     }
   }, [userRole, navigate]);

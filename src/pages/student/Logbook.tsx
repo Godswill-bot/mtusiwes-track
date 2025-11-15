@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays, startOfWeek } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PhotoUpload } from "@/components/PhotoUpload";
@@ -77,9 +78,9 @@ const Logbook = () => {
         setWeekData(data);
         fetchPhotos(data.id);
       } else {
-        // Create new week
-        const today = new Date();
-        const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+        // Create new week with Lagos timezone
+        const lagosTime = toZonedTime(new Date(), 'Africa/Lagos');
+        const weekStart = startOfWeek(lagosTime, { weekStartsOn: 1 });
         const weekEnd = addDays(weekStart, 5);
 
         setWeekData({
@@ -134,6 +135,8 @@ const Logbook = () => {
 
     setSaving(true);
     try {
+      const lagosTime = toZonedTime(new Date(), 'Africa/Lagos');
+      
       const dataToSave = {
         student_id: studentId,
         week_number: currentWeek,
@@ -147,7 +150,7 @@ const Logbook = () => {
         saturday_activity: weekData.saturday_activity,
         comments: weekData.comments,
         status: submit ? ("submitted" as const) : ("draft" as const),
-        submitted_at: submit ? new Date().toISOString() : null,
+        submitted_at: submit ? lagosTime.toISOString() : null,
       };
 
       if (weekData.id) {
@@ -168,7 +171,7 @@ const Logbook = () => {
         setWeekData({ ...weekData, id: data.id });
       }
 
-      toast.success(submit ? "Week submitted successfully!" : "Week saved as draft");
+      toast.success(submit ? "Week submitted to your industry supervisor" : "Week saved as draft");
       fetchWeekData();
     } catch (error: any) {
       toast.error(error.message || "Failed to save week");
