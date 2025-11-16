@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays, startOfWeek } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Send, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PhotoUpload } from "@/components/PhotoUpload";
 
@@ -29,6 +30,7 @@ interface Week {
 
 const Logbook = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [studentId, setStudentId] = useState<string | null>(null);
   const [currentWeek, setCurrentWeek] = useState(1);
   const [weekData, setWeekData] = useState<Week | null>(null);
@@ -217,6 +219,14 @@ const Logbook = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto space-y-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/student/dashboard")}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-primary">Weekly Logbook</h1>

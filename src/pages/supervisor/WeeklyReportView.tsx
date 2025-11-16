@@ -69,7 +69,7 @@ const WeeklyReportView = () => {
         .from("weeks")
         .select(`
           *,
-          student:students!inner(
+          student:students(
             matric_no,
             department,
             faculty,
@@ -79,19 +79,24 @@ const WeeklyReportView = () => {
           )
         `)
         .eq("id", weekId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!data) {
+        setLoading(false);
+        return;
+      }
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("id", data.student.user_id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
-      setWeekData({ ...data, profile: profileData });
+      setWeekData({ ...data, profile: profileData || { full_name: 'Unknown' } });
       fetchPhotos(weekId);
     } catch (error: any) {
       toast.error("Error loading week data");
