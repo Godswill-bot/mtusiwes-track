@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 const PreSiwes = () => {
   const { user } = useAuth();
@@ -67,6 +68,14 @@ const PreSiwes = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/student/dashboard")}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
           <Card className="shadow-elevated">
             <CardHeader>
               <CardTitle className="text-2xl">Pre-SIWES Registration Form</CardTitle>

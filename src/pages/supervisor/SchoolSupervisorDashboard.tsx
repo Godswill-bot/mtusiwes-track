@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileCheck, Clock, CheckCircle, Eye } from "lucide-react";
+import { FileCheck, Clock, CheckCircle, Eye, ArrowLeft, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -193,6 +193,14 @@ const SchoolSupervisorDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Home
+        </Button>
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">School Supervisor Dashboard</h1>
           <p className="text-muted-foreground">
@@ -246,10 +254,18 @@ const SchoolSupervisorDashboard = () => {
         {/* Forwarded Submissions */}
         <Card>
           <CardHeader>
-            <CardTitle>Forwarded Weekly Reports</CardTitle>
-            <CardDescription>
-              Review and approve reports stamped by industry supervisors
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Forwarded Weekly Reports</CardTitle>
+                <CardDescription>
+                  Review and approve reports stamped by industry supervisors
+                </CardDescription>
+              </div>
+              <Button onClick={() => navigate("/supervisor/students")} variant="outline">
+                <Users className="h-4 w-4 mr-2" />
+                View All Students
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {students.length === 0 ? (

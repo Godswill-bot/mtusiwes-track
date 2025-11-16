@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Shield, Activity } from "lucide-react";
+import { Users, BookOpen, Shield, Activity, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const AdminDashboard = () => {
   const { userRole } = useAuth();
@@ -21,6 +22,14 @@ const AdminDashboard = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
           <div>
             <h1 className="text-3xl font-bold text-primary mb-2">Admin Dashboard</h1>
             <p className="text-muted-foreground">System overview and management</p>

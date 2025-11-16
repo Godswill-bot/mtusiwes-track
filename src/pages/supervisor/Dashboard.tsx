@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileCheck, Clock, CheckCircle, Eye } from "lucide-react";
+import { Users, FileCheck, Clock, CheckCircle, Eye, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -189,6 +189,14 @@ const SupervisorDashboard = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
           <div>
             <h1 className="text-3xl font-bold text-primary mb-2">Supervisor Dashboard</h1>
             <p className="text-muted-foreground">Review and approve student submissions</p>
@@ -246,8 +254,16 @@ const SupervisorDashboard = () => {
 
           <Card className="shadow-card">
             <CardHeader>
-              <CardTitle>Pending Submissions</CardTitle>
-              <CardDescription>Student weekly reports awaiting your review</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Pending Submissions</CardTitle>
+                  <CardDescription>Student weekly reports awaiting your review</CardDescription>
+                </div>
+                <Button onClick={() => navigate("/supervisor/students")} variant="outline">
+                  <Users className="h-4 w-4 mr-2" />
+                  View All Students
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {students.length === 0 ? (
