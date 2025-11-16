@@ -48,25 +48,27 @@ const StudentsList = () => {
 
     setLoading(true);
     try {
-      // Get supervisor's email
-      const { data: supervisorData, error: supervisorError } = await supabase
-        .from("supervisors")
-        .select("email")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Get supervisor's name from profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
 
-      const supervisorEmail = supervisorData?.email;
+      if (profileError) throw profileError;
 
-      if (!supervisorEmail) {
+      const supervisorName = profileData?.full_name;
+
+      if (!supervisorName) {
         setStudents([]);
         setLoading(false);
         return;
       }
 
-      // Fetch students based on supervisor type
-      const emailField = userRole === "industry_supervisor" 
-        ? "industry_supervisor_email" 
-        : "school_supervisor_email";
+      // Fetch students based on supervisor type - match by name
+      const nameField = userRole === "industry_supervisor" 
+        ? "industry_supervisor_name" 
+        : "school_supervisor_name";
 
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
@@ -83,7 +85,7 @@ const StudentsList = () => {
           email,
           phone
         `)
-        .eq(emailField, supervisorEmail);
+        .eq(nameField, supervisorName);
 
       if (studentsError) throw studentsError;
 

@@ -201,11 +201,16 @@ const SchoolSupervisorDashboard = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
         </Button>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">School Supervisor Dashboard</h1>
-          <p className="text-muted-foreground">
-            Review student submissions forwarded by industry supervisors
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">School Supervisor Dashboard</h1>
+            <p className="text-muted-foreground">
+              Review student submissions forwarded by industry supervisors
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/profile/edit")}>
+            Edit Profile
+          </Button>
         </div>
 
         {/* Statistics Cards */}

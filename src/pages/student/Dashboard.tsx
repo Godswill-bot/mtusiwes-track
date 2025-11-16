@@ -123,6 +123,14 @@ const StudentDashboard = () => {
                 Track your SIWES progress and manage your weekly logbook
               </p>
             </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate("/student/profile/edit")}>
+                Edit Profile
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/student/pre-siwes/edit")}>
+                Edit Registration
+              </Button>
+            </div>
           </div>
 
           {!hasRegistration ? (

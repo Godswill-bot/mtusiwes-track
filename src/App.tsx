@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/student/Dashboard";
 import PreSiwes from "./pages/student/PreSiwes";
+import PreSiwesEdit from "./pages/student/PreSiwesEdit";
+import ProfileEdit from "./pages/student/ProfileEdit";
 import Logbook from "./pages/student/Logbook";
 import SupervisorDashboard from "./pages/supervisor/Dashboard";
 import SchoolSupervisorDashboard from "./pages/supervisor/SchoolSupervisorDashboard";
@@ -42,6 +44,30 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
                   <PreSiwes />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/student/pre-siwes/edit" 
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <PreSiwesEdit />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/student/profile/edit" 
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <ProfileEdit />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile/edit" 
+              element={
+                <ProtectedRoute>
+                  <ProfileEdit />
                 </ProtectedRoute>
               } 
             />
