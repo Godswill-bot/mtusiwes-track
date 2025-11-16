@@ -197,9 +197,14 @@ const SupervisorDashboard = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-primary mb-2">Supervisor Dashboard</h1>
-            <p className="text-muted-foreground">Review and approve student submissions</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-primary mb-2">Supervisor Dashboard</h1>
+              <p className="text-muted-foreground">Review and approve student submissions</p>
+            </div>
+            <Button variant="outline" onClick={() => navigate("/profile/edit")}>
+              Edit Profile
+            </Button>
           </div>
 
           <div className="grid md:grid-cols-4 gap-4">
