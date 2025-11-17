@@ -6,17 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
 import mtuLogo from "@/assets/mtu-logo.png";
 
-type AppRole = "student" | "industry_supervisor" | "school_supervisor" | "admin";
-
-const Auth = () => {
+const StudentAuth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<AppRole>("student");
   const [loading, setLoading] = useState(false);
 
   const { signIn, signUp, user } = useAuth();
@@ -35,7 +32,7 @@ const Auth = () => {
     if (isLogin) {
       await signIn(email, password);
     } else {
-      await signUp(email, password, fullName, role);
+      await signUp(email, password, fullName, "student");
     }
 
     setLoading(false);
@@ -45,12 +42,20 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-elevated">
         <CardHeader className="text-center space-y-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="absolute top-4 left-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
           <div className="flex justify-center">
             <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">MTU SIWES Logbook</CardTitle>
-            <CardDescription>Mountain Top University</CardDescription>
+            <CardTitle className="text-2xl font-bold">Student Portal</CardTitle>
+            <CardDescription>MTU SIWES Logbook</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -124,20 +129,6 @@ const Auth = () => {
                     minLength={6}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
-                    <SelectTrigger id="role">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="industry_supervisor">Industry Supervisor</SelectItem>
-                      <SelectItem value="school_supervisor">School Supervisor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}
                 </Button>
@@ -150,4 +141,4 @@ const Auth = () => {
   );
 };
 
-export default Auth;
+export default StudentAuth;

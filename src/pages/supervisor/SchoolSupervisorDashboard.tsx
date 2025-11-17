@@ -266,10 +266,16 @@ const SchoolSupervisorDashboard = () => {
                   Review and approve reports stamped by industry supervisors
                 </CardDescription>
               </div>
-              <Button onClick={() => navigate("/supervisor/students")} variant="outline">
-                <Users className="h-4 w-4 mr-2" />
-                View All Students
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => navigate("/supervisor/students")} variant="outline">
+                  <Users className="h-4 w-4 mr-2" />
+                  View All Students
+                </Button>
+                <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline">
+                  <FileCheck className="h-4 w-4 mr-2" />
+                  Manage Registrations
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
