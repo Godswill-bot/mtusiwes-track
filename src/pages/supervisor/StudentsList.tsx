@@ -60,16 +60,23 @@ const StudentsList = () => {
       const supervisorName = profileData?.full_name;
 
       if (!supervisorName) {
+        console.log("No supervisor name found");
         setStudents([]);
         setLoading(false);
         return;
       }
 
-      // Fetch students based on supervisor type - match by name
+      console.log("Supervisor name:", supervisorName);
+      console.log("User role:", userRole);
+
+      // Fetch students based on supervisor type - match by name (case-insensitive)
       const nameField = userRole === "industry_supervisor" 
         ? "industry_supervisor_name" 
         : "school_supervisor_name";
 
+      console.log("Searching field:", nameField);
+
+      // Use ilike for case-insensitive matching
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
         .select(`
@@ -85,7 +92,9 @@ const StudentsList = () => {
           email,
           phone
         `)
-        .eq(nameField, supervisorName);
+        .ilike(nameField, supervisorName);
+
+      console.log("Students found:", studentsData?.length || 0);
 
       if (studentsError) throw studentsError;
 

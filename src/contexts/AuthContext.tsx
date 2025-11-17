@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(null);
       
       toast.success("Successfully signed out");
-      navigate("/auth");
+      navigate("/");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
     }
