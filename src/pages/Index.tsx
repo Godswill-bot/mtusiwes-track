@@ -10,11 +10,7 @@ const Index = () => {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
+  // Don't redirect - show login options instead
 
   useEffect(() => {
     if (user && userRole) {
@@ -40,6 +36,62 @@ const Index = () => {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // If not logged in, show login options
+  if (!loading && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl shadow-elevated">
+          <CardHeader className="text-center space-y-4">
+            <div>
+              <CardTitle className="text-3xl font-bold">MTU SIWES Logbook</CardTitle>
+              <CardDescription className="text-lg">Mountain Top University</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-center mb-6">Select Your Portal</h2>
+              
+              <div className="grid gap-4">
+                <Button
+                  onClick={() => navigate("/auth/student")}
+                  size="lg"
+                  className="h-20 text-lg"
+                >
+                  <Users className="h-6 w-6 mr-3" />
+                  Student Login / Sign Up
+                </Button>
+
+                <Button
+                  onClick={() => navigate("/auth/supervisor")}
+                  variant="outline"
+                  size="lg"
+                  className="h-20 text-lg"
+                >
+                  <CheckCircle className="h-6 w-6 mr-3" />
+                  Supervisor Login
+                </Button>
+
+                <Button
+                  onClick={() => navigate("/auth/admin")}
+                  variant="outline"
+                  size="lg"
+                  className="h-20 text-lg"
+                >
+                  <FileText className="h-6 w-6 mr-3" />
+                  Admin Login
+                </Button>
+              </div>
+
+              <p className="text-sm text-muted-foreground text-center mt-6">
+                Supervisors: Your account will be created by the school supervisor
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

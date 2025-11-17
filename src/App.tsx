@@ -6,7 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import StudentAuth from "./pages/auth/StudentAuth";
+import SupervisorAuth from "./pages/auth/SupervisorAuth";
+import AdminAuth from "./pages/auth/AdminAuth";
 import StudentDashboard from "./pages/student/Dashboard";
 import PreSiwes from "./pages/student/PreSiwes";
 import PreSiwesEdit from "./pages/student/PreSiwesEdit";
@@ -16,6 +18,7 @@ import SupervisorDashboard from "./pages/supervisor/Dashboard";
 import SchoolSupervisorDashboard from "./pages/supervisor/SchoolSupervisorDashboard";
 import WeeklyReportView from "./pages/supervisor/WeeklyReportView";
 import StudentsList from "./pages/supervisor/StudentsList";
+import PendingRegistrations from "./pages/supervisor/PendingRegistrations";
 import AdminDashboard from "./pages/admin/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -30,7 +33,9 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/student" element={<StudentAuth />} />
+            <Route path="/auth/supervisor" element={<SupervisorAuth />} />
+            <Route path="/auth/admin" element={<AdminAuth />} />
             <Route 
               path="/student/dashboard" 
               element={
@@ -108,6 +113,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["industry_supervisor", "school_supervisor"]}>
                   <StudentsList />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/supervisor/pending-registrations" 
+              element={
+                <ProtectedRoute allowedRoles={["school_supervisor"]}>
+                  <PendingRegistrations />
                 </ProtectedRoute>
               } 
             />
