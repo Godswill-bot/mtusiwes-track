@@ -18,10 +18,20 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    // Redirect to appropriate login page based on route
+    const path = window.location.pathname;
+    if (path.startsWith("/student")) {
+      return <Navigate to="/student/login" replace />;
+    } else if (path.startsWith("/admin")) {
+      return <Navigate to="/admin/login" replace />;
+    } else if (path.startsWith("/supervisor")) {
+      return <Navigate to="/school-supervisor/login" replace />;
+    }
+    return <Navigate to="/" replace />;
   }
 
   if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
+    // User has wrong role, redirect to home
     return <Navigate to="/" replace />;
   }
 

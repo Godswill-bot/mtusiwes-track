@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -50,13 +50,7 @@ const SupervisorDashboard = () => {
     }
   }, [userRole, navigate]);
 
-  useEffect(() => {
-    if (profile?.role && user) {
-      fetchStudentsAndSubmissions();
-    }
-  }, [profile, user]);
-
-  const fetchStudentsAndSubmissions = async () => {
+  const fetchStudentsAndSubmissions = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -152,13 +146,19 @@ const SupervisorDashboard = () => {
         approved,
         thisWeek
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Error loading dashboard data");
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (profile?.role && user) {
+      fetchStudentsAndSubmissions();
+    }
+  }, [profile, user, fetchStudentsAndSubmissions]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {

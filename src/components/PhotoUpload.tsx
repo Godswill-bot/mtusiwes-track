@@ -80,8 +80,9 @@ export const PhotoUpload = ({ weekId, day, photos, onPhotosChange, disabled }: P
       toast.success("Photo uploaded successfully");
       setDescription("");
       onPhotosChange();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to upload photo");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload photo";
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -102,8 +103,9 @@ export const PhotoUpload = ({ weekId, day, photos, onPhotosChange, disabled }: P
 
       toast.success("Photo deleted");
       onPhotosChange();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete photo");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete photo";
+      toast.error(errorMessage);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,14 +13,11 @@ const AdminAuth = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { signIn, user } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
+  // Note: We intentionally do NOT auto-redirect logged-in users here.
+  // If a user navigates to this page, they want to see the login form.
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

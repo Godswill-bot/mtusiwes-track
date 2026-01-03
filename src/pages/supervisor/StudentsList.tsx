@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -37,47 +37,114 @@ const StudentsList = () => {
     }
   }, [userRole, navigate]);
 
-  useEffect(() => {
-    if (user && userRole) {
-      fetchAssignedStudents();
-    }
-  }, [user, userRole]);
-
-  const fetchAssignedStudents = async () => {
+  const fetchAssignedStudents = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      // Get supervisor's name from profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
+      // First, get the supervisor record for the current user
+      const { data: supervisorData, error: supervisorError } = await supabase
+        .from("supervisors")
+        .select("id, name, email, supervisor_type")
+        .eq("user_id", user.id)
         .single();
 
-      if (profileError) throw profileError;
-
-      const supervisorName = profileData?.full_name;
-
-      if (!supervisorName) {
-        console.log("No supervisor name found");
-        setStudents([]);
-        setLoading(false);
+      if (supervisorError) {
+        console.error("Could not find supervisor record:", supervisorError);
+        // Fallback to old method using profile name
+        await fetchStudentsByProfileName();
         return;
       }
 
-      console.log("Supervisor name:", supervisorName);
-      console.log("User role:", userRole);
+      console.log("Supervisor record:", supervisorData);
 
-      // Fetch students based on supervisor type - match by name (case-insensitive)
+      // Use supervisor_assignments table to get assigned students (most reliable)
+      const { data: assignments, error: assignError } = await supabase
+        .from("supervisor_assignments")
+        .select(`
+          student_id,
+          students (
+            id,
+            matric_no,
+            department,
+            faculty,
+            organisation_name,
+            organisation_address,
+            industry_supervisor_name,
+            school_supervisor_name,
+            user_id,
+            email,
+            phone
+          )
+        `)
+        .eq("supervisor_id", supervisorData.id)
+        .eq("assignment_type", userRole === "industry_supervisor" ? "industry_supervisor" : "school_supervisor");
+
+      if (assignError) {
+        console.error("Error fetching assignments:", assignError);
+        // Fallback to direct students table query
+        await fetchStudentsByProfileName();
+        return;
+      }
+
+      // Extract students from assignments
+      const studentsData = assignments
+        ?.map(a => a.students)
+        .filter(Boolean) as typeof students;
+
+      console.log("Students found via assignments:", studentsData?.length || 0);
+
+      if (!studentsData || studentsData.length === 0) {
+        // Try fallback method
+        await fetchStudentsByProfileName();
+        return;
+      }
+
+      // Fetch profiles for students
+      const userIds = studentsData.map(s => s.user_id);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      // Combine data
+      const studentsWithProfiles = studentsData.map(student => {
+        const profile = profilesData?.find(p => p.id === student.user_id);
+        return {
+          ...student,
+          profile: { full_name: profile?.full_name || "Unknown" }
+        };
+      });
+
+      setStudents(studentsWithProfiles);
+    } catch (error: unknown) {
+      toast.error("Error loading students");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, userRole]);
+
+  // Fallback method: fetch students by matching supervisor name in students table
+  const fetchStudentsByProfileName = async () => {
+    try {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user?.id)
+        .single();
+
+      const supervisorName = profileData?.full_name;
+      if (!supervisorName) {
+        setStudents([]);
+        return;
+      }
+
       const nameField = userRole === "industry_supervisor" 
         ? "industry_supervisor_name" 
         : "school_supervisor_name";
 
-      console.log("Searching field:", nameField);
-
-      // Use ilike for case-insensitive matching
-      const { data: studentsData, error: studentsError } = await supabase
+      const { data: studentsData } = await supabase
         .from("students")
         .select(`
           id,
@@ -94,42 +161,37 @@ const StudentsList = () => {
         `)
         .ilike(nameField, supervisorName);
 
-      console.log("Students found:", studentsData?.length || 0);
-
-      if (studentsError) throw studentsError;
-
       if (!studentsData || studentsData.length === 0) {
         setStudents([]);
-        setLoading(false);
         return;
       }
 
-      // Fetch profiles for students
       const userIds = studentsData.map(s => s.user_id);
-      const { data: profilesData, error: profilesError } = await supabase
+      const { data: profilesData } = await supabase
         .from("profiles")
         .select("id, full_name")
         .in("id", userIds);
 
-      if (profilesError) throw profilesError;
-
-      // Combine data
       const studentsWithProfiles = studentsData.map(student => {
         const profile = profilesData?.find(p => p.id === student.user_id);
         return {
           ...student,
-          profile: profile || { full_name: 'Unknown' }
+          profile: { full_name: profile?.full_name || "Unknown" }
         };
       });
 
       setStudents(studentsWithProfiles);
-    } catch (error: any) {
-      toast.error("Error loading students");
-      console.error(error);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("Fallback fetch error:", error);
+      setStudents([]);
     }
   };
+
+  useEffect(() => {
+    if (user && userRole) {
+      fetchAssignedStudents();
+    }
+  }, [user, userRole, fetchAssignedStudents]);
 
   if (loading) {
     return (

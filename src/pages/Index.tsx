@@ -1,27 +1,27 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navbar } from "@/components/Navbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, Users, CheckCircle } from "lucide-react";
+import mtuLogo from "@/assets/mtu-logo.png";
+import mountainTopBg from "@/assets/mountaintop.jpg";
+import { ArrowRight, Info } from "lucide-react";
 
 const Index = () => {
-  const { user, userRole, loading } = useAuth();
+  const { user, userRole, loading, isInitialized } = useAuth();
   const navigate = useNavigate();
 
-  // Don't redirect - show login options instead
-
   useEffect(() => {
+    // Only redirect after auth is fully initialized AND we have confirmed user + role
+    if (!isInitialized) return;
+    
     if (user && userRole) {
       // Redirect based on role
       switch (userRole) {
         case "student":
           navigate("/student/dashboard");
           break;
-        case "industry_supervisor":
-          navigate("/supervisor/dashboard");
-          break;
+        // Industry supervisors are not system users - data only
+        // case "industry_supervisor": removed
         case "school_supervisor":
           navigate("/supervisor/dashboard");
           break;
@@ -30,130 +30,207 @@ const Index = () => {
           break;
       }
     }
-  }, [user, userRole, navigate]);
+  }, [user, userRole, isInitialized, navigate]);
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading MTU SIWES Portal...</p>
+        </div>
       </div>
     );
   }
 
-  // If not logged in, show login options
-  if (!loading && !user) {
-    return (
-      <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl shadow-elevated">
-          <CardHeader className="text-center space-y-4">
-            <div>
-              <CardTitle className="text-3xl font-bold">MTU SIWES Logbook</CardTitle>
-              <CardDescription className="text-lg">Mountain Top University</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-center mb-6">Select Your Portal</h2>
-              
-              <div className="grid gap-4">
-                <Button
-                  onClick={() => navigate("/auth/student")}
-                  size="lg"
-                  className="h-20 text-lg"
-                >
-                  <Users className="h-6 w-6 mr-3" />
-                  Student Login / Sign Up
-                </Button>
-
-                <Button
-                  onClick={() => navigate("/auth/supervisor")}
-                  variant="outline"
-                  size="lg"
-                  className="h-20 text-lg"
-                >
-                  <CheckCircle className="h-6 w-6 mr-3" />
-                  Supervisor Login
-                </Button>
-
-                <Button
-                  onClick={() => navigate("/auth/admin")}
-                  variant="outline"
-                  size="lg"
-                  className="h-20 text-lg"
-                >
-                  <FileText className="h-6 w-6 mr-3" />
-                  Admin Login
-                </Button>
-              </div>
-
-              <p className="text-sm text-muted-foreground text-center mt-6">
-                Supervisors: Your account will be created by the school supervisor
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  // If logged in, don't show homepage (redirect handled above)
+  if (user && userRole) {
+    return null;
   }
 
+  // Beautiful homepage for non-logged-in users
   return (
-    <div className="min-h-screen bg-gradient-light">
-      <Navbar />
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background Image with Gradient Overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${mountainTopBg})` }}
+      />
+      {/* Gradient Overlay for readability - Purple and Green blend */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-purple-50/85 to-primary/20" />
+      {/* Subtle green accent stripe at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-success to-transparent opacity-60" />
       
-      <main className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary">
-              Welcome to MTU SIWES Logbook
+      {/* Hero Section */}
+      <section className="flex-1 flex items-center justify-center px-4 py-16 md:py-24 relative z-10">
+        <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+          {/* Logo with animation and green accent ring */}
+          <div className="flex justify-center mb-8 animate-scale-in">
+            <div className="relative">
+              <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-primary via-success to-primary opacity-20 blur-sm"></div>
+              <img
+                src={mtuLogo}
+                alt="Mountain Top University Logo"
+                className="h-24 md:h-32 w-auto relative"
+              />
+            </div>
+          </div>
+
+          {/* Main Title with green underline accent */}
+          <div className="relative inline-block">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary animate-fade-in-up">
+              Welcome to the MTU SIWES Platform
             </h1>
-            <p className="text-lg text-muted-foreground">
-              Digital logbook management system for Student Industrial Work Experience Scheme
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-success via-success-light to-success rounded-full"></div>
+          </div>
+
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up animation-delay-200 pt-4">
+            Official Students Industrial Work Experience Scheme Portal for Mountain Top University.
+          </p>
+
+          {/* Introduction Paragraph */}
+          <div className="max-w-3xl mx-auto pt-8 animate-fade-in-up animation-delay-400">
+            <p className="text-base md:text-lg text-foreground/80 leading-relaxed">
+              The MTU SIWES Platform is designed to help students document, manage, and track their industrial training activities with ease. This platform ensures proper supervision, weekly submissions, industry evaluations, and seamless communication between students, industry supervisors, and school supervisors.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mt-12">
-            <Card className="shadow-card hover:shadow-elevated transition-all">
-              <CardHeader>
-                <BookOpen className="h-12 w-12 text-primary mb-2" />
-                <CardTitle>Digital Logbook</CardTitle>
-                <CardDescription>
-                  Record your weekly activities and training progress
-                </CardDescription>
-              </CardHeader>
-            </Card>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 animate-fade-in-up animation-delay-600">
+            <Button
+              onClick={() => navigate("/student/signup")}
+              size="lg"
+              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold rounded-full bg-success/85 hover:bg-success text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:glow-green backdrop-blur-sm"
+            >
+              Get Started
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
 
-            <Card className="shadow-card hover:shadow-elevated transition-all">
-              <CardHeader>
-                <CheckCircle className="h-12 w-12 text-primary mb-2" />
-                <CardTitle>Digital Verification</CardTitle>
-                <CardDescription>
-                  Secure digital stamps and supervisor approval system
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <Button
+              onClick={() => navigate("/siwes-info")}
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold rounded-full border-2 border-primary/70 text-primary bg-white/60 hover:bg-primary/90 hover:text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+            >
+              <Info className="mr-2 h-5 w-5" />
+              Learn More
+            </Button>
+          </div>
 
-            <Card className="shadow-card hover:shadow-elevated transition-all">
-              <CardHeader>
-                <FileText className="h-12 w-12 text-primary mb-2" />
-                <CardTitle>Pre-SIWES Form</CardTitle>
-                <CardDescription>
-                  Complete your registration before starting training
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="shadow-card hover:shadow-elevated transition-all">
-              <CardHeader>
-                <Users className="h-12 w-12 text-primary mb-2" />
-                <CardTitle>Attendance Tracking</CardTitle>
-                <CardDescription>
-                  Monitor daily check-ins and training presence
-                </CardDescription>
-              </CardHeader>
-            </Card>
+          {/* Login Links Section */}
+          <div className="max-w-3xl mx-auto pt-12 animate-fade-in-up animation-delay-800">
+            <div className="border-t border-border pt-8">
+              <p className="text-sm text-muted-foreground mb-4 text-center">
+                Already have an account? Sign in here:
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button
+                  onClick={() => navigate("/student/login")}
+                  variant="outline"
+                  className="w-full sm:w-auto border-success/50 text-success bg-white/60 hover:bg-success/90 hover:text-white hover:border-success backdrop-blur-sm"
+                >
+                  Student Login
+                </Button>
+                <Button
+                  onClick={() => navigate("/school-supervisor/login")}
+                  variant="outline"
+                  className="w-full sm:w-auto bg-white/60 backdrop-blur-sm hover:bg-primary/90 hover:text-white"
+                >
+                  Supervisor Login
+                </Button>
+                <Button
+                  onClick={() => navigate("/admin/login")}
+                  variant="outline"
+                  className="w-full sm:w-auto bg-white/60 backdrop-blur-sm hover:bg-primary/90 hover:text-white"
+                >
+                  Admin Login
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4 text-center">
+                New supervisor?{" "}
+                <button
+                  onClick={() => navigate("/school-supervisor/signup")}
+                  className="text-success hover:underline font-medium"
+                >
+                  Sign up here
+                </button>
+              </p>
+            </div>
           </div>
         </div>
-      </main>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border/50 relative z-10 bg-white/70 backdrop-blur-sm">
+        <p>© {new Date().getFullYear()} Mountain Top University. All rights reserved.</p>
+      </footer>
+
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 0.8s ease-out forwards;
+          opacity: 0;
+        }
+
+        .animate-scale-in {
+          animation: scale-in 0.6s ease-out;
+        }
+
+        .animation-delay-200 {
+          animation-delay: 0.2s;
+        }
+
+        .animation-delay-400 {
+          animation-delay: 0.4s;
+        }
+
+        .animation-delay-600 {
+          animation-delay: 0.6s;
+        }
+
+        .hover\\:glow-primary:hover {
+          box-shadow: 0 0 20px rgba(128, 0, 128, 0.4);
+        }
+        
+        .hover\\:glow-green:hover {
+          box-shadow: 0 0 20px rgba(30, 100, 60, 0.5);
+        }
+      `}</style>
     </div>
   );
 };

@@ -7,10 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+server/node_modules
+
+# Build outputs
 dist
 dist-ssr
+build
 *.local
+
+# Environment variables (NEVER commit these!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server/.env
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +35,40 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Large binaries and executables
+*.exe
+*.crdownload
+*.msi
+*.dmg
+supabase.exe/
+
+# Images and screenshots (keep only essential assets)
+*.png
+*.jpg
+*.jpeg
+!src/assets/*.png
+!src/assets/*.jpg
+!public/*.png
+!public/*.ico
+
+# Documentation and notes (not needed in production)
+*.md
+!README.md
+*.sql
+*.txt
+
+# Supabase local files
+supabase/.temp/
+supabase/.branches/
+supabase/scripts/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Lock files (optional - keep if you want consistent installs)
+# package-lock.json
+# bun.lockb

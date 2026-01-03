@@ -1,22 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileCheck, Clock, CheckCircle, Eye, ArrowLeft, Users } from "lucide-react";
+import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, CalendarCheck, CalendarRange, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
+import { PrintableStudentsTable } from "@/components/supervisor/PrintableStudentsTable";
+import { StudentAttendanceTabsView } from "@/components/supervisor/StudentAttendanceTabsView";
+import { StudentTabsView } from "@/components/supervisor/StudentTabsView";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 
 interface StudentWithWeeks {
   id: string;
   matric_no: string;
   department: string;
+  faculty?: string;
+  level?: string;
   period_of_training: string;
   organisation_name: string;
   user_id: string;
+  full_name?: string;
   profile: {
     full_name: string;
   };
@@ -28,6 +35,9 @@ interface StudentWithWeeks {
     start_date: string;
     end_date: string;
     forwarded_to_school: boolean;
+    score?: number | null;
+    school_supervisor_approved_at?: string | null;
+    school_supervisor_comments?: string | null;
   }[];
 }
 
@@ -36,6 +46,7 @@ const SchoolSupervisorDashboard = () => {
   const navigate = useNavigate();
   const [students, setStudents] = useState<StudentWithWeeks[]>([]);
   const [loading, setLoading] = useState(true);
+  const [compilingLogbook, setCompilingLogbook] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalStudents: 0,
     pendingReviews: 0,
@@ -49,13 +60,60 @@ const SchoolSupervisorDashboard = () => {
     }
   }, [userRole, navigate]);
 
-  useEffect(() => {
-    if (profile?.role && user) {
-      fetchForwardedSubmissions();
-    }
-  }, [profile, user]);
+  // Fetch current session
+  const { data: currentSession } = useQuery({
+    queryKey: ["current-session"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("academic_sessions")
+        .select("*")
+        .eq("is_current", true)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+  });
 
-  const fetchForwardedSubmissions = async () => {
+  // Fetch acceptance letter date
+  const { data: acceptanceDate } = useQuery({
+    queryKey: ["system-settings", currentSession?.id, "acceptance_letter_date"],
+    queryFn: async () => {
+      if (!currentSession?.id) return null;
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("setting_value")
+        .eq("session_id", currentSession.id)
+        .eq("setting_key", "acceptance_letter_date")
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.setting_value;
+    },
+    enabled: !!currentSession?.id,
+  });
+
+  // Fetch period of attachment
+  const { data: attachmentPeriod } = useQuery({
+    queryKey: ["system-settings", currentSession?.id, "attachment_period"],
+    queryFn: async () => {
+      if (!currentSession?.id) return null;
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("setting_value")
+        .eq("session_id", currentSession.id)
+        .eq("setting_key", "attachment_period")
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.setting_value;
+    },
+    enabled: !!currentSession?.id,
+  });
+
+
+
+  const fetchForwardedSubmissions = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -83,6 +141,8 @@ const SchoolSupervisorDashboard = () => {
           id,
           matric_no,
           department,
+          faculty,
+          full_name,
           period_of_training,
           organisation_name,
           school_supervisor_email,
@@ -98,6 +158,7 @@ const SchoolSupervisorDashboard = () => {
         return;
       }
 
+
       // Fetch profiles for students
       const userIds = studentsData.map(s => s.user_id);
       const { data: profilesData, error: profilesError } = await supabase
@@ -107,24 +168,24 @@ const SchoolSupervisorDashboard = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch weeks that have been forwarded to school
+      // Fetch weeks that are submitted, approved, or rejected (all reviewed/reviewable by school supervisor)
       const studentIds = studentsData.map(s => s.id);
       const { data: weeksData, error: weeksError } = await supabase
         .from("weeks")
         .select("*")
         .in("student_id", studentIds)
-        .eq("forwarded_to_school", true)
+        .in("status", ["submitted", "approved", "rejected"])
         .order("week_number", { ascending: false });
 
       if (weeksError) throw weeksError;
 
-      // Combine data
+      // Combine data - also get full_name from students table as fallback
       const studentsWithWeeks = studentsData.map(student => {
         const profile = profilesData?.find(p => p.id === student.user_id);
         const weeks = weeksData?.filter(w => w.student_id === student.id) || [];
         return {
           ...student,
-          profile: profile || { full_name: 'Unknown' },
+          profile: profile || { full_name: student.full_name || 'Unknown' },
           weeks,
         };
       });
@@ -134,8 +195,8 @@ const SchoolSupervisorDashboard = () => {
       // Calculate stats
       const totalStudents = studentsWithWeeks.length;
       const allWeeks = weeksData || [];
-      const pendingReviews = allWeeks.filter(w => w.forwarded_to_school && !w.school_approved_at).length;
-      const approved = allWeeks.filter(w => w.school_approved_at).length;
+      const pendingReviews = allWeeks.filter(w => w.status === "submitted" && !w.school_approved_at).length;
+      const approved = allWeeks.filter(w => w.status === "approved").length;
       
       const today = new Date();
       const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1));
@@ -150,26 +211,61 @@ const SchoolSupervisorDashboard = () => {
         approved,
         thisWeek
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Error loading submissions");
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const getStatusBadge = (status: string, forwarded: boolean) => {
-    if (!forwarded) return null;
-    
-    switch (status) {
-      case "submitted":
-        return <Badge variant="default">Pending Review</Badge>;
-      case "approved":
-        return <Badge className="bg-green-500">Approved</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejected</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+  useEffect(() => {
+    if (profile?.role && user) {
+      fetchForwardedSubmissions();
+    }
+  }, [profile, user, fetchForwardedSubmissions]);
+
+  // Handle Compile Logbook - generates complete 24-week PDF
+  const handleCompileLogbook = async (studentId: string, studentName: string) => {
+    setCompilingLogbook(studentId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Authentication required");
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/pdf/compile-logbook`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ studentId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to compile logbook');
+      }
+
+      // Download the PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SIWES_Logbook_${studentName.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Logbook compiled and downloaded successfully!");
+    } catch (error) {
+      console.error("Compile logbook error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to compile logbook");
+    } finally {
+      setCompilingLogbook(null);
     }
   };
 
@@ -256,92 +352,94 @@ const SchoolSupervisorDashboard = () => {
           </Card>
         </div>
 
-        {/* Forwarded Submissions */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Forwarded Weekly Reports</CardTitle>
-                <CardDescription>
-                  Review and approve reports stamped by industry supervisors
-                </CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={() => navigate("/supervisor/students")} variant="outline">
-                  <Users className="h-4 w-4 mr-2" />
-                  View All Students
-                </Button>
-                <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline">
-                  <FileCheck className="h-4 w-4 mr-2" />
-                  Manage Registrations
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {students.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No students assigned yet
-              </p>
-            ) : (
-              <div className="space-y-6">
-                {students.map((student) => {
-                  const forwardedWeeks = student.weeks.filter(w => w.forwarded_to_school);
-                  
-                  if (forwardedWeeks.length === 0) return null;
-
-                  return (
-                    <div key={student.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-semibold text-lg">{student.profile.full_name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {student.matric_no} • {student.department}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {student.organisation_name}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm">Forwarded Reports:</h4>
-                        {forwardedWeeks.map((week) => (
-                          <div
-                            key={week.id}
-                            className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">Week {week.week_number}</span>
-                                {getStatusBadge(week.status, week.forwarded_to_school)}
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {format(new Date(week.start_date), "MMM d")} - {format(new Date(week.end_date), "MMM d, yyyy")}
-                              </p>
-                              {week.submitted_at && (
-                                <p className="text-xs text-muted-foreground">
-                                  Forwarded: {format(new Date(week.submitted_at), "MMM d, yyyy h:mm a")}
-                                </p>
-                              )}
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={() => navigate(`/supervisor/week/${week.id}`)}
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              Review
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        {/* Session Information Cards */}
+        {(acceptanceDate || attachmentPeriod) && (
+          <div className="grid md:grid-cols-2 gap-4 mb-8">
+            {acceptanceDate && (
+              <Card className="border-2 border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-800 text-base">
+                    <CalendarCheck className="h-5 w-5" />
+                    Acceptance Letter Deadline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-lg font-bold text-blue-900">
+                    {format(new Date(acceptanceDate as string), "EEEE, MMMM dd, yyyy")}
+                  </p>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+
+            {attachmentPeriod && typeof attachmentPeriod === 'object' && (attachmentPeriod as {from_date?: string; to_date?: string}).from_date && (attachmentPeriod as {from_date?: string; to_date?: string}).to_date && (
+              <Card className="border-2 border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-800 text-base">
+                    <CalendarRange className="h-5 w-5" />
+                    Period of Attachment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {format(new Date((attachmentPeriod as {from_date: string}).from_date), "MMM dd, yyyy")} - {format(new Date((attachmentPeriod as {to_date: string}).to_date), "MMM dd, yyyy")}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Printable Students Table */}
+        {students.length > 0 && (
+          <div className="mb-8">
+            <PrintableStudentsTable 
+              students={students}
+              supervisorName={profile?.full_name || "School Supervisor"}
+              title="Students Under Supervision"
+            />
+          </div>
+        )}
+
+        {/* Tabs for Reports and Attendance */}
+        <Tabs defaultValue="reports" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="reports">
+              <FileCheck className="h-4 w-4 mr-2" />
+              Weekly Reports
+            </TabsTrigger>
+            <TabsTrigger value="attendance">
+              <Calendar className="h-4 w-4 mr-2" />
+              Attendance
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="reports">
+            {/* Quick Actions */}
+            <div className="flex gap-2 mb-4">
+              <Button onClick={() => navigate("/supervisor/students")} variant="outline">
+                <Users className="h-4 w-4 mr-2" />
+                View All Students
+              </Button>
+              <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline">
+                <FileCheck className="h-4 w-4 mr-2" />
+                Manage Registrations
+              </Button>
+            </div>
+            
+            {/* Student Tabs View with Full-Screen Reports */}
+            <StudentTabsView 
+              students={students}
+              onRefresh={fetchForwardedSubmissions}
+              onCompileLogbook={handleCompileLogbook}
+              compilingLogbook={compilingLogbook}
+            />
+          </TabsContent>
+
+          <TabsContent value="attendance">
+            {/* Enhanced Attendance View with Student Tabs */}
+            <StudentAttendanceTabsView />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

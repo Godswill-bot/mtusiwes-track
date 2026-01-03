@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logProfileUpdate } from "@/utils/audit";
 
 const PreSiwesEdit = () => {
   const { user } = useAuth();
@@ -35,13 +36,7 @@ const PreSiwesEdit = () => {
     other_info: "",
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchStudentData();
-    }
-  }, [user]);
-
-  const fetchStudentData = async () => {
+  const fetchStudentData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -73,11 +68,17 @@ const PreSiwesEdit = () => {
           other_info: data.other_info || "",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Error loading data");
       console.error(error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchStudentData();
+    }
+  }, [user, fetchStudentData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,16 +86,49 @@ const PreSiwesEdit = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      // Get old data for audit logging
+      const { data: oldData } = await supabase
+        .from("students")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      const { data: newData, error } = await supabase
         .from("students")
         .update(formData)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Determine what changed
+      const changes: string[] = [];
+      if (oldData) {
+        Object.keys(formData).forEach((key) => {
+          if (oldData[key as keyof typeof oldData] !== formData[key as keyof typeof formData]) {
+            changes.push(key);
+          }
+        });
+      }
+
+      // Log the update if there were changes
+      if (changes.length > 0 && newData) {
+        await logProfileUpdate({
+          userId: user.id,
+          userType: "student",
+          userEmail: user.email || "",
+          tableName: "students",
+          recordId: newData.id,
+          oldValue: oldData || {},
+          newValue: newData,
+          changes,
+        });
+      }
+
       toast.success("Information updated successfully");
       navigate("/student/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Error updating information");
       console.error(error);
     } finally {

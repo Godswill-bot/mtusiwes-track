@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -9,9 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays, startOfWeek } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { ChevronLeft, ChevronRight, Save, Send, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Send, ArrowLeft, Clock, Download, AlertCircle, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PhotoUpload } from "@/components/PhotoUpload";
+import { usePortalStatus } from "@/hooks/usePortalStatus";
+import PortalClosed from "./PortalClosed";
+import { apiRequest } from "@/utils/api";
+import { getOrCreateStudent, isStudentProfileComplete, StudentRecord } from "@/utils/studentUtils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Week {
   id: string;
@@ -26,119 +31,283 @@ interface Week {
   saturday_activity: string | null;
   comments: string | null;
   status: "draft" | "submitted" | "approved" | "rejected";
+  image_urls: string[] | null;
+  industry_supervisor_comments: string | null;
+  industry_supervisor_approved_at: string | null;
+  school_supervisor_approved_at: string | null;
+}
+
+interface Photo {
+  id: string;
+  image_url: string;
+  description: string | null;
+  day_of_week?: string;
+}
+
+interface WeekWithPhotos extends Week {
+  photos?: Photo[];
 }
 
 const Logbook = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const { portalOpen, loading: portalLoading } = usePortalStatus();
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [studentRecord, setStudentRecord] = useState<StudentRecord | null>(null);
+  const [studentError, setStudentError] = useState<string | null>(null);
   const [currentWeek, setCurrentWeek] = useState(1);
   const [weekData, setWeekData] = useState<Week | null>(null);
-  const [photos, setPhotos] = useState<Record<string, any[]>>({});
+  const [photos, setPhotos] = useState<Record<string, Photo[]>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [siwesLocked, setSiwesLocked] = useState(false);
+
+  const initializeStudent = useCallback(async () => {
+    if (!user?.id || !user?.email) {
+      setStudentError("User session not found. Please log in again.");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      // Use getOrCreateStudent to ensure student record exists
+      const { student, error, created } = await getOrCreateStudent(
+        user.id,
+        user.email,
+        profile?.full_name
+      );
+
+      if (error) {
+        console.error("Failed to get/create student:", error);
+        setStudentError(error);
+        setLoading(false);
+        return;
+      }
+
+      if (!student) {
+        setStudentError("Could not initialize student profile. Please contact support.");
+        setLoading(false);
+        return;
+      }
+
+      // Log if a new record was created
+      if (created) {
+        console.log("New student record created for user:", user.id);
+        toast.info("Student profile initialized. Please complete your Pre-SIWES registration.");
+      }
+
+      setStudentId(student.id);
+      setStudentRecord(student);
+      setStudentError(null);
+
+      // Check if SIWES is locked (graded)
+      setSiwesLocked(student.siwes_locked === true);
+
+      // Fetch pre-registration status separately
+      const { data: preRegData } = await supabase
+        .from("pre_registration")
+        .select("status")
+        .eq("student_id", student.id)
+        .maybeSingle();
+
+      setIsApproved(preRegData?.status === 'approved');
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error initializing student:", error);
+      setStudentError(`Error loading student data: ${errorMessage}`);
+      toast.error("Error loading student data");
+      setLoading(false);
+    }
+  }, [user?.id, user?.email, profile?.full_name]);
+
+  const fetchWeekData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Optimized: Fetch week and photos in one go
+      const { data, error } = await supabase
+        .from("weeks")
+        .select(`
+          *,
+          photos (*)
+        `)
+        .eq("student_id", studentId)
+        .eq("week_number", currentWeek)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching week data:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+        });
+        throw error;
+      }
+
+      if (data) {
+        setWeekData(data as unknown as Week);
+        
+        // Process photos from the joined data
+        const photosByDay: Record<string, Photo[]> = {};
+        // Check if photos is an array (it should be from the join)
+        const photosList = (Array.isArray((data as unknown as WeekWithPhotos).photos) ? (data as unknown as WeekWithPhotos).photos : []) as Photo[];
+        
+        photosList.forEach((photo) => {
+          if (!photosByDay[photo.day_of_week]) {
+            photosByDay[photo.day_of_week] = [];
+          }
+          photosByDay[photo.day_of_week].push(photo);
+        });
+        setPhotos(photosByDay);
+      } else {
+        // Create new week with Lagos timezone immediately so photos can be uploaded
+        const lagosTime = toZonedTime(new Date(), 'Africa/Lagos');
+        const weekStart = startOfWeek(lagosTime, { weekStartsOn: 1 });
+        const weekEnd = addDays(weekStart, 5);
+
+        // Note: Only include fields that exist in the base weeks table
+        const newWeekData = {
+          student_id: studentId,
+          week_number: currentWeek,
+          start_date: format(weekStart, "yyyy-MM-dd"),
+          end_date: format(weekEnd, "yyyy-MM-dd"),
+          monday_activity: null,
+          tuesday_activity: null,
+          wednesday_activity: null,
+          thursday_activity: null,
+          friday_activity: null,
+          saturday_activity: null,
+          comments: null,
+          status: "draft" as const,
+        };
+
+        console.log("Creating new week record:", { studentId, weekNumber: currentWeek });
+
+        // Create the week record immediately so photos can be uploaded
+        const { data: createdWeek, error: createError } = await supabase
+          .from("weeks")
+          .insert(newWeekData)
+          .select()
+          .single();
+
+        if (createError) {
+          console.error("Error creating week:", {
+            message: createError.message,
+            code: createError.code,
+            details: createError.details,
+            hint: createError.hint,
+          });
+          toast.error(`Failed to create week: ${createError.message}`);
+          // Still set weekData so user can work, but without ID
+          setWeekData({
+            id: "",
+            week_number: currentWeek,
+            start_date: format(weekStart, "yyyy-MM-dd"),
+            end_date: format(weekEnd, "yyyy-MM-dd"),
+            monday_activity: null,
+            tuesday_activity: null,
+            wednesday_activity: null,
+            thursday_activity: null,
+            friday_activity: null,
+            saturday_activity: null,
+            comments: null,
+            status: "draft",
+            image_urls: null,
+            industry_supervisor_comments: null,
+            industry_supervisor_approved_at: null,
+            school_supervisor_approved_at: null,
+          });
+          setPhotos({});
+        } else {
+          console.log("Week created successfully:", createdWeek?.id);
+          setWeekData(createdWeek as unknown as Week);
+          // No photos for a new week
+          setPhotos({});
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error loading week data:", error);
+      toast.error(`Error loading week data: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [studentId, currentWeek]);
 
   useEffect(() => {
-    fetchStudentId();
-  }, [user]);
+    initializeStudent();
+  }, [initializeStudent]);
 
   useEffect(() => {
     if (studentId) {
       fetchWeekData();
     }
-  }, [studentId, currentWeek]);
+  }, [studentId, currentWeek, fetchWeekData]);
 
-  const fetchStudentId = async () => {
+  const handleDownloadPDF = async () => {
+    if (!studentId) return;
+    
+    setDownloading(true);
     try {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id")
-        .eq("user_id", user?.id)
-        .single();
-
-      if (error) throw error;
-      setStudentId(data.id);
-    } catch (error) {
-      toast.error("Error loading student data");
-      console.error(error);
-    }
-  };
-
-  const fetchWeekData = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("weeks")
-        .select("*")
-        .eq("student_id", studentId)
-        .eq("week_number", currentWeek)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data) {
-        setWeekData(data);
-        fetchPhotos(data.id);
-      } else {
-        // Create new week with Lagos timezone
-        const lagosTime = toZonedTime(new Date(), 'Africa/Lagos');
-        const weekStart = startOfWeek(lagosTime, { weekStartsOn: 1 });
-        const weekEnd = addDays(weekStart, 5);
-
-        setWeekData({
-          id: "",
-          week_number: currentWeek,
-          start_date: format(weekStart, "yyyy-MM-dd"),
-          end_date: format(weekEnd, "yyyy-MM-dd"),
-          monday_activity: "",
-          tuesday_activity: "",
-          wednesday_activity: "",
-          thursday_activity: "",
-          friday_activity: "",
-          saturday_activity: "",
-          comments: "",
-          status: "draft",
-        });
-        setPhotos({});
-      }
-    } catch (error) {
-      toast.error("Error loading week data");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPhotos = async (weekId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("photos")
-        .select("*")
-        .eq("week_id", weekId)
-        .order("uploaded_at", { ascending: true });
-
-      if (error) throw error;
-
-      const photosByDay: Record<string, any[]> = {};
-      data?.forEach((photo) => {
-        if (!photosByDay[photo.day_of_week]) {
-          photosByDay[photo.day_of_week] = [];
-        }
-        photosByDay[photo.day_of_week].push(photo);
+      const response = await apiRequest("/api/pdf/generate-student-pdf", {
+        method: "POST",
+        body: JSON.stringify({ studentId }),
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
       });
-      setPhotos(photosByDay);
-    } catch (error) {
-      console.error("Error fetching photos:", error);
+
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      // Create blob from response
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SIWES_Logbook_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success("Logbook downloaded successfully");
+    } catch (error: unknown) {
+      console.error("PDF Download Error:", error);
+      toast.error("Failed to download logbook. Please try again.");
+    } finally {
+      setDownloading(false);
     }
   };
 
   const handleSave = async (submit: boolean = false) => {
-    if (!weekData || !studentId) return;
+    // Check if SIWES is locked
+    if (siwesLocked) {
+      toast.error("Your SIWES has been completed and graded. No further edits are allowed.");
+      return;
+    }
+
+    // Defensive check: Ensure studentId exists
+    if (!studentId) {
+      console.error("handleSave called without studentId");
+      toast.error("Student profile not initialized. Please refresh the page.");
+      return;
+    }
+
+    if (!weekData) {
+      console.error("handleSave called without weekData");
+      toast.error("Week data not loaded. Please refresh the page.");
+      return;
+    }
 
     setSaving(true);
     try {
       const lagosTime = toZonedTime(new Date(), 'Africa/Lagos');
       
+      // Build data object - only include fields that exist in the database
       const dataToSave = {
         student_id: studentId,
         week_number: currentWeek,
@@ -153,31 +322,93 @@ const Logbook = () => {
         comments: weekData.comments,
         status: submit ? ("submitted" as const) : ("draft" as const),
         submitted_at: submit ? lagosTime.toISOString() : null,
+        forwarded_to_school: submit ? true : false, // Directly forward to school supervisor
       };
 
+      console.log("Saving week data:", { weekId: weekData.id, studentId, submit });
+
       if (weekData.id) {
+        // Update existing week
         const { error } = await supabase
           .from("weeks")
           .update(dataToSave)
           .eq("id", weekData.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase UPDATE error:", { 
+            message: error.message, 
+            code: error.code, 
+            details: error.details,
+            hint: error.hint 
+          });
+          throw error;
+        }
       } else {
+        // Insert new week
         const { data, error } = await supabase
           .from("weeks")
           .insert(dataToSave)
           .select()
           .single();
 
-        if (error) throw error;
-        setWeekData({ ...weekData, id: data.id });
+        if (error) {
+          console.error("Supabase INSERT error:", { 
+            message: error.message, 
+            code: error.code, 
+            details: error.details,
+            hint: error.hint 
+          });
+          throw error;
+        }
+        
+        console.log("Week created successfully:", data?.id);
+        setWeekData({ ...weekData, id: (data as unknown as Week).id });
       }
 
-      toast.success(submit ? "Week submitted to your industry supervisor" : "Week saved as draft");
+      toast.success(submit ? "Week submitted to your school supervisor" : "Week saved as draft");
+      
+      // Log activity for submissions (not drafts)
+      if (submit && user) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+          await fetch(`${API_BASE_URL}/api/auth/log-activity`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user.id,
+              userType: "student",
+              userEmail: user.email,
+              activityType: "week_submit",
+              activityDetails: {
+                weekId: weekData.id,
+                weekNumber: currentWeek,
+                studentId: studentId,
+              },
+              success: true,
+            }),
+          }).catch(() => {}); // Don't block on logging failure
+        } catch {
+          // Ignore logging errors
+        }
+      }
+      
       fetchWeekData();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save week");
-      console.error(error);
+    } catch (error: unknown) {
+      // Enhanced error logging
+      const supabaseError = error as { message?: string; code?: string; details?: string; hint?: string };
+      console.error("Failed to save week:", {
+        error,
+        message: supabaseError?.message,
+        code: supabaseError?.code,
+        details: supabaseError?.details,
+        hint: supabaseError?.hint,
+        studentId,
+        weekId: weekData?.id,
+      });
+      
+      // User-friendly error message
+      const errorMessage = supabaseError?.message || "Failed to save week";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -203,7 +434,7 @@ const Logbook = () => {
     );
   };
 
-  if (loading) {
+  if (portalLoading || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
@@ -211,7 +442,110 @@ const Logbook = () => {
     );
   }
 
-  const canEdit = weekData?.status === "draft" || !weekData?.id;
+  // Check portal status - redirect if closed
+  if (portalOpen === false) {
+    return <PortalClosed />;
+  }
+
+  // Show error if student profile could not be initialized
+  if (studentError || !studentId) {
+    return (
+      <div className="min-h-screen bg-gradient-light">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Student Profile Error</AlertTitle>
+              <AlertDescription>
+                {studentError || "Could not load student profile. Please try logging out and back in."}
+              </AlertDescription>
+            </Alert>
+            <div className="mt-4 flex gap-4">
+              <Button onClick={() => window.location.reload()}>
+                Refresh Page
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/student/dashboard")}>
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show message if profile is incomplete
+  if (studentRecord && !isStudentProfileComplete(studentRecord)) {
+    return (
+      <div className="min-h-screen bg-gradient-light">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="shadow-elevated border-2 border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-yellow-800">
+                  <AlertCircle className="h-6 w-6" />
+                  <span>Complete Your Profile</span>
+                </CardTitle>
+                <CardDescription>
+                  Please complete your Pre-SIWES registration before submitting weekly reports.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Your student profile needs to be completed with your matric number, department, and other required details.
+                </p>
+                <div className="flex gap-4">
+                  <Button onClick={() => navigate("/student/pre-siwes")}>
+                    Complete Pre-SIWES Form
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/student/dashboard")}>
+                    Back to Dashboard
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isApproved) {
+    return (
+      <div className="min-h-screen bg-gradient-light">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="shadow-elevated border-2 border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-yellow-800">
+                  <Clock className="h-6 w-6" />
+                  <span>Pre-Registration Not Approved</span>
+                </CardTitle>
+                <CardDescription>
+                  Your pre-registration form must be approved by your school supervisor before you can start weekly submissions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Please wait for your school supervisor to review and approve your pre-registration form. 
+                  Once approved, you'll be able to access your weekly logbook.
+                </p>
+                <Button onClick={() => navigate("/student/dashboard")}>
+                  Back to Dashboard
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // canEdit: Draft or new week, AND not locked
+  const canEdit = (weekData?.status === "draft" || !weekData?.id) && !siwesLocked;
 
   return (
     <div className="min-h-screen bg-gradient-light">
@@ -219,14 +553,38 @@ const Logbook = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto space-y-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/student/dashboard")}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+          {/* Locked Banner */}
+          {siwesLocked && (
+            <Alert className="border-purple-200 bg-purple-50">
+              <Lock className="h-4 w-4 text-purple-600" />
+              <AlertTitle className="text-purple-800">SIWES Completed - Read-Only Mode</AlertTitle>
+              <AlertDescription className="text-purple-700">
+                Your SIWES has been completed and graded. You can view your logbook entries but cannot make any changes.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex items-center justify-between mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/student/dashboard")}
+              className="hover:bg-white/50"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={handleDownloadPDF} 
+              disabled={downloading}
+              className="bg-white hover:bg-gray-50"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {downloading ? "Generating PDF..." : "Download Logbook"}
+            </Button>
+          </div>
+
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-primary">Weekly Logbook</h1>
@@ -241,11 +599,12 @@ const Logbook = () => {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="font-semibold px-4">Week {currentWeek}</span>
+              <span className="font-semibold px-4">Week {currentWeek} of 24</span>
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentWeek(currentWeek + 1)}
+                onClick={() => setCurrentWeek(Math.min(24, currentWeek + 1))}
+                disabled={currentWeek >= 24}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -287,7 +646,7 @@ const Logbook = () => {
                         weekId={weekData.id}
                         day={day}
                         photos={photos[day] || []}
-                        onPhotosChange={() => fetchPhotos(weekData.id)}
+                        onPhotosChange={() => fetchWeekData()}
                         disabled={!canEdit}
                       />
                     )}

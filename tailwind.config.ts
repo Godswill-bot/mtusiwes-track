@@ -41,6 +41,17 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+          light: "hsl(var(--success-light))",
+          lighter: "hsl(var(--success-lighter))",
+        },
+        "green-accent": {
+          DEFAULT: "hsl(var(--green-accent))",
+          foreground: "hsl(var(--green-accent-foreground))",
+          muted: "hsl(var(--green-muted))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -100,5 +111,6 @@ export default {
       },
     },
   },
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;

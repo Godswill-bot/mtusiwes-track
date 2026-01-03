@@ -29,6 +29,17 @@ All colors MUST be HSL.
     /* Secondary: Light purple tones */
     --secondary: 280 20% 96%;
     --secondary-foreground: 280 70% 15%;
+    
+    /* Green Accent Colors - Dark green matching MTU logo */
+    --success: 140 60% 28%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 140 50% 35%;
+    --success-lighter: 140 30% 88%;
+    
+    /* Green for highlights and accents */
+    --green-accent: 140 55% 30%;
+    --green-accent-foreground: 0 0% 100%;
+    --green-muted: 140 25% 85%;
 
     --muted: 280 15% 95%;
     --muted-foreground: 280 20% 45%;
@@ -128,7 +139,51 @@ All colors MUST be HSL.
     font-family: 'Poppins', sans-serif;
   }
   
+  html {
+    scroll-behavior: smooth;
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  /* Responsive text utilities for long text handling */
+  .text-wrap {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  .text-break {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Dynamic height containers */
+  .h-auto {
+    height: auto;
+  }
+  
+  .min-h-fit {
+    min-height: fit-content;
+  }
+  
+  /* Card responsive utilities */
+  .card-responsive {
+    @apply min-h-fit h-auto;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  /* Mobile-first responsive containers */
+  .container-responsive {
+    @apply w-full px-4 sm:px-6 lg:px-8;
+    max-width: 100%;
+  }
+  
+  /* Responsive grid - 1 column on mobile */
+  .grid-responsive {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
   }
 }
