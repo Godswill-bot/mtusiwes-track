@@ -16,8 +16,9 @@ const IndustrySupervisorLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [portalActive, setPortalActive] = useState(true);
+  const [loginAttempted, setLoginAttempted] = useState(false);
 
-  const { signIn, user, userRole } = useAuth();
+  const { signIn, user, userRole, loading: authLoading, isInitialized } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,13 +42,12 @@ const IndustrySupervisorLogin = () => {
     checkPortalStatus();
   }, []);
 
+  // Redirect to dashboard after successful login when auth state is updated
   useEffect(() => {
-    if (user && userRole === "industry_supervisor") {
-      navigate("/supervisor/dashboard");
-    } else if (user && userRole) {
-      navigate("/");
+    if (loginAttempted && user && userRole === "industry_supervisor" && isInitialized && !authLoading) {
+      navigate("/supervisor/dashboard", { replace: true });
     }
-  }, [user, userRole, navigate]);
+  }, [loginAttempted, user, userRole, isInitialized, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +65,9 @@ const IndustrySupervisorLogin = () => {
       const result = await signIn(email, password);
       if (result.error) {
         setError(result.error.message || "Invalid email or password");
+      } else {
+        // Login successful - set flag and let useEffect handle navigation
+        setLoginAttempted(true);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";

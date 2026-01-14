@@ -162,10 +162,21 @@ const Logbook = () => {
         });
         setPhotos(photosByDay);
       } else {
-        // Create new week with Lagos timezone immediately so photos can be uploaded
-        const lagosTime = toZonedTime(new Date(), 'Africa/Lagos');
-        const weekStart = startOfWeek(lagosTime, { weekStartsOn: 1 });
-        const weekEnd = addDays(weekStart, 5);
+        // Create new week - calculate dates based on student's SIWES start date
+        let weekStart: Date;
+        let weekEnd: Date;
+        
+        if (studentRecord?.start_date) {
+          // Calculate week dates based on student's SIWES start date
+          const siwesStartDate = new Date(studentRecord.start_date);
+          weekStart = addDays(siwesStartDate, (currentWeek - 1) * 7);
+          weekEnd = addDays(weekStart, 5); // Monday to Saturday
+        } else {
+          // Fallback to current date if no start_date set
+          const lagosTime = toZonedTime(new Date(), 'Africa/Lagos');
+          weekStart = startOfWeek(lagosTime, { weekStartsOn: 1 });
+          weekEnd = addDays(weekStart, 5);
+        }
 
         // Note: Only include fields that exist in the base weeks table
         const newWeekData = {
@@ -234,7 +245,7 @@ const Logbook = () => {
     } finally {
       setLoading(false);
     }
-  }, [studentId, currentWeek]);
+  }, [studentId, currentWeek, studentRecord]);
 
   useEffect(() => {
     initializeStudent();

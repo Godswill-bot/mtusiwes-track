@@ -14,9 +14,17 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginAttempted, setLoginAttempted] = useState(false);
 
   const { signIn, user, userRole, loading: authLoading, isInitialized } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to dashboard after successful login when auth state is updated
+  useEffect(() => {
+    if (loginAttempted && user && userRole === "admin" && isInitialized && !authLoading) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [loginAttempted, user, userRole, isInitialized, authLoading, navigate]);
 
   // Note: We intentionally do NOT auto-redirect logged-in users here.
   // If a user navigates to /admin/login, they want to see the login form.
@@ -35,6 +43,9 @@ const AdminLogin = () => {
           ? (result.error as { message: string }).message 
           : "Failed to sign in";
         setError(errorMsg);
+      } else {
+        // Login successful - set flag and let useEffect handle navigation
+        setLoginAttempted(true);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";

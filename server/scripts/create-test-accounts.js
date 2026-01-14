@@ -54,7 +54,7 @@ const STUDENTS = [
     email: 'test.student.1@mtu-siwes.test',
     password: 'TestStudent@123',
     fullName: 'Test Student 1',
-    matricNo: 'TEST/2024/001',
+    matricNo: 'TEST/2025/001',
     department: 'Computer Science',
     faculty: 'CBAS',
     phone: '+234-900-000-0001',
@@ -69,7 +69,7 @@ const STUDENTS = [
     email: 'test.student.2@mtu-siwes.test',
     password: 'TestStudent@123',
     fullName: 'Test Student 2',
-    matricNo: 'TEST/2024/002',
+    matricNo: 'TEST/2025/002',
     department: 'Software Engineering',
     faculty: 'CBAS',
     phone: '+234-900-000-0002',
@@ -84,7 +84,7 @@ const STUDENTS = [
     email: 'test.student.3@mtu-siwes.test',
     password: 'TestStudent@123',
     fullName: 'Test Student 3',
-    matricNo: 'TEST/2024/003',
+    matricNo: 'TEST/2025/003',
     department: 'Cybersecurity',
     faculty: 'CBAS',
     phone: '+234-900-000-0003',
@@ -119,7 +119,7 @@ async function getCurrentSession() {
     const { data: newSession, error: createError } = await supabase
       .from('academic_sessions')
       .insert({
-        session_name: '2024/2025',
+        session_name: '2025/2026',
         is_current: true
       })
       .select()

@@ -21,6 +21,9 @@ export interface StudentRecord {
   products_services?: string;
   industry_supervisor_name?: string;
   period_of_training?: string;
+  // SIWES dates
+  start_date?: string | null;
+  end_date?: string | null;
   // Grading and lock fields
   siwes_locked?: boolean;
   siwes_locked_at?: string;

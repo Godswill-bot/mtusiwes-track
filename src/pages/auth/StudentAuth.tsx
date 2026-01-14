@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,17 @@ const StudentAuth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
 
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, userRole, loading: authLoading, isInitialized } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to dashboard after successful login when auth state is updated
+  useEffect(() => {
+    if (loginAttempted && user && userRole === "student" && isInitialized && !authLoading) {
+      navigate("/student/dashboard", { replace: true });
+    }
+  }, [loginAttempted, user, userRole, isInitialized, authLoading, navigate]);
 
   // Note: We intentionally do NOT auto-redirect logged-in users here.
   // If a user navigates to this page, they want to see the login form.
@@ -27,7 +35,10 @@ const StudentAuth = () => {
     setLoading(true);
 
     if (isLogin) {
-      await signIn(email, password);
+      const result = await signIn(email, password);
+      if (!result.error) {
+        setLoginAttempted(true);
+      }
     } else {
       await signUp(email, password, fullName, "student");
     }

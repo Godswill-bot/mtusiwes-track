@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,17 @@ const AdminAuth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
 
-  const { signIn } = useAuth();
+  const { signIn, user, userRole, loading: authLoading, isInitialized } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to dashboard after successful login when auth state is updated
+  useEffect(() => {
+    if (loginAttempted && user && userRole === "admin" && isInitialized && !authLoading) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [loginAttempted, user, userRole, isInitialized, authLoading, navigate]);
 
   // Note: We intentionally do NOT auto-redirect logged-in users here.
   // If a user navigates to this page, they want to see the login form.
@@ -22,8 +30,11 @@ const AdminAuth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signIn(email, password);
+    const result = await signIn(email, password);
     setLoading(false);
+    if (!result.error) {
+      setLoginAttempted(true);
+    }
   };
 
   return (

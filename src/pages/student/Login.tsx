@@ -17,9 +17,17 @@ const StudentLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [portalActive, setPortalActive] = useState(true);
+  const [loginAttempted, setLoginAttempted] = useState(false);
 
   const { signIn, user, userRole, loading: authLoading, isInitialized } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to dashboard after successful login when auth state is updated
+  useEffect(() => {
+    if (loginAttempted && user && userRole === "student" && isInitialized && !authLoading) {
+      navigate("/student/dashboard", { replace: true });
+    }
+  }, [loginAttempted, user, userRole, isInitialized, authLoading, navigate]);
 
   useEffect(() => {
     // Check portal status in background - don't block login form
@@ -72,6 +80,9 @@ const StudentLogin = () => {
           setError(result.error.message || "Invalid email or password");
           toast.error(result.error.message || "Failed to sign in");
         }
+      } else {
+        // Login successful - set flag and let useEffect handle navigation
+        setLoginAttempted(true);
       }
     } catch (err: unknown) {
       const isEmailError = err instanceof Error && (err.name === "EmailNotConfirmed" || err.message.includes("verify"));
