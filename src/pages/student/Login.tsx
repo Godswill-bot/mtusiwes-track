@@ -35,13 +35,13 @@ const StudentLogin = () => {
     const checkPortalStatus = async () => {
       try {
         const { data } = await supabase
-          .from("portal_settings")
+          .from("portal_settings" as never)
           .select("student_portal_open")
-          .eq("id", 1)
+          .eq("id", "1")
           .single();
         
         if (data) {
-          setPortalActive(data.student_portal_open ?? true);
+          setPortalActive((data as { student_portal_open?: boolean }).student_portal_open ?? true);
         }
       } catch {
         // Default to active if check fails
@@ -71,15 +71,16 @@ const StudentLogin = () => {
       // Attempt login - AuthContext will check email_confirmed_at
       const result = await signIn(email, password);
       if (result.error) {
+        const errorObj = result.error as { message?: string; name?: string };
         // Check if error is related to email verification
-        if (result.error.message?.includes("verify") || 
-            result.error.name === "EmailNotConfirmed" ||
-            result.error.message?.includes("Email not confirmed")) {
+        if (errorObj.message?.includes("verify") || 
+            errorObj.name === "EmailNotConfirmed" ||
+            errorObj.message?.includes("Email not confirmed")) {
           setError("Please verify your email before logging in. Check your inbox for the verification code.");
           toast.error("Email verification required");
         } else {
-          setError(result.error.message || "Invalid email or password");
-          toast.error(result.error.message || "Failed to sign in");
+          setError(errorObj.message || "Invalid email or password");
+          toast.error(errorObj.message || "Failed to sign in");
         }
       } else {
         // Login successful - set flag and let useEffect handle navigation

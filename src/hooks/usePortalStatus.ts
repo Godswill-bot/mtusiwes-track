@@ -12,16 +12,16 @@ export const usePortalStatus = () => {
     queryKey: PORTAL_STATUS_KEY,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("portal_settings")
+        .from("portal_settings" as never)
         .select("student_portal_open")
-        .eq("id", 1)
+        .eq("id", "1")
         .single();
 
       if (error) {
         console.error("Error checking portal status:", error);
         return false; // Default to closed if there's an error
       }
-      return data?.student_portal_open ?? false;
+      return (data as { student_portal_open?: boolean })?.student_portal_open ?? false;
     },
     staleTime: 1000 * 60 * 10, // 10 minutes - portal status rarely changes
     gcTime: 1000 * 60 * 60, // 1 hour cache

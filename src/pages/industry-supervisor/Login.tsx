@@ -26,13 +26,13 @@ const IndustrySupervisorLogin = () => {
     const checkPortalStatus = async () => {
       try {
         const { data } = await supabase
-          .from("portal_settings")
+          .from("portal_settings" as never)
           .select("student_portal_open")
-          .eq("id", 1)
+          .eq("id", "1")
           .single();
         
         if (data) {
-          setPortalActive(data.student_portal_open ?? true);
+          setPortalActive((data as { student_portal_open?: boolean }).student_portal_open ?? true);
         }
       } catch {
         // Default to active if check fails
