@@ -1,14 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import mtuLogo from "@/assets/mtu-logo.png";
-import mountainTopBg from "@/assets/mountaintop.jpg";
+import siwesStudents from "@/assets/siwes-students.webp";
+import itfBuilding from "@/assets/itf-building.png";
+import studentLogbook from "@/assets/student-logbook.jpg";
 import { ArrowRight, Info } from "lucide-react";
+
+// Slideshow images array
+const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
 
 const Index = () => {
   const { user, userRole, loading, isInitialized } = useAuth();
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Slideshow auto-advancement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Only redirect after auth is fully initialized AND we have confirmed user + role
@@ -50,14 +65,42 @@ const Index = () => {
 
   // Beautiful homepage for non-logged-in users
   return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Background Image with Gradient Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${mountainTopBg})` }}
-      />
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Slideshow Background */}
+      <div className="absolute inset-0">
+        {slideshowImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? "opacity-100 slide-zoom" : "opacity-0"
+            }`}
+            style={{ 
+              backgroundImage: `url(${image})`,
+              animationPlayState: index === currentSlide ? 'running' : 'paused'
+            }}
+          />
+        ))}
+      </div>
+      
       {/* Gradient Overlay for readability - Purple and Green blend */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-purple-50/85 to-primary/20" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-purple-900/60 to-primary/50" />
+      
+      {/* Slideshow Indicators */}
+      <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
+        {slideshowImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              index === currentSlide
+                ? "bg-white scale-125"
+                : "bg-white/50 hover:bg-white/75"
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+      
       {/* Subtle green accent stripe at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-success to-transparent opacity-60" />
       
@@ -78,20 +121,20 @@ const Index = () => {
 
           {/* Main Title with green underline accent */}
           <div className="relative inline-block">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary animate-fade-in-up">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg animate-fade-in-up">
               Welcome to the MTU SIWES Platform
             </h1>
             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-success via-success-light to-success rounded-full"></div>
           </div>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up animation-delay-200 pt-4">
+          <p className="text-lg md:text-xl lg:text-2xl text-white/90 max-w-3xl mx-auto animate-fade-in-up animation-delay-200 pt-4 drop-shadow-md">
             Official Students Industrial Work Experience Scheme Portal for Mountain Top University.
           </p>
 
           {/* Introduction Paragraph */}
           <div className="max-w-3xl mx-auto pt-8 animate-fade-in-up animation-delay-400">
-            <p className="text-base md:text-lg text-foreground/80 leading-relaxed">
+            <p className="text-base md:text-lg text-white/85 leading-relaxed drop-shadow-md">
               The MTU SIWES Platform is designed to help students document, manage, and track their industrial training activities with ease. This platform ensures proper supervision, weekly submissions, industry evaluations, and seamless communication between students, industry supervisors, and school supervisors.
             </p>
           </div>
@@ -120,34 +163,34 @@ const Index = () => {
 
           {/* Login Links Section */}
           <div className="max-w-3xl mx-auto pt-12 animate-fade-in-up animation-delay-800">
-            <div className="border-t border-border pt-8">
-              <p className="text-sm text-muted-foreground mb-4 text-center">
+            <div className="border-t border-white/30 pt-8">
+              <p className="text-sm text-white/80 mb-4 text-center">
                 Already have an account? Sign in here:
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <Button
                   onClick={() => navigate("/student/login")}
                   variant="outline"
-                  className="w-full sm:w-auto border-success/50 text-success bg-white/60 hover:bg-success/90 hover:text-white hover:border-success backdrop-blur-sm"
+                  className="w-full sm:w-auto border-success text-white bg-success/30 hover:bg-success hover:text-white hover:border-success backdrop-blur-sm"
                 >
                   Student Login
                 </Button>
                 <Button
                   onClick={() => navigate("/school-supervisor/login")}
                   variant="outline"
-                  className="w-full sm:w-auto bg-white/60 backdrop-blur-sm hover:bg-primary/90 hover:text-white"
+                  className="w-full sm:w-auto bg-white/20 text-white border-white/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary"
                 >
                   Supervisor Login
                 </Button>
                 <Button
                   onClick={() => navigate("/admin/login")}
                   variant="outline"
-                  className="w-full sm:w-auto bg-white/60 backdrop-blur-sm hover:bg-primary/90 hover:text-white"
+                  className="w-full sm:w-auto bg-white/20 text-white border-white/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary"
                 >
                   Admin Login
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-4 text-center">
+              <p className="text-xs text-white/70 mt-4 text-center">
                 New supervisor?{" "}
                 <button
                   onClick={() => navigate("/school-supervisor/signup")}
@@ -162,7 +205,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border/50 relative z-10 bg-white/70 backdrop-blur-sm">
+      <footer className="py-6 text-center text-sm text-white/80 border-t border-white/20 relative z-10 bg-black/30 backdrop-blur-sm">
         <p>© {new Date().getFullYear()} Mountain Top University. All rights reserved.</p>
       </footer>
 
@@ -229,6 +272,20 @@ const Index = () => {
         
         .hover\\:glow-green:hover {
           box-shadow: 0 0 20px rgba(30, 100, 60, 0.5);
+        }
+
+        /* Slideshow zoom animation */
+        @keyframes slideZoom {
+          0% {
+            transform: scale(1);
+          }
+          100% {
+            transform: scale(1.1);
+          }
+        }
+
+        .slide-zoom {
+          animation: slideZoom 6s ease-out forwards;
         }
       `}</style>
     </div>
