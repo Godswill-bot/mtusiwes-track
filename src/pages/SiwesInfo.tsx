@@ -97,15 +97,15 @@ const SiwesInfo = () => {
       {/* Gradient Overlay for readability */}
       <div className="fixed inset-0 bg-gradient-to-br from-white/90 via-purple-50/85 to-primary/20" />
       
-      {/* Slideshow Indicators */}
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex gap-2">
+      {/* Slideshow Indicators - positioned at bottom but won't overlap content */}
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex gap-3 bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full">
         {slideshowImages.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
               index === currentSlide
-                ? "bg-primary scale-125"
+                ? "bg-primary scale-125 shadow-md"
                 : "bg-primary/40 hover:bg-primary/60"
             }`}
             aria-label={`Go to slide ${index + 1}`}
