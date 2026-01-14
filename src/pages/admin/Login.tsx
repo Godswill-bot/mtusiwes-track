@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, AlertCircle, Shield } from "lucide-react";
 import mtuLogo from "@/assets/mtu-logo.png";
+import itfBuilding from "@/assets/itf-building.png";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminLogin = () => {
@@ -60,8 +61,20 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-elevated">
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Blurred Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-sm scale-105"
+        style={{ backgroundImage: `url(${itfBuilding})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-purple-900/60 to-black/70" />
+      
+      {/* Decorative Shield Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+        <Shield className="w-96 h-96 text-white" />
+      </div>
+      
+      <Card className="w-full max-w-md shadow-elevated relative z-10 bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 relative">
           <Button
             variant="ghost"
@@ -72,11 +85,11 @@ const AdminLogin = () => {
             Back
           </Button>
           <div className="flex justify-center">
-            <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20" />
+            <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20 mix-blend-multiply" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
-              <Shield className="h-6 w-6" />
+              <Shield className="h-6 w-6 text-primary" />
               Admin Login
             </CardTitle>
             <CardDescription>MTU SIWES System Administration</CardDescription>

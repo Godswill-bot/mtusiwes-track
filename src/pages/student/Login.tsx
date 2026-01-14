@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import mtuLogo from "@/assets/mtu-logo.png";
+import studentLogbook from "@/assets/student-logbook.jpg";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -100,11 +101,18 @@ const StudentLogin = () => {
 
   if (!portalActive) {
     return (
-      <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-elevated">
+      <div className="min-h-screen relative flex items-center justify-center p-4">
+        {/* Blurred Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-sm scale-105"
+          style={{ backgroundImage: `url(${studentLogbook})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-green-900/70 via-primary/50 to-black/60" />
+        
+        <Card className="w-full max-w-md shadow-elevated relative z-10 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
-              <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20" />
+              <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20 mix-blend-multiply" />
             </div>
             <CardTitle className="text-2xl font-bold">SIWES Portal Closed</CardTitle>
             <CardDescription>
@@ -122,8 +130,15 @@ const StudentLogin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-elevated">
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Blurred Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-sm scale-105"
+        style={{ backgroundImage: `url(${studentLogbook})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-green-900/70 via-primary/50 to-black/60" />
+      
+      <Card className="w-full max-w-md shadow-elevated relative z-10 bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 relative">
           <Button
             variant="ghost"
@@ -134,7 +149,7 @@ const StudentLogin = () => {
             Back
           </Button>
           <div className="flex justify-center">
-            <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20" />
+            <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20 mix-blend-multiply" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Student Login</CardTitle>

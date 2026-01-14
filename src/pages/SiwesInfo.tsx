@@ -1,13 +1,28 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import mtuLogo from "@/assets/mtu-logo.png";
 import itfLogo from "@/assets/itf-logo.png";
-import mountainBg from "@/assets/mountaintop.jpg";
+import siwesStudents from "@/assets/siwes-students.webp";
+import itfBuilding from "@/assets/itf-building.png";
+import studentLogbook from "@/assets/student-logbook.jpg";
 import { ArrowLeft, ArrowRight, Target, Users, BookOpen, Award, FileText, Calendar, CheckSquare } from "lucide-react";
+
+// Slideshow images array
+const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
 
 const SiwesInfo = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Slideshow auto-advancement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const aims = [
     {
@@ -66,14 +81,37 @@ const SiwesInfo = () => {
   ];
 
   return (
-    <div className="min-h-screen relative">
-      {/* Background Image with Gradient Overlay */}
-      <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${mountainBg})` }}
-      />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Slideshow Background */}
+      <div className="fixed inset-0">
+        {slideshowImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ backgroundImage: `url(${image})` }}
+          />
+        ))}
+      </div>
       {/* Gradient Overlay for readability */}
       <div className="fixed inset-0 bg-gradient-to-br from-white/90 via-purple-50/85 to-primary/20" />
+      
+      {/* Slideshow Indicators */}
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex gap-2">
+        {slideshowImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              index === currentSlide
+                ? "bg-primary scale-125"
+                : "bg-primary/40 hover:bg-primary/60"
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
       
       {/* Header with Logo */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-border shadow-sm py-6 relative z-10">
