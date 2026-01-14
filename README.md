@@ -1,73 +1,94 @@
-# Welcome to your MTU  project
+# MTU SIWES Tracking System
 
-## Project info
+A comprehensive Student Industrial Work Experience Scheme (SIWES) management platform for Maryam Abacha American University of Nigeria (MAUTECH).
 
-**URL**: https://lovable.dev/projects/724c6fcd-fdcc-408d-9a26-671e8616df15
+## 🌐 Live Demo
 
-## How can I edit this code?
+**Production URL**: [https://mtusiwes-track.vercel.app](https://mtusiwes-track.vercel.app)
 
-There are several ways of editing your application.
+## 📋 About
 
-**Use Lovable**
+The MTU SIWES Tracking System is a web-based application designed to streamline the management and monitoring of student industrial training placements. It provides dedicated portals for:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/724c6fcd-fdcc-408d-9a26-671e8616df15) and start prompting.
+- **Students** - Log daily activities, submit reports, track placement progress
+- **Supervisors** - Monitor assigned students, review logbooks, provide assessments
+- **Administrators** - Manage placements, assign supervisors, oversee the entire SIWES program
 
-Changes made via Lovable will be committed automatically to this repo.
+## ✨ Features
 
-**Use your preferred IDE**
+- 📝 Digital logbook for daily activity logging
+- 👥 Supervisor-student assignment and management
+- 📊 Progress tracking and reporting
+- 🔐 Role-based authentication (Student, Supervisor, Admin)
+- 📱 Responsive design for mobile and desktop
+- 🔔 Notification system for updates and approvals
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Technologies Used
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend**: React, TypeScript, Vite
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (Database, Authentication, Storage)
+- **Deployment**: Vercel
 
-Follow these steps:
+## 🚀 Getting Started
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prerequisites
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Node.js (v18 or higher)
+- npm or bun package manager
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Installation
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+# Clone the repository
+git clone https://github.com/Godswill-bot/mtusiwes-track.git
+
+# Navigate to project directory
+cd mtusiwes-track
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Environment Variables
 
-**Use GitHub Codespaces**
+Create a `.env` file in the root directory with:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+```
 
-## What technologies are used for this project?
+## 📁 Project Structure
 
-This project is built with:
+```
+src/
+├── components/     # Reusable UI components
+├── pages/          # Application pages/routes
+├── services/       # API and database services
+├── hooks/          # Custom React hooks
+├── lib/            # Utility functions
+└── types/          # TypeScript type definitions
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🤝 Contributing
 
-## How can I deploy this project?
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -m 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
+5. Open a Pull Request
 
-Simply open [Lovable](https://lovable.dev/projects/724c6fcd-fdcc-408d-9a26-671e8616df15) and click on Share -> Publish.
+## 📄 License
 
-## Can I connect a custom domain to my Lovable project?
+This project is developed for educational purposes as part of the SIWES program at Maryam Abacha American University of Nigeria.
 
-Yes, you can!
+## 👤 Author
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+**Godswill Nwafor**
+- GitHub: [@Godswill-bot](https://github.com/Godswill-bot)
