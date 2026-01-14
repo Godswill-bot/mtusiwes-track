@@ -11,10 +11,25 @@ import { ArrowRight, Info } from "lucide-react";
 // Slideshow images array
 const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
 
+// Preload images for faster slideshow
+const preloadImages = () => {
+  slideshowImages.forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+};
+
 const Index = () => {
   const { user, userRole, loading, isInitialized } = useAuth();
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
+  // Preload slideshow images on mount
+  useEffect(() => {
+    preloadImages();
+    setImagesLoaded(true);
+  }, []);
 
   // Slideshow auto-advancement
   useEffect(() => {
@@ -114,7 +129,9 @@ const Index = () => {
               <img
                 src={mtuLogo}
                 alt="Mountain Top University Logo"
-                className="h-24 md:h-32 w-auto relative"
+                className="h-24 md:h-32 w-auto relative mix-blend-multiply drop-shadow-lg"
+                loading="eager"
+                decoding="async"
               />
             </div>
           </div>

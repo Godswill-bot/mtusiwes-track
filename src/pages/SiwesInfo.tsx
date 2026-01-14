@@ -82,7 +82,9 @@ const SiwesInfo = () => {
             <img
               src={mtuLogo}
               alt="Mountain Top University Logo"
-              className="h-16 md:h-20 w-auto"
+              className="h-16 md:h-20 w-auto mix-blend-multiply"
+              loading="eager"
+              decoding="async"
             />
           </div>
         </div>
@@ -104,7 +106,9 @@ const SiwesInfo = () => {
           <img
             src={itfLogo}
             alt="Industrial Training Fund Logo"
-            className="h-32 md:h-40 w-auto mix-blend-multiply"
+            className="h-32 md:h-40 w-auto mix-blend-multiply drop-shadow-md"
+            loading="eager"
+            decoding="async"
           />
           {/* Text below logo matching ITF branding */}
           <div className="text-center mt-6 space-y-2">
