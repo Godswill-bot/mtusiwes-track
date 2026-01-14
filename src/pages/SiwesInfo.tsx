@@ -141,13 +141,15 @@ const SiwesInfo = () => {
 
         {/* ITF Logo */}
         <div className="flex flex-col items-center justify-center mb-12">
-          <img
-            src={itfLogo}
-            alt="Industrial Training Fund Logo"
-            className="h-32 md:h-40 w-auto mix-blend-multiply drop-shadow-md"
-            loading="eager"
-            decoding="async"
-          />
+          <div className="bg-white rounded-2xl p-4 shadow-lg">
+            <img
+              src={itfLogo}
+              alt="Industrial Training Fund Logo"
+              className="h-32 md:h-40 w-auto"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
           {/* Text below logo matching ITF branding */}
           <div className="text-center mt-6 space-y-2">
             <p className="text-sm md:text-base font-semibold text-red-800 uppercase tracking-wide">
