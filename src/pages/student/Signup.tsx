@@ -8,9 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import mtuLogo from "@/assets/mtu-logo.png";
+import siwesStudents from "@/assets/siwes-students.webp";
+import itfBuilding from "@/assets/itf-building.png";
+import studentLogbook from "@/assets/student-logbook.jpg";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Slideshow images array
+const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
 
 const CBAS_DEPARTMENTS = [
   "Computer Science",
@@ -40,21 +46,35 @@ const StudentSignup = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [portalActive, setPortalActive] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const { signUp, user, userRole } = useAuth();
   const navigate = useNavigate();
 
+  // Slideshow auto-advancement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     // Check if portal is active
     const checkPortalStatus = async () => {
-      const { data } = await supabase
-        .from("settings")
-        .select("value")
-        .eq("key", "portal_active")
-        .single();
-      
-      if (data?.value === false || data?.value === "false") {
-        setPortalActive(false);
+      try {
+        const { data } = await supabase
+          .from("portal_settings" as never)
+          .select("student_portal_open")
+          .eq("id", "1")
+          .single();
+        
+        if (data) {
+          setPortalActive((data as { student_portal_open?: boolean }).student_portal_open ?? true);
+        }
+      } catch {
+        // Default to active if check fails
+        setPortalActive(true);
       }
     };
     checkPortalStatus();
@@ -165,7 +185,8 @@ const StudentSignup = () => {
       if (!useBackend) {
         const result = await signUp(email, password, fullName, "student");
         if (result.error) {
-          throw new Error(result.error.message || "Failed to create account");
+          const errorObj = result.error as { message?: string };
+          throw new Error(errorObj.message || "Failed to create account");
         }
 
         // Wait a moment for user to be created
@@ -295,14 +316,26 @@ const StudentSignup = () => {
 
   if (!portalActive) {
     return (
-      <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-elevated">
+      <div className="min-h-screen relative flex items-center justify-center p-4">
+        {/* Slideshow Background */}
+        {slideshowImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 bg-cover bg-center bg-no-repeat blur-sm scale-105 transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ backgroundImage: `url(${image})` }}
+          />
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-900/70 via-primary/50 to-black/60" />
+        
+        <Card className="w-full max-w-md shadow-elevated relative z-10 bg-white/30 backdrop-blur-md border-white/20">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
-              <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20" />
+              <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20 drop-shadow-lg" />
             </div>
-            <CardTitle className="text-2xl font-bold">SIWES Portal Closed</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-bold text-white">SIWES Portal Closed</CardTitle>
+            <CardDescription className="text-white/80">
               The SIWES Portal is currently closed. Please contact the administrator for assistance.
             </CardDescription>
           </CardHeader>
@@ -317,23 +350,35 @@ const StudentSignup = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl shadow-elevated max-h-[90vh] overflow-y-auto">
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Slideshow Background */}
+      {slideshowImages.map((image, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 bg-cover bg-center bg-no-repeat blur-sm scale-105 transition-opacity duration-1000 ease-in-out ${
+            index === currentSlide ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ backgroundImage: `url(${image})` }}
+        />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-900/70 via-primary/50 to-black/60" />
+      
+      <Card className="w-full max-w-2xl shadow-elevated max-h-[90vh] overflow-y-auto relative z-10 bg-white/30 backdrop-blur-md border-white/20">
         <CardHeader className="text-center space-y-4 relative">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="absolute top-4 left-4"
+            className="absolute top-4 left-4 text-white hover:bg-white/20"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div className="flex justify-center">
-            <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20" />
+            <img src={mtuLogo} alt="MTU Logo" className="h-20 w-20 drop-shadow-lg" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Student Sign Up</CardTitle>
-            <CardDescription>Create your MTU SIWES account</CardDescription>
+            <CardTitle className="text-2xl font-bold text-white">Student Sign Up</CardTitle>
+            <CardDescription className="text-white/80">Create your MTU SIWES account</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -345,7 +390,7 @@ const StudentSignup = () => {
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name *</Label>
+              <Label htmlFor="fullName" className="text-white">Full Name *</Label>
               <Input
                 id="fullName"
                 type="text"
@@ -354,11 +399,12 @@ const StudentSignup = () => {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={loading}
+                className="bg-white/80"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">MTU Email *</Label>
+              <Label htmlFor="email" className="text-white">MTU Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -367,15 +413,16 @@ const StudentSignup = () => {
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
                 disabled={loading}
+                className="bg-white/80"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-white/70">
                 Only MTU email addresses are accepted (format: firstnamelastname@mtu.edu.ng)
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="matricNo">Matric Number *</Label>
+                <Label htmlFor="matricNo" className="text-white">Matric Number *</Label>
                 <Input
                   id="matricNo"
                   type="text"
@@ -385,12 +432,13 @@ const StudentSignup = () => {
                   required
                   maxLength={11}
                   disabled={loading}
+                  className="bg-white/80"
                 />
-                <p className="text-xs text-muted-foreground">11 digits only</p>
+                <p className="text-xs text-white/70">11 digits only</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
+                <Label htmlFor="phone" className="text-white">Phone Number *</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -399,15 +447,16 @@ const StudentSignup = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   disabled={loading}
+                  className="bg-white/80"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="faculty">Faculty *</Label>
+                <Label htmlFor="faculty" className="text-white">Faculty *</Label>
                 <Select value={faculty} onValueChange={(v) => { setFaculty(v as "CBAS" | "CHMS"); setDepartment(""); }} required disabled={loading}>
-                  <SelectTrigger id="faculty">
+                  <SelectTrigger id="faculty" className="bg-white/80">
                     <SelectValue placeholder="Select Faculty" />
                   </SelectTrigger>
                   <SelectContent>
@@ -418,9 +467,9 @@ const StudentSignup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="department">Department *</Label>
+                <Label htmlFor="department" className="text-white">Department *</Label>
                 <Select value={department} onValueChange={setDepartment} required disabled={loading || !faculty}>
-                  <SelectTrigger id="department">
+                  <SelectTrigger id="department" className="bg-white/80">
                     <SelectValue placeholder="Select Department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -433,7 +482,7 @@ const StudentSignup = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
+              <Label htmlFor="password" className="text-white">Password *</Label>
               <Input
                 id="password"
                 type="password"
@@ -442,14 +491,15 @@ const StudentSignup = () => {
                 required
                 minLength={6}
                 disabled={loading}
+                className="bg-white/80"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-white/70">
                 Must be at least 6 characters
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password *</Label>
+              <Label htmlFor="confirmPassword" className="text-white">Confirm Password *</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -457,6 +507,7 @@ const StudentSignup = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="bg-white/80"
               />
             </div>
 
@@ -465,11 +516,11 @@ const StudentSignup = () => {
             </Button>
           </form>
           <div className="mt-4 text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-white/80">
               Already have an account?{" "}
               <Button
                 variant="link"
-                className="p-0 h-auto"
+                className="p-0 h-auto text-white hover:text-white/90"
                 onClick={() => navigate("/student/login")}
               >
                 Sign in here

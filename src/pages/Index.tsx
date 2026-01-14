@@ -126,15 +126,13 @@ const Index = () => {
           <div className="flex justify-center mb-8 animate-scale-in">
             <div className="relative">
               <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-primary via-success to-primary opacity-20 blur-sm"></div>
-              <div className="bg-white rounded-full p-3 shadow-lg">
-                <img
-                  src={mtuLogo}
-                  alt="Mountain Top University Logo"
-                  className="h-24 md:h-32 w-auto relative"
-                  loading="eager"
-                  decoding="async"
-                />
-              </div>
+              <img
+                src={mtuLogo}
+                alt="Mountain Top University Logo"
+                className="h-24 md:h-32 w-auto relative drop-shadow-lg"
+                loading="eager"
+                decoding="async"
+              />
             </div>
           </div>
 
