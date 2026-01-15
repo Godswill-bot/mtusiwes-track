@@ -14,6 +14,7 @@ import { StudentGradingModal } from "./StudentGradingModal";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { apiRequest } from "@/utils/api";
 
 interface WeekInfo {
   id: string;
@@ -100,10 +101,9 @@ export const FullScreenStudentModal = ({
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/pdf/compile-logbook`, {
+      const response = await apiRequest('/api/pdf/compile-logbook', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ studentId: student.id }),

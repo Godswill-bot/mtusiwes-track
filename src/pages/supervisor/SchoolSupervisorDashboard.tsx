@@ -13,6 +13,7 @@ import { StudentAttendanceTabsView } from "@/components/supervisor/StudentAttend
 import { StudentTabsView } from "@/components/supervisor/StudentTabsView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/utils/api";
 
 interface StudentWithWeeks {
   id: string;
@@ -236,10 +237,9 @@ const SchoolSupervisorDashboard = () => {
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/pdf/compile-logbook`, {
+      const response = await apiRequest('/api/pdf/compile-logbook', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ studentId }),
