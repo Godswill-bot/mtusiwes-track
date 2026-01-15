@@ -261,7 +261,7 @@ const Logbook = () => {
     if (!studentId) return;
     
     setDownloading(true);
-    toast.info("Generating your logbook PDF. This may take a moment...");
+    toast.info("Compiling your logbook PDF. This may take a moment...");
     
     try {
       const session = await supabase.auth.getSession();
@@ -270,7 +270,8 @@ const Logbook = () => {
         return;
       }
 
-      const response = await apiRequest("/api/pdf/generate-student-pdf", {
+      // Use compile-logbook endpoint to include all weeks (approved, rejected, submitted)
+      const response = await apiRequest("/api/pdf/compile-logbook", {
         method: "POST",
         body: JSON.stringify({ studentId }),
         headers: {
