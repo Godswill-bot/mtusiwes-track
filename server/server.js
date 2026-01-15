@@ -108,25 +108,13 @@ app.use((err, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
-    // Verify email configuration (with timeout to prevent hanging)
-    console.log('Checking email configuration...');
-    const emailReady = await Promise.race([
-      verifyEmailConfig(),
-      new Promise((resolve) => setTimeout(() => resolve(false), 12000))
-    ]);
-    
-    if (!emailReady) {
-      console.warn('⚠ Warning: Email configuration may be incorrect');
-      console.warn('  Server will start, but email sending may not work');
-      console.warn('  Check your EMAIL_USER and EMAIL_PASS in .env file\n');
-    }
-
-    app.listen(PORT, () => {
+    // Start server FIRST (Railway needs this to pass health check quickly)
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║     MTU SIWES Email Server is running!                  ║
 ╠══════════════════════════════════════════════════════════╣
-║  Server:     http://localhost:${PORT}                    ║
+║  Server:     http://0.0.0.0:${PORT}                       ║
 ║  Environment: ${process.env.NODE_ENV || 'development'}                    ║
 ║  Email:       ${process.env.EMAIL_USER || 'Not configured'}              ║
 ╚══════════════════════════════════════════════════════════╝
@@ -140,6 +128,23 @@ const startServer = async () => {
       console.log('  POST /api/auth/reset-password');
       console.log('  GET  /health');
     });
+
+    // Check email configuration in background (don't block server startup)
+    console.log('Checking email configuration in background...');
+    Promise.race([
+      verifyEmailConfig(),
+      new Promise((resolve) => setTimeout(() => resolve(false), 10000))
+    ]).then(emailReady => {
+      if (emailReady) {
+        console.log('✓ Email configuration verified successfully');
+      } else {
+        console.warn('⚠ Warning: Email configuration may be incorrect');
+        console.warn('  Server is running, but email sending may not work');
+      }
+    }).catch(err => {
+      console.warn('⚠ Email verification error:', err.message);
+    });
+    
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
