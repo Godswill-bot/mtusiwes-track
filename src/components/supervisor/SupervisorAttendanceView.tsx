@@ -14,8 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar, Clock, CheckCircle, XCircle, Loader2, Users, Eye, FileDown, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+import { apiRequest } from "@/utils/api";
 
 interface StudentAttendanceSummary {
   studentId: string;
@@ -64,10 +63,9 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
       console.log("[SupervisorAttendanceView] Fetching attendance summary...");
       
       try {
-        const response = await fetch(`${API_BASE_URL}/api/attendance/supervisor/summary`, {
+        const response = await apiRequest(`/api/attendance/supervisor/summary`, {
           headers: { 
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
           }
         });
 
@@ -87,11 +85,8 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
         console.log("[SupervisorAttendanceView] Attendance data loaded:", data?.students?.length || 0, "students");
         return data;
       } catch (fetchError) {
-        // Handle network errors (CORS, server down, etc.)
-        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
-          console.error("[SupervisorAttendanceView] Network error - server may be down or CORS issue");
-          throw new Error("Cannot connect to server. Please ensure the backend is running.");
-        }
+        // apiRequest already handles network errors, re-throw with better message
+        console.error("[SupervisorAttendanceView] Error:", fetchError);
         throw fetchError;
       }
     },
@@ -108,7 +103,7 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
       const token = await getAuthToken();
       if (!token) throw new Error("Not authenticated");
 
-      const response = await fetch(`${API_BASE_URL}/api/pdf/attendance/${studentId}`, {
+      const response = await apiRequest(`/api/pdf/attendance/${studentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

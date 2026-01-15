@@ -10,14 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { apiRequest } from "@/utils/api";
 
 interface StudentGradingModalProps {
   studentId: string;
   studentName: string;
   onGradeSubmitted: () => void;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 // Grading constants (must match backend)
 const MAX_ATTENDANCE_SCORE = 10;
@@ -75,7 +74,7 @@ export const StudentGradingModal = ({ studentId, studentName, onGradeSubmitted }
         return;
       }
       
-      const response = await fetch(`${API_BASE_URL}/api/grading/preview/${studentId}`, {
+      const response = await apiRequest(`/api/grading/preview/${studentId}`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
         },
@@ -94,7 +93,7 @@ export const StudentGradingModal = ({ studentId, studentName, onGradeSubmitted }
       }
     } catch (error) {
       console.error("Error fetching preview:", error);
-      toast.error("Network error: Unable to connect to grading server");
+      toast.error(error instanceof Error ? error.message : "Failed to connect to grading server");
     } finally {
       setPreviewLoading(false);
     }
@@ -108,7 +107,7 @@ export const StudentGradingModal = ({ studentId, studentName, onGradeSubmitted }
         return; // No session, no existing grade to fetch
       }
       
-      const response = await fetch(`${API_BASE_URL}/api/grading/get-grade/${studentId}`, {
+      const response = await apiRequest(`/api/grading/get-grade/${studentId}`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
         },
@@ -168,10 +167,9 @@ export const StudentGradingModal = ({ studentId, studentName, onGradeSubmitted }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(`${API_BASE_URL}/api/grading/submit-grade`, {
+      const response = await apiRequest(`/api/grading/submit-grade`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
