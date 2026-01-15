@@ -1,0 +1,27 @@
+# Render Blueprint for MTU SIWES Backend Server
+# Deploy to Render: https://render.com
+
+services:
+  - type: web
+    name: mtusiwes-backend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: FRONTEND_URL
+        sync: false  # Set this in Render dashboard
+      - key: EMAIL_USER
+        sync: false  # Set this in Render dashboard
+      - key: EMAIL_PASS
+        sync: false  # Set this in Render dashboard
+      - key: SUPABASE_URL
+        sync: false  # Set this in Render dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false  # Set this in Render dashboard
+    healthCheckPath: /health
