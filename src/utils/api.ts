@@ -22,14 +22,23 @@ export const checkServerHealth = async (): Promise<boolean> => {
 
 /**
  * Make API request with better error handling and timeout
+ * @param endpoint - API endpoint
+ * @param options - Fetch options
+ * @param timeoutMs - Custom timeout in milliseconds (default: 30000 for long operations like PDF generation)
  */
 export const apiRequest = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  timeoutMs: number = 30000 // 30 second default for most operations
 ): Promise<Response> => {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    
+    // Use longer timeout for PDF generation endpoints
+    const isPdfEndpoint = endpoint.includes('/pdf/') || endpoint.includes('compile-logbook');
+    const effectiveTimeout = isPdfEndpoint ? 120000 : timeoutMs; // 2 minutes for PDF, otherwise use provided timeout
+    
+    const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
@@ -45,12 +54,12 @@ export const apiRequest = async (
   } catch (error: unknown) {
     // Handle timeout/abort
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("Request timeout - backend server may not be running");
+      throw new Error("Request timeout - the operation is taking longer than expected. Please try again.");
     }
     // Handle network errors
     if (error instanceof Error && error.name === "TypeError" && error.message.includes("fetch")) {
       throw new Error(
-        "Cannot connect to server. Please ensure the backend server is running on port 3001."
+        "Cannot connect to server. Please ensure the backend server is running."
       );
     }
     throw error;

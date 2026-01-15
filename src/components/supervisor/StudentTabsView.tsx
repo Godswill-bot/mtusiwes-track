@@ -38,6 +38,7 @@ interface StudentWithWeeks {
   organisation_name: string;
   user_id: string;
   full_name?: string;
+  profile_image_url?: string | null;
   profile: {
     full_name: string;
   };
@@ -329,6 +330,7 @@ export const StudentTabsView = ({
           faculty: selectedStudent.faculty,
           organisation_name: selectedStudent.organisation_name,
           full_name: selectedStudent.profile.full_name,
+          profile_image_url: selectedStudent.profile_image_url,
         } : undefined}
         onStatusChange={onRefresh}
         allWeeks={selectedStudent?.weeks.map(w => ({ id: w.id, week_number: w.week_number, status: w.status }))}

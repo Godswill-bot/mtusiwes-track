@@ -261,17 +261,26 @@ const Logbook = () => {
     if (!studentId) return;
     
     setDownloading(true);
+    toast.info("Generating your logbook PDF. This may take a moment...");
+    
     try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session?.access_token) {
+        toast.error("Session expired. Please log in again.");
+        return;
+      }
+
       const response = await apiRequest("/api/pdf/generate-student-pdf", {
         method: "POST",
         body: JSON.stringify({ studentId }),
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.data.session.access_token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate PDF");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to generate PDF");
       }
 
       // Create blob from response
@@ -285,10 +294,11 @@ const Logbook = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      toast.success("Logbook downloaded successfully");
+      toast.success("Logbook downloaded successfully!");
     } catch (error: unknown) {
       console.error("PDF Download Error:", error);
-      toast.error("Failed to download logbook. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to download logbook: ${errorMessage}`);
     } finally {
       setDownloading(false);
     }

@@ -5,10 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   X, Check, Printer, Download, Stamp, 
   ArrowLeft, ArrowRight, Maximize2, Minimize2, 
-  Loader2, ChevronLeft, ChevronRight 
+  Loader2, ChevronLeft, ChevronRight, User 
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -54,6 +55,7 @@ interface StudentInfo {
   faculty?: string;
   organisation_name: string;
   full_name: string;
+  profile_image_url?: string | null;
 }
 
 interface FullScreenReportModalProps {
@@ -348,24 +350,44 @@ export const FullScreenReportModal = ({
               </div>
             ) : (
               <div className="space-y-6 max-w-5xl mx-auto">
-                {/* Student Info */}
+                {/* Student Info with Profile Picture */}
                 {studentInfo && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Student Name</p>
-                      <p className="font-medium">{studentInfo.full_name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Matric No.</p>
-                      <p className="font-medium">{studentInfo.matric_no}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Department</p>
-                      <p className="font-medium">{studentInfo.department}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Organisation</p>
-                      <p className="font-medium">{studentInfo.organisation_name}</p>
+                  <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
+                    {/* Profile Picture */}
+                    <Avatar className="h-20 w-20 border-2 border-primary/20 shadow-md flex-shrink-0">
+                      <AvatarImage 
+                        src={studentInfo.profile_image_url || undefined} 
+                        alt={studentInfo.full_name}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                        {studentInfo.full_name
+                          .split(" ")
+                          .map(n => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    {/* Student Details */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Student Name</p>
+                        <p className="font-medium">{studentInfo.full_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Matric No.</p>
+                        <p className="font-medium">{studentInfo.matric_no}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Department</p>
+                        <p className="font-medium">{studentInfo.department}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Organisation</p>
+                        <p className="font-medium">{studentInfo.organisation_name}</p>
+                      </div>
                     </div>
                   </div>
                 )}

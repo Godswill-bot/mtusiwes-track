@@ -146,7 +146,8 @@ const SchoolSupervisorDashboard = () => {
           period_of_training,
           organisation_name,
           school_supervisor_email,
-          user_id
+          user_id,
+          profile_image_url
         `)
         .eq("school_supervisor_email", supervisorEmail);
 

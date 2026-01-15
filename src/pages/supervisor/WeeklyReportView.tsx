@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -55,6 +56,7 @@ interface WeekData {
     period_of_training: string;
     organisation_name: string;
     user_id: string;
+    profile_image_url?: string | null;
   };
   profile: {
     full_name: string;
@@ -91,6 +93,7 @@ interface WeekDataFromDB {
     period_of_training: string;
     organisation_name: string;
     user_id: string;
+    profile_image_url?: string | null;
   };
   school_supervisor_comments?: string | null;
 }
@@ -121,12 +124,14 @@ const WeeklyReportView = () => {
         .select(`
           *,
           student:students(
+            id,
             matric_no,
             department,
             faculty,
             period_of_training,
             organisation_name,
-            user_id
+            user_id,
+            profile_image_url
           )
         `)
         .eq("id", weekId)
@@ -653,22 +658,43 @@ const WeeklyReportView = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                <div>
-                  <p className="text-sm text-muted-foreground">Student Name</p>
-                  <p className="font-medium">{weekData.profile.full_name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Matric No.</p>
-                  <p className="font-medium">{weekData.student.matric_no}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Department</p>
-                  <p className="font-medium">{weekData.student.department}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Organisation</p>
-                  <p className="font-medium">{weekData.student.organisation_name}</p>
+              {/* Student Info with Profile Picture */}
+              <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
+                {/* Profile Picture */}
+                <Avatar className="h-20 w-20 border-2 border-primary/20 shadow-md flex-shrink-0">
+                  <AvatarImage 
+                    src={weekData.student.profile_image_url || undefined} 
+                    alt={weekData.profile.full_name}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                    {weekData.profile.full_name
+                      .split(" ")
+                      .map(n => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Student Details */}
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Student Name</p>
+                    <p className="font-medium">{weekData.profile.full_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Matric No.</p>
+                    <p className="font-medium">{weekData.student.matric_no}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Department</p>
+                    <p className="font-medium">{weekData.student.department}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Organisation</p>
+                    <p className="font-medium">{weekData.student.organisation_name}</p>
+                  </div>
                 </div>
               </div>
 
