@@ -1,6 +1,6 @@
-# Force Railway/Nixpacks to use npm instead of bun
+# Force Railway/Nixpacks to use Node.js with npm (npm is included with nodejs)
 [phases.setup]
-nixPkgs = ["nodejs_20", "npm"]
+nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = ["npm install"]
