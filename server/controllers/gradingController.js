@@ -379,6 +379,8 @@ export const previewGrade = async (req, res) => {
       });
     }
 
+    // Debug log for studentId
+    console.log('[GRADING] previewGrading called with studentId:', studentId);
     // Verify student exists
     const { data: studentData } = await supabase
       .from('students')
@@ -387,6 +389,7 @@ export const previewGrade = async (req, res) => {
       .single();
 
     if (!studentData) {
+      console.log('[GRADING] Student not found for studentId:', studentId, 'studentData:', studentData);
       return res.status(404).json({
         success: false,
         error: 'Student not found',

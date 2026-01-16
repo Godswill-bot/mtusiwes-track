@@ -6,6 +6,15 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+// Load environment variables FIRST
+dotenv.config();
+
+// Log startup info immediately
+console.log('Starting MTU SIWES Backend Server...');
+console.log('PORT:', process.env.PORT || 3001);
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+
 import authRoutes from './routes/authRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import weekRoutes from './routes/weekRoutes.js';
@@ -17,9 +26,6 @@ import supervisorRoutes from './routes/supervisorRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import { verifyEmailConfig } from './lib/email.js';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

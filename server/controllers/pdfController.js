@@ -190,6 +190,8 @@ export const generateSupervisorGradingPDF = async (req, res) => {
       });
     }
 
+    // Debug log for studentId
+    console.log('[PDF] compileLogbook called with studentId:', studentId);
     // Fetch student data - use separate query for profile to avoid join issues
     const { data: studentData, error: studentError } = await supabase
       .from('students')
@@ -198,7 +200,7 @@ export const generateSupervisorGradingPDF = async (req, res) => {
       .single();
 
     if (studentError || !studentData) {
-      console.log('[PDF] Student fetch failed:', studentError?.message, 'studentId:', studentId);
+      console.log('[PDF] Student fetch failed:', studentError?.message, 'studentId:', studentId, 'studentData:', studentData);
       return res.status(404).json({
         success: false,
         error: 'Student not found',
