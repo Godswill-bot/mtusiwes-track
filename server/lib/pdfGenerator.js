@@ -453,8 +453,12 @@ export const generateStudentPDF = async (
       // Add footer to all pages
       const pageCount = doc.bufferedPageRange().count;
       for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
-        addFooter();
+        if (i < doc.pageCount) {
+          doc.switchToPage(i);
+          addFooter();
+        } else {
+          console.warn(`[PDF] Tried to switch to page ${i} but only ${doc.pageCount} pages exist.`);
+        }
       }
       
       doc.end();
