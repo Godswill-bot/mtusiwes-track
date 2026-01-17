@@ -75,16 +75,7 @@ export const StudentTabsView = ({
     return sortedStudents.find(s => s.id === activeStudentId) || sortedStudents[0];
   }, [sortedStudents, activeStudentId]);
 
-  // Categorize weeks for current student
-  const categorizedWeeks = useMemo(() => {
-    if (!currentStudent) return { pending: [], approved: [], rejected: [] };
-    
-    return {
-      pending: currentStudent.weeks.filter(w => w.status === "submitted"),
-      approved: currentStudent.weeks.filter(w => w.status === "approved"),
-      rejected: currentStudent.weeks.filter(w => w.status === "rejected"),
-    };
-  }, [currentStudent]);
+  // Removed categorizedWeeks: weekly reports are only shown in Full View
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -252,7 +243,7 @@ export const StudentTabsView = ({
                   </div>
                 </div>
 
-                {/* Only show summary here. Weekly reports moved to Full View */}
+                {/* Only show summary here. No weekly reports rendered in this view. */}
                 <div className="flex flex-col items-center justify-center py-8">
                   <p className="text-muted-foreground">Click <b>Full View</b> to see all weekly reports for this student.</p>
                 </div>
