@@ -453,7 +453,7 @@ export const generateStudentPDF = async (
       // Add footer to all pages
       const pageCount = doc.pageCount;
       for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
+
         addFooter();
       }
       
@@ -756,7 +756,7 @@ export const generateSupervisorPDF = async (
       
       const pageCount = doc.bufferedPageRange().count;
       for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
+        
         addFooter();
       }
       
@@ -1064,7 +1064,7 @@ export const generateWeeklyReportPDF = async (
       // Add footer to all pages
       const pageCount = doc.bufferedPageRange().count;
       for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
+     
         addFooter();
       }
       
@@ -1483,7 +1483,7 @@ export const generateLogbookPDF = async (
       // Add footer to all pages
       const logbookPageCount = doc.bufferedPageRange().count;
       for (let i = 0; i < logbookPageCount; i++) {
-        doc.switchToPage(i);
+    
         addLogbookFooter(i + 1, logbookPageCount);
       }
       

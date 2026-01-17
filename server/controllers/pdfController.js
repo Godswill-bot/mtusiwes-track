@@ -45,7 +45,7 @@ export const generateStudentSummaryPDF = async (req, res) => {
     // Fetch student data
     const { data: studentData, error: studentError } = await supabase
       .from('students')
-      .select('*, user:profiles(full_name)')
+      .select('*')
       .eq('id', studentId)
       .single();
 
@@ -404,9 +404,12 @@ export const generateWeekPDF = async (req, res) => {
  * Combines all weeks into a single comprehensive PDF
  */
 export const compileLogbook = async (req, res) => {
+
   try {
     const { studentId } = req.body;
     const userId = req.user?.id;
+    console.log('[PDF] compileLogbook called with studentId:', studentId);
+    console.log('[DEBUG] compileLogbook called with studentId:', studentId);
 
     if (!studentId) {
       return res.status(400).json({
@@ -416,14 +419,13 @@ export const compileLogbook = async (req, res) => {
     }
 
     // Fetch student data
+
     const { data: studentData, error: studentError } = await supabase
       .from('students')
-      .select(`
-        *,
-        user:profiles(full_name)
-      `)
+      .select('*')
       .eq('id', studentId)
       .single();
+    console.log('[DEBUG] studentData:', studentData, 'studentError:', studentError);
 
     if (studentError || !studentData) {
       return res.status(404).json({
