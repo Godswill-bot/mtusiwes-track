@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,15 @@ export const StudentTabsView = ({
     return sortedStudents.find(s => s.id === activeStudentId) || sortedStudents[0];
   }, [sortedStudents, activeStudentId]);
 
-  // Removed categorizedWeeks: weekly reports are only shown in Full View
+  // Categorize weeks for current student (needed for dropdowns)
+  const categorizedWeeks = useMemo(() => {
+    if (!currentStudent) return { pending: [], approved: [], rejected: [] };
+    return {
+      pending: currentStudent.weeks.filter(w => w.status === "submitted"),
+      approved: currentStudent.weeks.filter(w => w.status === "approved"),
+      rejected: currentStudent.weeks.filter(w => w.status === "rejected"),
+    };
+  }, [currentStudent]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -243,10 +252,45 @@ export const StudentTabsView = ({
                   </div>
                 </div>
 
-                {/* Only show summary here. No weekly reports rendered in this view. */}
-                <div className="flex flex-col items-center justify-center py-8">
-                  <p className="text-muted-foreground">Click <b>Full View</b> to see all weekly reports for this student.</p>
-                </div>
+                {/* Collapsible Approved/Rejected Sections */}
+                <Accordion type="multiple" className="w-full">
+                  {/* Approved Dropdown */}
+                  <AccordionItem value="approved">
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2 text-green-700">
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="font-medium">Approved ({categorizedWeeks.approved.length})</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2">
+                        {categorizedWeeks.approved.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-4">No approved reports</p>
+                        ) : (
+                          categorizedWeeks.approved.map((week) => renderWeekCard(week, currentStudent, "border-green-200"))
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  {/* Rejected Dropdown */}
+                  <AccordionItem value="rejected">
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2 text-red-700">
+                        <XCircle className="h-4 w-4" />
+                        <span className="font-medium">Rejected ({categorizedWeeks.rejected.length})</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2">
+                        {categorizedWeeks.rejected.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-4">No rejected reports</p>
+                        ) : (
+                          categorizedWeeks.rejected.map((week) => renderWeekCard(week, currentStudent, "border-red-200"))
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </TabsContent>
             ))}
           </Tabs>
