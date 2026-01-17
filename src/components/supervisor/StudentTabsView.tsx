@@ -252,62 +252,9 @@ export const StudentTabsView = ({
                   </div>
                 </div>
 
-                {/* Reports by Status */}
-                <div className="space-y-4">
-                  {/* Pending */}
-                  {student.id === activeStudentId && categorizedWeeks.pending.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-yellow-700">
-                        <Clock className="h-4 w-4" />
-                        <h4 className="font-medium">Pending Review ({categorizedWeeks.pending.length})</h4>
-                      </div>
-                      <div className="space-y-2">
-                        {categorizedWeeks.pending.map((week) => 
-                          renderWeekCard(week, student, "border-yellow-200")
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Approved */}
-                  {student.id === activeStudentId && categorizedWeeks.approved.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-green-700">
-                        <CheckCircle className="h-4 w-4" />
-                        <h4 className="font-medium">Approved ({categorizedWeeks.approved.length})</h4>
-                      </div>
-                      <div className="space-y-2">
-                        {categorizedWeeks.approved.map((week) => 
-                          renderWeekCard(week, student, "border-green-200")
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Rejected */}
-                  {student.id === activeStudentId && categorizedWeeks.rejected.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-red-700">
-                        <XCircle className="h-4 w-4" />
-                        <h4 className="font-medium">Rejected ({categorizedWeeks.rejected.length})</h4>
-                      </div>
-                      <div className="space-y-2">
-                        {categorizedWeeks.rejected.map((week) => 
-                          renderWeekCard(week, student, "border-red-200")
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* No reports */}
-                  {student.id === activeStudentId && 
-                   categorizedWeeks.pending.length === 0 && 
-                   categorizedWeeks.approved.length === 0 && 
-                   categorizedWeeks.rejected.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">
-                      No reports submitted yet for this student
-                    </p>
-                  )}
+                {/* Only show summary here. Weekly reports moved to Full View */}
+                <div className="flex flex-col items-center justify-center py-8">
+                  <p className="text-muted-foreground">Click <b>Full View</b> to see all weekly reports for this student.</p>
                 </div>
               </TabsContent>
             ))}
