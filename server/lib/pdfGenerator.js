@@ -1512,6 +1512,12 @@ export const generateLogbookPDF = async (
         }
         
         doc.text('Name: _______________', SPACING.pageX, schBoxY + 90);
+        doc.text('Date: _______________', SPACING.pageX, doc.y + 15);
+
+      // FOOTERS: Only add after all content, using switchToPage, to avoid blank pages
+      const addLogbookFooterAllPages = (doc) => {
+        const range = doc.bufferedPageRange();
+        for (let i = range.start; i < range.start + range.count; i++) {
           doc.switchToPage(i);
           doc.save();
           doc.fontSize(8).fillColor('#9ca3af')
