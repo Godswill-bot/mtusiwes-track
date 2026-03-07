@@ -35,6 +35,7 @@ export const WeeklyControlPanel = () => {
   const [editingWeek, setEditingWeek] = useState<WeekRecord | null>(null);
   const [editData, setEditData] = useState<Partial<WeekRecord>>({});
   const [statusNote, setStatusNote] = useState("");
+  const [expandedWeekId, setExpandedWeekId] = useState<string | null>(null);
 
   const weeksQuery = useQuery({
     queryKey: ["admin", "weeks"],
@@ -127,43 +128,69 @@ export const WeeklyControlPanel = () => {
             </TableHeader>
             <TableBody>
               {(weeksQuery.data && weeksQuery.data.length > 0) ? (
-                weeksQuery.data.map((week) => (
-                  <TableRow key={week.id}>
-                    <TableCell className="max-w-[120px]">
-                      <div className="font-medium break-words">{week.student?.full_name ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground break-words">{week.student?.matric_no}</div>
-                    </TableCell>
-                    <TableCell>Week {week.week_number}</TableCell>
-                    <TableCell>
-                      <Badge className="capitalize whitespace-nowrap">{week.status}</Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[150px]">
-                      <div className="break-words text-sm">{week.comments || "—"}</div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-wrap gap-1 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setEditingWeek(week);
-                          setEditData(week);
-                        }} className="text-xs">
-                          Edit
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => changeStatus(week, "approved")} className="text-xs">
-                          Approve
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => changeStatus(week, "submitted")} className="text-xs">
-                          Forward
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => changeStatus(week, "rejected")} className="text-xs">
-                          Reject
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => deleteWeek(week)} className="text-xs">
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                weeksQuery.data.map((week) => {
+                  const isExpanded = expandedWeekId === week.id;
+                  return (
+                    <>
+                      <TableRow key={week.id}>
+                        <TableCell className="max-w-[120px]">
+                          <div className="font-medium break-words">{week.student?.full_name ?? "—"}</div>
+                          <div className="text-xs text-muted-foreground break-words">{week.student?.matric_no}</div>
+                        </TableCell>
+                        <TableCell>Week {week.week_number}</TableCell>
+                        <TableCell>
+                          <Badge className="capitalize whitespace-nowrap">{week.status}</Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[150px]">
+                          <div className="break-words text-sm">{week.comments || "—"}</div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <button
+                            onClick={() => setExpandedWeekId(isExpanded ? null : week.id)}
+                            className="p-1 mr-2"
+                            aria-label={isExpanded ? "Collapse" : "Expand"}
+                          >
+                            {isExpanded ? <span>&#9660;</span> : <span>&#9654;</span>}
+                          </button>
+                          <div className="flex flex-wrap gap-1 justify-end">
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setEditingWeek(week);
+                              setEditData(week);
+                            }} className="text-xs">
+                              Edit
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => changeStatus(week, "approved")} className="text-xs">
+                              Approve
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => changeStatus(week, "submitted")} className="text-xs">
+                              Forward
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => changeStatus(week, "rejected")} className="text-xs">
+                              Reject
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => deleteWeek(week)} className="text-xs">
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="bg-muted/30 p-4">
+                            <div>
+                              <div><strong>Start Date:</strong> {week.start_date}</div>
+                              <div><strong>End Date:</strong> {week.end_date}</div>
+                              <div><strong>Score:</strong> {week.score ?? "—"}</div>
+                              <div><strong>Student Comments:</strong> {week.comments}</div>
+                              <div><strong>Supervisor Comments:</strong> {week.school_supervisor_comments}</div>
+                              {/* Add more fields as needed */}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">

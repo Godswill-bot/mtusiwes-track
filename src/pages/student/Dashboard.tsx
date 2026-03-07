@@ -9,6 +9,7 @@ import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, Ar
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
+import SupervisorStudentChatDrawer from "@/components/SupervisorStudentChatDrawer";
 import { usePortalStatus } from "@/hooks/usePortalStatus";
 import PortalClosed from "./PortalClosed";
 import { useQuery } from "@tanstack/react-query";
@@ -43,6 +44,7 @@ const StudentDashboard = () => {
     pending: 0,
   });
   const [allWeeksCompleted, setAllWeeksCompleted] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Fetch current session
   const { data: currentSession } = useQuery({
@@ -72,7 +74,7 @@ const StudentDashboard = () => {
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data?.setting_value;
+      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
     },
     enabled: !!currentSession?.id,
   });
@@ -90,7 +92,7 @@ const StudentDashboard = () => {
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data?.setting_value;
+      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
     },
     enabled: !!currentSession?.id,
   });
@@ -125,21 +127,22 @@ const StudentDashboard = () => {
 
       setHasRegistration(!!studentData);
       
-      // If school_supervisor_name is null, try to fetch from supervisor_assignments
       let enrichedStudentData = studentData;
-      if (studentData && !studentData.school_supervisor_name) {
+      if (studentData) {
+        // ALWAYS try to get the supervisor assignment to ensure we have the ID for chat
         const { data: assignment } = await supabase
           .from("supervisor_assignments")
-          .select("supervisors(name, email)")
+          .select("supervisor_id, supervisors(name, email)")
           .eq("student_id", studentData.id)
           .eq("assignment_type", "school_supervisor")
           .maybeSingle();
         
-        if (assignment?.supervisors) {
+        if (assignment && assignment.supervisor_id) {
           enrichedStudentData = {
             ...studentData,
-            school_supervisor_name: assignment.supervisors.name,
-            school_supervisor_email: assignment.supervisors.email,
+            school_supervisor_id: assignment.supervisor_id,
+            school_supervisor_name: assignment.supervisors?.name || studentData.school_supervisor_name,
+            school_supervisor_email: assignment.supervisors?.email || studentData.school_supervisor_email,
           };
         }
       }
@@ -184,22 +187,27 @@ const StudentDashboard = () => {
           }
         }
 
-        // 2. Fetch Weeks Stats (Parallelizable if we didn't need student ID, but we do)
+        // 2. Fetch Weeks Stats
         const { data: weeksData } = await supabase
           .from("weeks")
           .select("status, week_number")
           .eq("student_id", studentData.id)
           .lte("week_number", 24);
 
-        const totalWeeks = weeksData?.length || 0;
-        const submitted = weeksData?.filter(w => w.status === "submitted").length || 0;
+        const totalWeeks = 24; // SIWES is typically 24 weeks
         const approved = weeksData?.filter(w => w.status === "approved").length || 0;
         const rejected = weeksData?.filter(w => w.status === "rejected").length || 0;
-        const pending = weeksData?.filter(w => w.status === "draft").length || 0;
+        const strictlySubmitted = weeksData?.filter(w => w.status === "submitted").length || 0;
+        
+        // Total submitted includes currently submitted, approved, and rejected weeks
+        const totalSubmitted = strictlySubmitted + approved + rejected;
+        
+        // Pending is all remaining weeks up to 24 that haven't been submitted
+        const pending = Math.max(0, 24 - totalSubmitted);
 
         setStats({
           totalWeeks,
-          submitted,
+          submitted: totalSubmitted,
           approved,
           rejected,
           pending,
@@ -238,8 +246,9 @@ const StudentDashboard = () => {
     return <PortalClosed />;
   }
 
-  const completionPercentage = stats.totalWeeks > 0 
-    ? Math.round((stats.approved / stats.totalWeeks) * 100) 
+  // Calculate completion percentage based on total submitted vs total expected weeks (24)
+  const completionPercentage = stats.totalWeeks > 0
+    ? Math.min(100, Math.round((stats.submitted / stats.totalWeeks) * 100))
     : 0;
 
   return (
@@ -585,7 +594,7 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-4 gap-4">
                 <Button 
                   onClick={() => navigate("/student/logbook")} 
                   className="h-24 flex-col gap-2"
@@ -597,6 +606,22 @@ const StudentDashboard = () => {
                   <span>{siwesLocked ? "View Logbook (Read-Only)" : "My Logbook"}</span>
                   {!isApproved && !siwesLocked && (
                     <span className="text-xs text-muted-foreground">(Awaiting approval)</span>
+                  )}
+                </Button>
+
+                {/* Chat Button for Supervisor ↔ Student */}
+                <Button
+                  onClick={() => setChatOpen(true)}
+                  className="h-24 flex-col gap-2"
+                  size="lg"
+                  disabled={!isApproved || siwesLocked || !studentInfo?.school_supervisor_name}
+                  variant="outline"
+                  title="Chat with your assigned supervisor"
+                >
+                  <span className="text-2xl">💬</span>
+                  <span>Chat with Supervisor</span>
+                  {!studentInfo?.school_supervisor_name && (
+                    <span className="text-xs text-muted-foreground">(No supervisor assigned)</span>
                   )}
                 </Button>
                 <Button 
@@ -620,6 +645,29 @@ const StudentDashboard = () => {
                   <span>{siwesLocked ? "View Attendance (Read-Only)" : "My Attendance"}</span>
                 </Button>
               </div>
+
+              {/* Supervisor ↔ Student Chat Drawer */}
+              <SupervisorStudentChatDrawer
+                open={chatOpen}
+                onClose={() => setChatOpen(false)}
+                supervisorId={
+                  studentInfo?.school_supervisor_id
+                  || studentInfo?.supervisor_id
+                  || (studentInfo?.supervisor_assignments && Array.isArray(studentInfo.supervisor_assignments)
+                        ? studentInfo.supervisor_assignments[0]?.supervisor_id
+                        : undefined)
+                }
+                student={{
+                  id: studentInfo?.id,
+                  name: profile?.full_name,
+                  matric_number: studentInfo?.matric_no,
+                }}
+                supervisorInfo={{
+                  name: studentInfo?.school_supervisor_name,
+                  email: studentInfo?.school_supervisor_email,
+                  photo: studentInfo?.school_supervisor_photo_url || undefined,
+                }}
+              />
             </>
           )}
         </div>

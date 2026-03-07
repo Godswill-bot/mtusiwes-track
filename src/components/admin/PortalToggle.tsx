@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { Power } from "lucide-react";
 
 const fetchPortalStatus = async (): Promise<boolean> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+   
+  const { data, error } = await supabase
     .from("portal_settings")
     .select("student_portal_open")
     .eq("id", "1")
@@ -20,8 +20,8 @@ const fetchPortalStatus = async (): Promise<boolean> => {
 };
 
 const updatePortalStatus = async (active: boolean): Promise<boolean> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+   
+  const { error } = await supabase
     .from("portal_settings")
     .update({ student_portal_open: active })
     .eq("id", "1");

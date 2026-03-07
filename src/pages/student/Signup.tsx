@@ -236,13 +236,58 @@ const StudentSignup = () => {
           if (studentError) {
             console.error("Error creating student record:", studentError);
             toast.warning("Account created but student profile creation failed. You can complete your profile later.");
-          } else if (insertedStudent?.id) {
-            // Automatically assign student to a random school supervisor
+          } else if ((insertedStudent as any)?.id) {
+            // Automatically assign student to an available school supervisor (Robust Fallback)
             try {
-              const { error: assignmentError } = await supabase.rpc(
+              let assignmentError = null;
+              
+              // 1. Attempt using RPC
+              const { error: rpcError } = await supabase.rpc(
                 "assign_student_to_school_supervisor",
-                { p_student_id: insertedStudent.id }
+                { p_student_id: (insertedStudent as any).id }
               );
+              
+              if (rpcError) {
+                console.log("RPC assignment failed during signup, falling back to frontend assignment...", rpcError?.message);
+                
+                // 2. Manual Frontend Assignment
+                const { data: sessionData } = await supabase.from('academic_sessions').select('id').eq('is_current', true).single();
+                
+                if (sessionData) {
+                  const { data: availableSupervisors } = await supabase
+                    .from('supervisors')
+                    .select('*')
+                    .eq('supervisor_type', 'school_supervisor')
+                    .eq('is_active', true);
+                    
+                  if (availableSupervisors && availableSupervisors.length > 0) {
+                     const randSup = availableSupervisors[Math.floor(Math.random() * availableSupervisors.length)];
+                     
+                     const { error: upsertErr } = await supabase.from('supervisor_assignments').upsert({
+                       student_id: (insertedStudent as any).id,
+                       supervisor_id: randSup.id,
+                       session_id: sessionData.id,
+                       assignment_type: 'school_supervisor',
+                       assigned_at: new Date().toISOString()
+                     }, { onConflict: 'student_id, session_id, assignment_type' });
+                     
+                     if (!upsertErr) {
+                       await supabase.from('students').update({
+                         school_supervisor_name: randSup.name,
+                         school_supervisor_email: randSup.email
+                       }).eq('id', (insertedStudent as any).id);
+                       
+                       console.log('Automated frontend assignment successful during signup:', randSup.name);
+                     } else {
+                       assignmentError = upsertErr;
+                     }
+                  } else {
+                     assignmentError = { message: 'No active school supervisors available' };
+                  }
+                } else {
+                  assignmentError = { message: 'No current academic session found' };
+                }
+              }
 
               if (assignmentError) {
                 console.error("Error assigning supervisor:", assignmentError);

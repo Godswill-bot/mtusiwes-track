@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AdminAnnouncement } from "./AdminAnnouncement";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,135 +152,138 @@ export const AdminNotifications = () => {
   };
 
   return (
-    <Card className="shadow-elevated">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
-            <CardTitle>Notifications</CardTitle>
-            {unreadCount > 0 && (
-              <Badge variant="destructive" className="ml-2">
-                {unreadCount} new
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilter(filter === "all" ? "unread" : "all")}
-            >
-              {filter === "all" ? "Unread Only" : "Show All"}
-            </Button>
-            {unreadCount > 0 && (
+    <>
+      <AdminAnnouncement />
+      <Card className="shadow-elevated">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              <CardTitle>Notifications</CardTitle>
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {unreadCount} new
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => markAllReadMutation.mutate()}
-                disabled={markAllReadMutation.isPending}
+                onClick={() => setFilter(filter === "all" ? "unread" : "all")}
               >
-                <Check className="h-4 w-4 mr-2" />
-                Mark All Read
+                {filter === "all" ? "Unread Only" : "Show All"}
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isPending}
-            >
-              <RefreshCw className={`h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
-            </Button>
-          </div>
-        </div>
-        <CardDescription>
-          Real-time updates on user activities and system changes
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isPending ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Loading notifications...
-          </div>
-        ) : filteredNotifications.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {filter === "unread" ? "No unread notifications" : "No notifications"}
-          </div>
-        ) : (
-          <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {filteredNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`p-4 rounded-lg border ${
-                  notification.is_read
-                    ? "bg-muted/30 border-border"
-                    : "bg-primary/5 border-primary/20"
-                }`}
+              {unreadCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => markAllReadMutation.mutate()}
+                  disabled={markAllReadMutation.isPending}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Mark All Read
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => refetch()}
+                disabled={isPending}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">
-                        {getNotificationIcon(notification.notification_type)}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={getNotificationColor(notification.notification_type)}
-                      >
-                        {notification.notification_type.replace("_", " ")}
-                      </Badge>
-                      {!notification.is_read && (
-                        <Badge variant="default" className="ml-auto">
-                          New
+                <RefreshCw className={`h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
+          </div>
+          <CardDescription>
+            Real-time updates on user activities and system changes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isPending ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Loading notifications...
+            </div>
+          ) : filteredNotifications.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {filter === "unread" ? "No unread notifications" : "No notifications"}
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              {filteredNotifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-4 rounded-lg border ${
+                    notification.is_read
+                      ? "bg-muted/30 border-border"
+                      : "bg-primary/5 border-primary/20"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">
+                          {getNotificationIcon(notification.notification_type)}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={getNotificationColor(notification.notification_type)}
+                        >
+                          {notification.notification_type.replace("_", " ")}
                         </Badge>
-                      )}
-                    </div>
-                    <h4 className="font-semibold text-sm mb-1">
-                      {notification.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {notification.message}
-                    </p>
-                    {notification.user_email && (
-                      <p className="text-xs text-muted-foreground">
-                        User: {notification.user_email} ({notification.user_type})
+                        {!notification.is_read && (
+                          <Badge variant="default" className="ml-auto">
+                            New
+                          </Badge>
+                        )}
+                      </div>
+                      <h4 className="font-semibold text-sm mb-1">
+                        {notification.title}
+                      </h4>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {notification.message}
                       </p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(notification.created_at), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {!notification.is_read && (
+                      {notification.user_email && (
+                        <p className="text-xs text-muted-foreground">
+                          User: {notification.user_email} ({notification.user_type})
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(notification.created_at), {
+                          addSuffix: true,
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {!notification.is_read && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => markReadMutation.mutate(notification.id)}
+                          disabled={markReadMutation.isPending}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => markReadMutation.mutate(notification.id)}
-                        disabled={markReadMutation.isPending}
-                        className="h-8 w-8 p-0"
+                        onClick={() => deleteMutation.mutate(notification.id)}
+                        disabled={deleteMutation.isPending}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                       >
-                        <Check className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteMutation.mutate(notification.id)}
-                      disabled={deleteMutation.isPending}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

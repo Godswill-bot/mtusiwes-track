@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ArrowLeft, Check, X, FileSignature, Printer, Download, Stamp } from "lucide-react";
+import { ArrowLeft, Check, X, FileSignature, Printer, Download, Stamp, Calendar, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SignaturePad } from "@/components/SignaturePad";
@@ -48,6 +48,12 @@ interface WeekData {
   industry_supervisor_approved_at: string | null;
   school_supervisor_approved_at: string | null;
   score?: number | null;
+  photos?: {
+    id: string;
+    image_url: string;
+    day_of_week?: string;
+    description?: string;
+  }[];
   student: {
     id?: string;
     matric_no: string;
@@ -169,13 +175,20 @@ const WeeklyReportView = () => {
         .select("id, week_id, method, image_path, signed_at, supervisor_id")
         .eq("week_id", weekId)
         .order("signed_at", { ascending: false });
-      
+
       setStamps(stampData || []);
 
-      setWeekData({ 
-        ...(data as unknown as WeekDataFromDB), 
+      // Fetch daily evidence photos for this week
+      const { data: photoData } = await supabase
+        .from("photos")
+        .select("id, image_url, day_of_week, description")
+        .eq("week_id", weekId);
+
+      setWeekData({
+        ...(data as unknown as WeekDataFromDB),
         profile: { full_name: studentName || 'Unknown' },
         industry_supervisor_comments: (data as unknown as WeekDataFromDB).industry_supervisor_comments || "",
+        photos: photoData || [],
       });
       setIndustryComments((data as unknown as WeekDataFromDB).industry_supervisor_comments || "");
       setSchoolComments((data as unknown as WeekDataFromDB).school_supervisor_comments || "");
@@ -715,7 +728,10 @@ const WeeklyReportView = () => {
                   return (
                     <div key={day} className="space-y-3 pb-4 border-b last:border-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium capitalize">{day}</h4>
+                        <h4 className="font-medium capitalize flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          {day}
+                        </h4>
                         <span className="text-sm text-muted-foreground">
                           {format(new Date(weekData.start_date).setDate(new Date(weekData.start_date).getDate() + index), "MMM d, yyyy")}
                         </span>
@@ -723,6 +739,30 @@ const WeeklyReportView = () => {
                       <p className="text-sm whitespace-pre-wrap">
                         {activity || <span className="text-muted-foreground">No activity logged</span>}
                       </p>
+                      
+                      {/* Check if there are daily photos and display them */}
+                      {weekData.photos && weekData.photos.filter((p) => p.day_of_week?.toLowerCase() === day.toLowerCase()).length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          <h5 className="text-sm font-medium flex items-center gap-1.5 text-muted-foreground">
+                            <ImageIcon className="w-4 h-4" />
+                            Evidence Photos
+                          </h5>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {weekData.photos
+                              .filter((p) => p.day_of_week?.toLowerCase() === day.toLowerCase())
+                              .map((photo) => (
+                                <div key={photo.id} className="group relative overflow-hidden rounded-lg border">
+                                  <img
+                                    src={photo.image_url}
+                                    alt={`Evidence for ${day}`}
+                                    className="w-full h-24 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                                    onClick={() => window.open(photo.image_url, '_blank')}
+                                  />
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

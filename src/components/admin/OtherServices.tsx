@@ -16,7 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 // Fetch academic sessions
 const fetchSessions = async () => {
   const { data, error } = await supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from("academic_sessions" as any)
     .select("*")
     .order("session_name", { ascending: false });
@@ -28,7 +28,7 @@ const fetchSessions = async () => {
 // Fetch current session
 const fetchCurrentSession = async () => {
   const { data, error } = await supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from("academic_sessions" as any)
     .select("*")
     .eq("is_current", true)
@@ -41,7 +41,7 @@ const fetchCurrentSession = async () => {
 const setCurrentSession = async (sessionId: string) => {
   // First unset all sessions, then set the selected one
   const { error: unsetError } = await supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from("academic_sessions" as any)
     .update({ is_current: false })
     .neq("id", sessionId);
@@ -49,7 +49,7 @@ const setCurrentSession = async (sessionId: string) => {
   if (unsetError) throw unsetError;
 
   const { error: setError } = await supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from("academic_sessions" as any)
     .update({ is_current: true })
     .eq("id", sessionId);
@@ -60,7 +60,7 @@ const setCurrentSession = async (sessionId: string) => {
 // Get system setting
 const getSystemSetting = async (sessionId: string, key: string) => {
   const { data, error } = await supabase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     .from("system_settings" as any)
     .select("setting_value")
     .eq("session_id", sessionId)
@@ -68,13 +68,15 @@ const getSystemSetting = async (sessionId: string, key: string) => {
     .maybeSingle();
 
   if (error && error.code !== 'PGRST116') throw error;
-  return ((data as unknown as { setting_value: unknown } | null)?.setting_value) || null;
+  // Always return null if missing, never undefined
+  if (!data || typeof data.setting_value === 'undefined') return null;
+  return data.setting_value;
 };
 
 // Set system setting
 const updateSystemSetting = async (sessionId: string, key: string, value: unknown) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+   
+  const { error } = await supabase
     .from("system_settings")
     .upsert(
       {

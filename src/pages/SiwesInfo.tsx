@@ -85,13 +85,15 @@ const SiwesInfo = () => {
       {/* Slideshow Background */}
       <div className="fixed inset-0">
         {slideshowImages.map((image, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ backgroundImage: `url(${image})` }}
-          />
+            <div
+              key={index}
+              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out siwes-bg ${
+                index === currentSlide ? "opacity-100" : "opacity-0"
+              }`} 
+              data-bg={image}
+            >
+              <img src={image} alt="SIWES background" className="w-full h-full object-cover absolute inset-0 siwes-img" />
+          </div>
         ))}
       </div>
       {/* Gradient Overlay for readability */}

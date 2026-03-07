@@ -78,19 +78,17 @@ export const FullScreenStudentModal = ({
     if (!student) return { totalWeeks: 0, avgScore: 0, completionRate: 0 };
     
     const approvedWeeks = categorizedWeeks.approved;
-    const scoresWithValues = approvedWeeks.filter(w => w.score !== null && w.score !== undefined);
-    const avgScore = scoresWithValues.length > 0
-      ? Math.round(scoresWithValues.reduce((sum, w) => sum + (w.score || 0), 0) / scoresWithValues.length)
-      : 0;
-    
-    return {
-      totalWeeks: student.weeks.length,
-      avgScore,
-      completionRate: Math.round((approvedWeeks.length / 24) * 100), // Assuming 24 weeks total
-    };
-  }, [student, categorizedWeeks]);
+      const totalSubmitted = categorizedWeeks.pending.length + categorizedWeeks.approved.length + categorizedWeeks.rejected.length;
+      
+      const scoresWithValues = approvedWeeks.filter(w => w.score !== null && w.score !== undefined);
+      const avgScore = scoresWithValues.length > 0
+        ? Math.round(scoresWithValues.reduce((sum, w) => sum + (w.score || 0), 0) / scoresWithValues.length)
+        : 0;
 
-  const handleCompileLogbook = async () => {
+      return {
+        totalWeeks: student.weeks.length,
+        avgScore,
+        completionRate: Math.round((Math.min(24, totalSubmitted) / 24) * 100), // Based on 24 weeks total
     if (!student) return;
     
     setCompilingLogbook(true);

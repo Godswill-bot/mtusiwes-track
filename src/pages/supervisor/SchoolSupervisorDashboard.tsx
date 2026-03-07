@@ -48,6 +48,7 @@ const SchoolSupervisorDashboard = () => {
   const [students, setStudents] = useState<StudentWithWeeks[]>([]);
   const [loading, setLoading] = useState(true);
   const [compilingLogbook, setCompilingLogbook] = useState<string | null>(null);
+  const [supervisorRecordId, setSupervisorRecordId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalStudents: 0,
     pendingReviews: 0,
@@ -89,7 +90,7 @@ const SchoolSupervisorDashboard = () => {
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data?.setting_value;
+      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
     },
     enabled: !!currentSession?.id,
   });
@@ -107,7 +108,7 @@ const SchoolSupervisorDashboard = () => {
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data?.setting_value;
+      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
     },
     enabled: !!currentSession?.id,
   });
@@ -119,14 +120,17 @@ const SchoolSupervisorDashboard = () => {
 
     setLoading(true);
     try {
-      // Get supervisor's email from supervisors table
-      const { data: supervisorData, error: supervisorError } = await supabase
-        .from("supervisors")
-        .select("email")
-        .eq("user_id", user.id)
-        .eq("supervisor_type", "school_supervisor")
-        .maybeSingle();
+        // Get supervisor's email and id from supervisors table
+        const { data: supervisorData, error: supervisorError } = await supabase
+          .from("supervisors")
+          .select("id, email")
+          .eq("user_id", user.id)
+          .eq("supervisor_type", "school_supervisor")
+          .maybeSingle();
 
+        if (supervisorData?.id) {
+          setSupervisorRecordId(supervisorData.id);
+        }
       const supervisorEmail = supervisorData?.email;
 
       if (!supervisorEmail) {
@@ -433,6 +437,7 @@ const SchoolSupervisorDashboard = () => {
               onRefresh={fetchForwardedSubmissions}
               onCompileLogbook={handleCompileLogbook}
               compilingLogbook={compilingLogbook}
+              supervisorId={supervisorRecordId || user?.id || ""}
             />
           </TabsContent>
 

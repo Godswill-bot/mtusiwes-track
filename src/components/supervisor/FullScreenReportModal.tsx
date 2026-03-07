@@ -93,8 +93,8 @@ export const FullScreenReportModal = ({
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("weeks")
+        const { data, error } = await supabase
+          .from("weeks")
         .select("*")
         .eq("id", weekId)
         .maybeSingle();
@@ -108,8 +108,8 @@ export const FullScreenReportModal = ({
       }
 
       // Fetch stamps
-      const { data: stampData } = await supabase
-        .from("stamps")
+        const { data: stampData } = await supabase
+          .from("stamps")
         .select("id, week_id, method, image_path, signed_at, supervisor_id")
         .eq("week_id", weekId)
         .order("signed_at", { ascending: false });
@@ -153,7 +153,7 @@ export const FullScreenReportModal = ({
         .update({ 
           status: "approved",
           school_supervisor_approved_at: lagosTime.toISOString(),
-          school_supervisor_id: supervisorData?.id || null,
+          school_supervisor_id: supervisorData && supervisorData.id ? supervisorData.id : null,
           school_supervisor_comments: schoolComments || null,
           score: score === "" ? null : Number(score)
         })

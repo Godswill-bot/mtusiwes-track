@@ -13,6 +13,7 @@ import { FullScreenReportModal } from "./FullScreenReportModal";
 import { FullScreenStudentModal } from "./FullScreenStudentModal";
 import { StudentGradingModal } from "./StudentGradingModal";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
+import SupervisorStudentChatDrawer from "../SupervisorStudentChatDrawer";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -51,17 +52,21 @@ interface StudentTabsViewProps {
   onRefresh: () => void;
   onCompileLogbook: (studentId: string, studentName: string) => void;
   compilingLogbook: string | null;
+  supervisorId: string;
 }
 
 export const StudentTabsView = ({ 
   students, 
   onRefresh, 
   onCompileLogbook,
-  compilingLogbook 
+  compilingLogbook,
+  supervisorId
 }: StudentTabsViewProps) => {
   const [selectedWeekId, setSelectedWeekId] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithWeeks | null>(null);
   const [showFullScreenStudent, setShowFullScreenStudent] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatStudent, setChatStudent] = useState(null);
   const [activeStudentId, setActiveStudentId] = useState<string>(students[0]?.id || "");
 
   // Get sorted students by name
@@ -221,6 +226,15 @@ export const StudentTabsView = ({
                       <Maximize2 className="h-4 w-4 mr-2" />
                       Full View
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setChatOpen(true); setChatStudent(student); }}
+                      title="Chat with student"
+                    >
+                      <span className="mr-2">💬</span>
+                      Chat
+                    </Button>
                     <StudentGradingModal 
                       studentId={student.id}
                       studentName={student.profile.full_name}
@@ -332,6 +346,15 @@ export const StudentTabsView = ({
           setShowFullScreenStudent(false);
           setSelectedWeekId(weekId);
         }}
+      />
+
+      {/* Supervisor ↔ Student Chat Drawer */}
+      <SupervisorStudentChatDrawer
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        supervisorId={supervisorId}
+        student={chatStudent}
+        supervisorInfo={undefined}
       />
     </>
   );

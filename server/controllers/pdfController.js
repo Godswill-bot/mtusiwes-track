@@ -163,14 +163,28 @@ export const generateStudentSummaryPDF = async (req, res) => {
 export const generateSupervisorGradingPDF = async (req, res) => {
   try {
     const { studentId } = req.body;
-    const userId = req.user?.id; // From auth middleware
+    // Derive userId from body or token (robust)
+    const userId =
+      req.body.userId ||
+      req.user?.sub ||
+      req.user?.id ||
+      req.user?.user_id ||
+      req.user?.user_metadata?.id;
 
     console.log('[PDF] Generate supervisor grading PDF request:', { studentId, userId });
+    console.log('[AUTH] req.user keys:', req.user ? Object.keys(req.user) : null);
+    console.log('[AUTH] req.user.sub:', req.user?.sub);
 
     if (!studentId) {
       return res.status(400).json({
         success: false,
-        error: 'Student ID is required',
+        error: 'studentId is required',
+      });
+    }
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized: userId missing',
       });
     }
 
@@ -338,6 +352,13 @@ export const generateWeekPDF = async (req, res) => {
       });
     }
 
+    // Fetch all photos for this week
+    const { data: photosData } = await supabase
+      .from('photos')
+      .select('image_url')
+      .eq('week_id', weekId);
+    const imageUrls = Array.isArray(photosData) ? photosData.map(p => p.image_url) : [];
+
     // Get student's full name from profiles if needed
     let studentFullName = weekData.student?.full_name;
     if (!studentFullName && weekData.student?.user_id) {
@@ -367,7 +388,7 @@ export const generateWeekPDF = async (req, res) => {
         department: weekData.student?.department || 'N/A',
         organisation_name: weekData.student?.organisation_name || 'N/A',
       },
-      weekData.image_urls || [],
+      imageUrls,
       stamps || [],
       outputPath
     );
@@ -462,10 +483,17 @@ export const compileLogbook = async (req, res) => {
       .select('*')
       .in('week_id', weekIds);
 
-    // Attach stamps to their respective weeks
-    const weeksWithStamps = weeksData.map(week => ({
+    // Fetch photos for all weeks
+    const { data: photosData } = await supabase
+      .from('photos')
+      .select('week_id, image_url')
+      .in('week_id', weekIds);
+
+    // Attach stamps and images to their respective weeks
+    const weeksWithStampsAndImages = weeksData.map(week => ({
       ...week,
-      stamps: stampsData?.filter(s => s.week_id === week.id) || []
+      stamps: stampsData?.filter(s => s.week_id === week.id) || [],
+      image_urls: photosData?.filter(p => p.week_id === week.id).map(p => p.image_url) || [],
     }));
 
     // Industry supervisor info from student record
@@ -492,7 +520,7 @@ export const compileLogbook = async (req, res) => {
         organisation_name: studentData.organisation_name,
         period_of_training: studentData.period_of_training,
       },
-      weeksWithStamps,
+      weeksWithStampsAndImages,
       industrySupervisor,
       outputPath
     );

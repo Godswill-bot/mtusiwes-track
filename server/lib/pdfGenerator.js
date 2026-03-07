@@ -1,7 +1,128 @@
+// --- Supervisor Grading Layout Helpers ---
+const drawSummaryCard = (doc, x, y, w, stats) => {
+  const pad = 14;
+  const rowH = 16;
+  const rows = [
+    ['Total Weeks Submitted', stats.total],
+    ['Approved', stats.approved],
+    ['Rejected', stats.rejected],
+    ['Pending', stats.pending],
+  ];
+  const titleH = 18;
+  const h = pad + titleH + 10 + rows.length * rowH + pad;
+  doc.save();
+  doc.roundedRect(x, y, w, h, 14).fill('#FFFFFF');
+  doc.roundedRect(x, y, w, h, 14).strokeColor('#E5E7EB').lineWidth(1).stroke();
+  doc.restore();
+  setFont(doc, 'semibold');
+  doc.fontSize(11).fillColor(UI.primary).text('Weekly Reports Summary', x + pad, y + pad);
+  let ry = y + pad + titleH + 10;
+  for (const [label, value] of rows) {
+    setFont(doc, 'regular');
+    doc.fontSize(10).fillColor(UI.secondary).text(label, x + pad, ry, { width: w * 0.65 });
+    setFont(doc, 'semibold');
+    doc.fontSize(10).fillColor(UI.primary).text(String(value), x + pad, ry, {
+      width: w - pad * 2,
+      align: 'right',
+    });
+    ry += rowH;
+  }
+  return y + h + 18;
+};
+
+const drawWeekStatusTable = async (doc, weeksData, addPageWithHeader, logoPath) => {
+  const x = 50;
+  const tableW = doc.page.width - 100;
+  const col = {
+    week: 50,
+    status: 110,
+    comments: tableW - (50 + 110),
+  };
+  const rowH = 18;
+  const drawHeader = () => {
+    setFont(doc, 'bold');
+    doc.fontSize(14).fillColor(UI.primary).text('Week-by-Week Status', x, doc.y);
+    doc.moveDown(0.6);
+    const hy = doc.y;
+    setFont(doc, 'semibold');
+    doc.fontSize(10).fillColor(UI.accent);
+    doc.text('Week', x, hy, { width: col.week });
+    doc.text('Status', x + col.week, hy, { width: col.status });
+    doc.text('Comments', x + col.week + col.status, hy, { width: col.comments });
+    doc.y = hy + 16;
+    doc.strokeColor('#E5E7EB').lineWidth(1)
+      .moveTo(x, doc.y)
+      .lineTo(x + tableW, doc.y)
+      .stroke();
+    doc.moveDown(0.4);
+  };
+  const ensureSpace = async (need) => {
+    const bottom = doc.page.height - 90;
+    if (doc.y + need > bottom) {
+      doc.addPage();
+      await addMTUHeader(doc, logoPath);
+      drawHeader();
+    }
+  };
+  const statusToPill = (statusRaw) => {
+    const st = (statusRaw || 'draft').toLowerCase();
+    if (st === 'approved') return { bg: '#DCFCE7', fg: '#166534', text: 'APPROVED' };
+    if (st === 'rejected') return { bg: '#FEE2E2', fg: '#991B1B', text: 'REJECTED' };
+    if (st === 'submitted') return { bg: '#DBEAFE', fg: '#1D4ED8', text: 'PENDING' };
+    return { bg: '#F3F4F6', fg: '#374151', text: 'PENDING' };
+  };
+  const drawPill = (px, py, pill) => {
+    const pillW = 86;
+    const pillH = 14;
+    doc.save();
+    doc.roundedRect(px, py + 2, pillW, pillH, 7).fill(pill.bg);
+    setFont(doc, 'medium');
+    doc.fontSize(8).fillColor(pill.fg).text(pill.text, px, py + 5, { width: pillW, align: 'center' });
+    doc.restore();
+  };
+  drawHeader();
+  for (const w of weeksData) {
+    await ensureSpace(rowH + 6);
+    const y = doc.y;
+    setFont(doc, 'regular');
+    doc.fontSize(9).fillColor(UI.primary).text(String(w.week_number), x, y, { width: col.week });
+    const pill = statusToPill(w.status);
+    drawPill(x + col.week, y, pill);
+    const comment = (w.supervisor_comment || 'N/A').replace(/\s+/g, ' ').trim();
+    const commentShort = comment.length > 80 ? comment.slice(0, 77) + '...' : comment;
+    setFont(doc, 'regular');
+    doc.fontSize(9).fillColor(UI.primary).text(commentShort, x + col.week + col.status, y, {
+      width: col.comments,
+    });
+    doc.strokeColor('#F3F4F6').lineWidth(1)
+      .moveTo(x, y + rowH)
+      .lineTo(x + tableW, y + rowH)
+      .stroke();
+    doc.y = y + rowH + 4;
+  }
+};
+// --- PDFKit Flow Helpers ---
+const ensureSpace = async (doc, neededHeight, addPageWithHeader) => {
+  const bottomLimit = doc.page.height - (doc.page.margins.bottom || 50);
+  if (doc.y + neededHeight > bottomLimit) {
+    await addPageWithHeader();
+  }
+};
+
+// Draw footer on EVERY page safely
+const addFooterAllPages = (doc, drawFooter) => {
+  const range = doc.bufferedPageRange(); // { start, count }
+  for (let i = range.start; i < range.start + range.count; i++) {
+    doc.switchToPage(i);
+    drawFooter(i + 1, range.count);
+  }
+};
 /**
  * PDF Generation Service
  * Generates MTU-branded PDFs for student summaries and supervisor grading
  */
+
+
 
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
@@ -12,6 +133,123 @@ import http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// --- UI THEME & FONTS ---
+const UI = {
+  primary: '#1f2937',     // near-black (modern)
+  secondary: '#6b7280',   // gray text
+  accent: '#612E89',      // MTU purple
+  soft: '#f9fafb',        // card background
+  border: '#e5e7eb',      // subtle lines
+};
+
+// ------------------------- 
+// Fonts (Poppins) - SAFE
+// -------------------------
+const FONT_DIR = path.join(__dirname, '../assets/fonts');
+
+const POPPINS = {
+  regular: path.join(FONT_DIR, 'Poppins-Regular.ttf'),
+  medium: path.join(FONT_DIR, 'Poppins-Medium.ttf'),
+  semibold: path.join(FONT_DIR, 'Poppins-SemiBold.ttf'),
+  bold: path.join(FONT_DIR, 'Poppins-Bold.ttf'),
+};
+
+const hasFont = (p) => {
+  try { return fs.existsSync(p); } catch { return false; }
+};
+
+const registerFonts = (doc) => {
+  if (hasFont(POPPINS.regular)) doc.registerFont('Poppins', POPPINS.regular);
+  if (hasFont(POPPINS.medium)) doc.registerFont('Poppins-Medium', POPPINS.medium);
+  if (hasFont(POPPINS.semibold)) doc.registerFont('Poppins-SemiBold', POPPINS.semibold);
+  if (hasFont(POPPINS.bold)) doc.registerFont('Poppins-Bold', POPPINS.bold);
+};
+
+const setFont = (doc, which = 'regular') => {
+  const map = {
+    regular: 'Poppins',
+    medium: 'Poppins-Medium',
+    semibold: 'Poppins-SemiBold',
+    bold: 'Poppins-Bold',
+  };
+  const name = map[which] || 'Poppins';
+  try {
+    doc.font(name);
+  } catch {
+    doc.font(which === 'bold' || which === 'semibold' ? 'Helvetica-Bold' : 'Helvetica');
+  }
+};
+
+// =========================
+// Premium Layout Helpers
+// =========================
+const SPACING = {
+  pageX: 50,
+  topAfterHeader: 110,
+  cardPad: 16,
+  gap: 12,
+};
+
+const safeText = (v, fallback = 'N/A') => (v === null || v === undefined || String(v).trim() === '' ? fallback : String(v));
+
+const hr = (doc, y, color = UI.border) => {
+  doc.save();
+  doc.strokeColor(color).lineWidth(1);
+  doc.moveTo(SPACING.pageX, y).lineTo(doc.page.width - SPACING.pageX, y).stroke();
+  doc.restore();
+};
+
+const pill = (doc, x, y, text, { bg = '#EEF2FF', fg = UI.accent } = {}) => {
+  setFont(doc, 'medium');
+  doc.fontSize(9);
+  const padX = 10, padY = 4;
+  const w = doc.widthOfString(text) + padX * 2;
+  const h = 16;
+  doc.save();
+  doc.roundedRect(x, y, w, h, 8).fill(bg);
+  doc.fillColor(fg).text(text, x + padX, y + 4, { lineBreak: false });
+  doc.restore();
+  return { w, h };
+};
+
+const sectionTitle = (doc, title, subtitle = null) => {
+  setFont(doc, 'bold');
+  doc.fontSize(14).fillColor(UI.primary).text(title);
+  if (subtitle) {
+    setFont(doc, 'regular');
+    doc.fontSize(10).fillColor(UI.secondary).text(subtitle);
+  }
+  doc.moveDown(0.6);
+};
+
+const card = (doc, { x, y, w, h }) => {
+  doc.save();
+  doc.roundedRect(x, y, w, h, 14).fill('#FFFFFF');
+  doc.roundedRect(x, y, w, h, 14).strokeColor(UI.border).lineWidth(1).stroke();
+  doc.restore();
+};
+
+const cardHeader = (doc, x, y, title) => {
+  setFont(doc, 'semibold');
+  doc.fontSize(11).fillColor(UI.accent).text(title, x, y);
+};
+
+const kvRow = (doc, x, y, label, value, { labelW = 150, valueW = 320 } = {}) => {
+  setFont(doc, 'medium');
+  doc.fontSize(10).fillColor(UI.secondary).text(label, x, y, { width: labelW });
+  setFont(doc, 'regular');
+  doc.fontSize(10).fillColor(UI.primary).text(safeText(value), x + labelW, y, { width: valueW });
+};
+
+const statusStyle = (statusRaw) => {
+  const status = (statusRaw || '').toLowerCase();
+  if (status === 'approved') return { bg: '#DCFCE7', fg: '#166534', text: 'APPROVED' };
+  if (status === 'rejected') return { bg: '#FEE2E2', fg: '#991B1B', text: 'REJECTED' };
+  if (status === 'submitted') return { bg: '#DBEAFE', fg: '#1D4ED8', text: 'SUBMITTED' };
+  return { bg: '#F3F4F6', fg: '#374151', text: (statusRaw || 'DRAFT').toUpperCase() };
+};
+
 
 /**
  * Fetch an image from a URL and return as a buffer
@@ -75,67 +313,36 @@ const fetchImageBuffer = async (imageUrl) => {
  */
 export const addMTUHeader = async (doc, logoPath = null) => {
   const pageWidth = doc.page.width;
-  const headerHeight = 80;
-  
-  // Header background - two-color split
-  const leftColor = '#A8E6A3'; // Light Green
-  const rightColor = '#612E89'; // Purple
-  
-  // Left half (Green)
-  doc.rect(0, 0, pageWidth / 2, headerHeight)
-     .fillColor(leftColor)
-     .fill();
-  
-  // Right half (Purple)
-  doc.rect(pageWidth / 2, 0, pageWidth / 2, headerHeight)
-     .fillColor(rightColor)
-     .fill();
-  
-  // Reset fill color
-  doc.fillColor('black');
-  
-  // Logo placement (left side)
+  const headerH = 86;
+
+  // White header
+  doc.save();
+  doc.rect(0, 0, pageWidth, headerH).fill('#FFFFFF');
+
+  // Accent bar
+  doc.rect(0, 0, pageWidth, 6).fill(UI.accent);
+
+  // Divider
+  doc.strokeColor(UI.border).lineWidth(1);
+  doc.moveTo(0, headerH).lineTo(pageWidth, headerH).stroke();
+
+  // Logo
   if (logoPath && fs.existsSync(logoPath)) {
-    try {
-      doc.image(logoPath, 20, 15, {
-        fit: [50, 50],
-        align: 'left',
-        valign: 'top'
-      });
-    } catch (error) {
-      console.error('Error loading logo:', error);
-    }
+    try { doc.image(logoPath, SPACING.pageX, 18, { width: 44 }); } catch {}
   }
-  
-  // University name (to the right of logo)
-  doc.fontSize(20)
-     .font('Helvetica-Bold')
-     .fillColor('white')
-     .text('Mountain Top University', 80, 25, {
-       width: pageWidth - 100,
-       align: 'left'
-     });
-  
-  // Motto (under university name)
-  doc.fontSize(11)
-     .font('Helvetica')
-     .text('"Empowered to Excel"', 80, 50, {
-       width: pageWidth - 100,
-       align: 'left'
-     });
-  
-  // Reset text color
-  doc.fillColor('black');
-  
-  // Add bottom border
-  doc.moveTo(0, headerHeight)
-     .lineTo(pageWidth, headerHeight)
-     .strokeColor('#cccccc')
-     .lineWidth(1)
-     .stroke();
-  
-  // Set top margin for content
-  doc.y = headerHeight + 30;
+
+  // Text
+  const textX = SPACING.pageX + 58;
+  setFont(doc, 'bold');
+  doc.fontSize(16).fillColor(UI.primary).text('Mountain Top University', textX, 24);
+
+  setFont(doc, 'regular');
+  doc.fontSize(9).fillColor(UI.secondary).text('Empowered to Excel', textX, 46);
+
+  doc.restore();
+
+  // Content start
+  doc.y = headerH + 22;
 };
 
 /**
@@ -152,6 +359,7 @@ export const generateStudentPDF = async (
   industrySupervisor,
   outputPath
 ) => {
+  console.log('[PDF] Using new Student Summary PDF design');
   return new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
@@ -162,66 +370,48 @@ export const generateStudentPDF = async (
       const stream = fs.createWriteStream(outputPath);
       doc.pipe(stream);
       
-      // Get logo path (adjust based on your setup)
-      // Try multiple possible locations for logo
-      const possiblePaths = [
-        path.join(__dirname, '../../public/mtu-logo.png'),
-        path.join(__dirname, '../../../public/mtu-logo.png'),
-        path.join(__dirname, '../../../../public/mtu-logo.png'),
-        path.join(process.cwd(), 'public/mtu-logo.png'),
-        path.join(process.cwd(), 'src/assets/mtu-logo.png'),
-      ];
-      
-      let logoPath = null;
-      for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-          logoPath = p;
-          break;
-        }
-      }
-      
-      // Helper to add new page with header
-      const addPageWithHeader = async () => {
-        doc.addPage();
-        await addMTUHeader(doc, logoPath);
-      };
-      
+      // Register fonts safely
+      registerFonts(doc);
+
+      // ...existing code...
+
       // First page header
       await addMTUHeader(doc, logoPath);
-      
-      // Title
-      doc.fontSize(18)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('SIWES 24-Week Summary Report', 50, doc.y, {
-           align: 'center',
-           width: doc.page.width - 100
-         });
-      
-      doc.moveDown();
-      doc.fillColor('black');
-      
-      // Student Information Section
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .text('Student Information', doc.x, doc.y);
-      
-      doc.moveDown(0.5);
-      doc.fontSize(11)
-         .font('Helvetica')
-         .text(`Name: ${studentData.full_name || studentData.name}`, { indent: 20 })
-         .text(`Matriculation Number: ${studentData.matric_no}`, { indent: 20 })
-         .text(`Department: ${studentData.department}`, { indent: 20 })
-         .text(`Faculty: ${studentData.faculty}`, { indent: 20 });
-      
-      doc.moveDown();
-      
-      // Weeks Summary (condensed to fit 3 pages)
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .text('Weekly Activities Summary', doc.x, doc.y);
-      
-      doc.moveDown(0.5);
+
+      // Title Card (modern editorial look)
+      drawCard(doc, 40, doc.y, doc.page.width - 80, 120);
+      doc.font('Poppins-Bold')
+        .fontSize(26)
+        .fillColor(UI.primary)
+        .text('SIWES 24-Week Summary Report', 40, doc.y + 32, { align: 'center' });
+      doc.font('Poppins')
+        .fontSize(13)
+        .fillColor(UI.secondary)
+        .text('Generated on: ' + new Date().toLocaleDateString(), { align: 'center' });
+      doc.moveDown(5);
+
+      // Student Information Card (modern grid feel)
+      drawCard(doc, 40, doc.y, doc.page.width - 80, 150);
+      doc.font('Poppins-Bold')
+        .fontSize(14)
+        .fillColor(UI.primary)
+        .text('Student Information', 60, doc.y + 16);
+      doc.font('Poppins')
+        .fontSize(11)
+        .fillColor(UI.secondary)
+        .text(`Name: ${studentData.full_name || studentData.name}`, 60, doc.y + 48)
+        .text(`Matriculation Number: ${studentData.matric_no}`, 60, doc.y + 70)
+        .text(`Department: ${studentData.department}`, 60, doc.y + 92)
+        .text(`Faculty: ${studentData.faculty}`, 60, doc.y + 114);
+      doc.moveDown(7);
+
+      // Weekly Activities Card (modern look)
+      drawCard(doc, 40, doc.y, doc.page.width - 80, 80);
+      doc.font('Poppins-Bold')
+        .fontSize(15)
+        .fillColor(UI.primary)
+        .text('Weekly Activities Summary', 60, doc.y + 16);
+      doc.moveDown(5);
       
       // Create a condensed weekly summary table to fit in 3 pages max
       // Page 1: Student info + Weeks 1-12 (table format)
@@ -234,18 +424,17 @@ export const generateStudentPDF = async (
       const colWidths = { week: 40, activities: doc.page.width - 150, score: 40 };
       
       // Table header
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('Week', tableLeft, tableTop)
-         .text('Activities Summary', tableLeft + colWidths.week + 10, tableTop)
-         .text('Score', doc.page.width - 90, tableTop);
-      
+      doc.font('Poppins-Bold')
+        .fontSize(10)
+        .fillColor(UI.accent)
+        .text('Week', tableLeft, tableTop)
+        .text('Activities Summary', tableLeft + colWidths.week + 10, tableTop)
+        .text('Score', doc.page.width - 90, tableTop);
       doc.moveDown(0.3);
-      doc.strokeColor('#cccccc')
-         .moveTo(tableLeft, doc.y)
-         .lineTo(doc.page.width - 50, doc.y)
-         .stroke();
+      doc.strokeColor(UI.border)
+        .moveTo(tableLeft, doc.y)
+        .lineTo(doc.page.width - 50, doc.y)
+        .stroke();
       
       // Weeks 1-12 (first page)
       let weekRow = 0;
@@ -292,16 +481,15 @@ export const generateStudentPDF = async (
           ? activities.join('; ').substring(0, 70) + (activities.join('; ').length > 70 ? '...' : '')
           : 'No activities';
         
-        doc.fontSize(9)
-           .font('Helvetica')
-           .fillColor('black')
+        doc.font('Poppins')
+           .fontSize(9)
+           .fillColor(UI.secondary)
            .text(`${week.week_number}`, tableLeft, doc.y)
            .text(summary, tableLeft + colWidths.week + 10, doc.y, {
              width: colWidths.activities - 40,
              continued: false
            })
            .text(week.score !== null && week.score !== undefined ? week.score : '-', doc.page.width - 90, doc.y);
-        
         doc.moveDown(0.25);
         weekRow++;
       }
@@ -364,9 +552,10 @@ export const generateStudentPDF = async (
       if (scoredWeeks > 0) {
         const averageScore = (totalScore / scoredWeeks).toFixed(1);
         doc.moveDown();
-        doc.fontSize(12)
-           .font('Helvetica-Bold')
-           .text(`Average Score: ${averageScore} / 100`, { align: 'right' });
+            doc.font('Poppins-Bold')
+              .fontSize(12)
+              .fillColor(UI.primary)
+              .text(`Average Score: ${averageScore} / 100`, { align: 'right' });
       }
       
       // Page 3: Supervisor sections and signatures
@@ -434,27 +623,22 @@ export const generateStudentPDF = async (
       doc.rect(50, doc.y, 200, 60)
          .stroke();
       
-      // Footer on each page
-      const addFooter = () => {
-        doc.fontSize(8)
-           .fillColor('#666666')
+      // Footer on each page (minimal, premium)
+      const addFooter = (pageNum = 1, totalPages = 1) => {
+        doc.font('Poppins')
+           .fontSize(8)
+           .fillColor('#9ca3af')
            .text(
-             `Generated on ${new Date().toLocaleDateString('en-US', { 
-               year: 'numeric', 
-               month: 'long', 
-               day: 'numeric' 
-             })}`,
+             `Mountain Top University • SIWES Logbook • Page ${pageNum}/${totalPages}`,
              50,
-             doc.page.height - 30,
+             doc.page.height - 28,
              { align: 'center', width: doc.page.width - 100 }
            );
       };
-      
       // Add footer to all pages
-      const pageCount = doc.pageCount;
+      const pageCount = doc.pageCount || 1;
       for (let i = 0; i < pageCount; i++) {
-
-        addFooter();
+        addFooter(i + 1, pageCount);
       }
       
       doc.end();
@@ -488,17 +672,17 @@ export const generateSupervisorPDF = async (
   gradeData,
   outputPath
 ) => {
+  console.log('[PDF] Using new Supervisor Grading PDF design (premium UI)');
   return new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
         size: 'A4',
-        margins: { top: 0, bottom: 50, left: 50, right: 50 }
+        margins: { top: 0, bottom: 60, left: 50, right: 50 },
+        bufferPages: true,
       });
-      
       const stream = fs.createWriteStream(outputPath);
       doc.pipe(stream);
-      
-      // Try multiple possible locations for logo
+      registerFonts(doc);
       const possiblePaths = [
         path.join(__dirname, '../../public/mtu-logo.png'),
         path.join(__dirname, '../../../public/mtu-logo.png'),
@@ -506,272 +690,155 @@ export const generateSupervisorPDF = async (
         path.join(process.cwd(), 'public/mtu-logo.png'),
         path.join(process.cwd(), 'src/assets/mtu-logo.png'),
       ];
-      
       let logoPath = null;
       for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-          logoPath = p;
-          break;
-        }
+        if (fs.existsSync(p)) { logoPath = p; break; }
       }
-
       // Pre-fetch student profile image if available
       let profileImageBuffer = null;
       if (studentData.profile_image_url) {
-        console.log('[PDF] Fetching student profile image...');
         profileImageBuffer = await fetchImageBuffer(studentData.profile_image_url);
-        if (profileImageBuffer) {
-          console.log('[PDF] Profile image loaded successfully');
-        } else {
-          console.log('[PDF] Profile image not available, using fallback');
-        }
       }
-      
-      // First page header
+      const addPageWithHeader = async () => {
+        doc.addPage();
+        await addMTUHeader(doc, logoPath);
+      };
       await addMTUHeader(doc, logoPath);
-      
       // Title
-      doc.fontSize(18)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('SIWES Supervisor Grading Report', 50, doc.y, {
-           align: 'center',
-           width: doc.page.width - 100
-         });
-      
-      doc.moveDown();
-      doc.fillColor('black');
-      
-      // Student Information with Profile Picture
-      const studentInfoY = doc.y;
-      
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .text('Student Information', doc.x, doc.y);
-      
-      doc.moveDown(0.5);
-      
-      // If profile image available, display it on the right
-      const textStartX = 50;
-      const photoSize = 80;
-      const photoX = doc.page.width - 50 - photoSize;
-      const photoY = doc.y;
-      
+      setFont(doc, 'bold');
+      doc.fontSize(20).fillColor(UI.accent).text('SIWES Supervisor Grading Report', { align: 'center' });
+      doc.moveDown(0.8);
+      // Student Card (with photo)
+      const x = SPACING.pageX;
+      const w = doc.page.width - SPACING.pageX * 2;
+      const y = doc.y;
+      const h = 120;
+      card(doc, { x, y, w, h });
+      cardHeader(doc, x + SPACING.cardPad, y + 14, 'Student Information');
+      // Photo (right)
+      const photoSize = 70;
+      const photoX = x + w - SPACING.cardPad - photoSize;
+      const photoY = y + 24;
       if (profileImageBuffer) {
         try {
-          // Draw profile picture with border
           doc.save();
-          doc.rect(photoX, photoY, photoSize, photoSize)
-             .strokeColor('#612E89')
-             .lineWidth(2)
-             .stroke();
-          doc.image(profileImageBuffer, photoX + 2, photoY + 2, {
-            fit: [photoSize - 4, photoSize - 4],
-            align: 'center',
-            valign: 'center'
-          });
+          doc.rect(photoX, photoY, photoSize, photoSize).strokeColor(UI.accent).lineWidth(2).stroke();
+          doc.image(profileImageBuffer, photoX + 2, photoY + 2, { fit: [photoSize - 4, photoSize - 4] });
           doc.restore();
-        } catch (imgErr) {
-          console.log('[PDF] Error embedding profile image:', imgErr.message);
-          // Draw placeholder box if image fails
-          doc.rect(photoX, photoY, photoSize, photoSize)
-             .strokeColor('#cccccc')
-             .lineWidth(1)
-             .stroke();
-          doc.fontSize(8)
-             .fillColor('#999999')
-             .text('Photo', photoX, photoY + photoSize/2 - 5, {
-               width: photoSize,
-               align: 'center'
-             });
-          doc.fillColor('black');
+        } catch {
+          doc.rect(photoX, photoY, photoSize, photoSize).strokeColor('#cccccc').lineWidth(1).stroke();
         }
       } else {
-        // Draw placeholder if no profile image
-        doc.rect(photoX, photoY, photoSize, photoSize)
-           .strokeColor('#cccccc')
-           .lineWidth(1)
-           .stroke();
-        doc.fontSize(8)
-           .fillColor('#999999')
-           .text('No Photo', photoX, photoY + photoSize/2 - 5, {
-             width: photoSize,
-             align: 'center'
-           });
-        doc.fillColor('black');
+        doc.rect(photoX, photoY, photoSize, photoSize).strokeColor('#cccccc').lineWidth(1).stroke();
+        setFont(doc, 'regular');
+        doc.fontSize(8).fillColor('#999999').text('No Photo', photoX, photoY + photoSize/2 - 5, { width: photoSize, align: 'center' });
       }
-      
-      // Student details (left side, leaving room for photo)
-      const detailsWidth = photoX - textStartX - 20;
-      doc.fontSize(11)
-         .font('Helvetica')
-         .text(`Name: ${studentData.full_name || studentData.name}`, { indent: 20 })
-         .text(`Matriculation Number: ${studentData.matric_no}`, { indent: 20 })
-         .text(`Department: ${studentData.department}`, { indent: 20 });
-      
-      // Ensure we're past the photo area before continuing
-      if (doc.y < photoY + photoSize + 10) {
-        doc.y = photoY + photoSize + 10;
-      }
-      
-      doc.moveDown();
-      
-      // Weekly Reports Summary
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .text('Weekly Reports Summary', doc.x, doc.y);
-      
-      doc.moveDown(0.5);
-      
+      // Details (left)
+      let rowY = y + 44;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Name', studentData.full_name || studentData.name); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Matric Number', studentData.matric_no); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Department', studentData.department);
+      doc.y = y + h + 16;
+      doc.moveDown(1); // Add vertical gap after student info
+      // --- Summary Card (dynamic height, always fits) ---
       const approvedCount = weeksData.filter(w => w.status === 'approved').length;
       const rejectedCount = weeksData.filter(w => w.status === 'rejected').length;
       const pendingCount = weeksData.filter(w => w.status === 'submitted' || w.status === 'draft').length;
-      
-      doc.fontSize(11)
-         .font('Helvetica')
-         .text(`Total Weeks Submitted: ${weeksData.length}`, { indent: 20 })
-         .text(`Approved: ${approvedCount}`, { indent: 20 })
-         .text(`Rejected: ${rejectedCount}`, { indent: 20 })
-         .text(`Pending: ${pendingCount}`, { indent: 20 });
-      
-      doc.moveDown();
-      
-      // Approval/Rejection History Table
-      doc.fontSize(12)
-         .font('Helvetica-Bold')
-         .text('Week-by-Week Status', doc.x, doc.y);
-      
-      doc.moveDown(0.3);
-      
-      // Table header
-      const tableTop = doc.y;
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .text('Week', 50, tableTop)
-         .text('Status', 100, tableTop)
-         .text('Comments', 200, tableTop);
-      
-      doc.moveDown(0.3);
-      doc.strokeColor('#cccccc')
-         .moveTo(50, doc.y)
-         .lineTo(doc.page.width - 50, doc.y)
-         .stroke();
-      
-      // Table rows
-      for (const week of weeksData) {
-        if (doc.y > doc.page.height - 100) {
-          doc.addPage();
-          await addMTUHeader(doc, logoPath);
-          doc.y = 110;
+      doc.y = drawSummaryCard(doc, 50, doc.y, doc.page.width - 100, {
+        total: weeksData.length,
+        approved: approvedCount,
+        rejected: rejectedCount,
+        pending: pendingCount,
+      });
+
+      // --- PAGE BREAK: Start page 2 for table and grading ---
+      doc.addPage();
+      await addMTUHeader(doc, logoPath);
+
+      // --- Week-by-Week Table (fixed columns, pills, paging) ---
+      await drawWeekStatusTable(doc, weeksData, addPageWithHeader, logoPath);
+
+      // Grading Section Card
+      await ensureSpace(doc, 220, addPageWithHeader);
+      const y3 = doc.y;
+      const h3 = 120;
+      card(doc, { x, y: y3, w, h: h3 });
+      cardHeader(doc, x + SPACING.cardPad, y3 + 14, 'Supervisor Grading');
+      let gY = y3 + 44;
+      setFont(doc, 'regular');
+      doc.fontSize(11).fillColor('#374151')
+        .text(`Final Grade: ${gradeData.grade || 'N/A'}`, x + SPACING.cardPad, gY)
+        .text(`Score: ${gradeData.score ?? 'N/A'}/100`, x + SPACING.cardPad, gY + 18);
+      gY += 38;
+      setFont(doc, 'medium');
+      doc.fontSize(10).fillColor(UI.secondary).text('Grading Scale:', x + SPACING.cardPad, gY); gY += 16;
+      setFont(doc, 'regular');
+      doc.fontSize(9).fillColor(UI.primary)
+        .text('A = 70-100', x + SPACING.cardPad + 20, gY)
+        .text('B = 60-69', x + SPACING.cardPad + 100, gY)
+        .text('C = 50-59', x + SPACING.cardPad + 180, gY)
+        .text('D = 45-49', x + SPACING.cardPad + 260, gY)
+        .text('F = Below 40', x + SPACING.cardPad + 340, gY);
+      doc.y = y3 + h3 + 16;
+
+      // Remarks Card
+      if (gradeData.remarks && gradeData.remarks.trim()) {
+        await ensureSpace(doc, 90, addPageWithHeader);
+        const y4 = doc.y;
+        const h4 = 70;
+        card(doc, { x, y: y4, w, h: h4 });
+        cardHeader(doc, x + SPACING.cardPad, y4 + 14, 'Supervisor Remarks');
+        setFont(doc, 'regular');
+        doc.fontSize(10).fillColor(UI.primary).text(gradeData.remarks, x + SPACING.cardPad, y4 + 44, { width: w - SPACING.cardPad * 2 });
+        doc.y = y4 + h4 + 16;
+      }
+
+      // --- Signature block ---
+      await ensureSpace(doc, 140, addPageWithHeader); // make sure we have room
+      const sigTop = doc.y + 10;
+      setFont(doc, 'semibold');
+      doc.fontSize(11).fillColor(UI.primary).text('Supervisor Signature:', 50, sigTop);
+      // Box
+      const boxY = sigTop + 18;
+      doc.save();
+      doc.roundedRect(50, boxY, 220, 70, 10).strokeColor(UI.border).lineWidth(1).stroke();
+      doc.restore();
+      // Extra spacing BEFORE the line below (this fixes your screenshot)
+      const infoY = boxY + 85; // <-- this is the key spacing control
+      setFont(doc, 'regular');
+      doc.fontSize(10).fillColor(UI.secondary);
+      doc.text(`Supervisor: ${supervisorData.name || 'N/A'}`, 50, infoY);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, doc.page.width - 270, infoY, {
+        width: 220,
+        align: 'right',
+      });
+      doc.y = infoY + 22;
+
+      // --- Footer: Add to all pages at the end, no extra blank pages ---
+      const addFooterAllPages = (doc) => {
+        const range = doc.bufferedPageRange();
+        for (let i = range.start; i < range.start + range.count; i++) {
+          doc.switchToPage(i);
+          doc.save();
+          doc.fontSize(8).fillColor('#9ca3af')
+            .text('Mountain Top University • SIWES Supervisor Grading Report', 50, doc.page.height - 35, {
+              width: doc.page.width - 100,
+              align: 'left'
+            });
+          doc.fontSize(8).fillColor('#9ca3af')
+            .text(`Page ${i + 1} / ${range.count}`, 50, doc.page.height - 35, {
+              width: doc.page.width - 100,
+              align: 'right'
+            });
+          doc.restore();
         }
-        
-        const statusColor = week.status === 'approved' ? '#22c55e' : 
-                           week.status === 'rejected' ? '#ef4444' : '#f59e0b';
-        
-        doc.fontSize(9)
-           .font('Helvetica')
-           .fillColor('black')
-           .text(`${week.week_number}`, 50, doc.y)
-           .fillColor(statusColor)
-           .text(week.status.toUpperCase(), 100, doc.y)
-           .fillColor('black')
-           .text((week.supervisor_comment || 'N/A').substring(0, 40), 200, doc.y, {
-             width: doc.page.width - 250
-           });
-        
-        doc.moveDown(0.4);
-      }
-      
-      doc.moveDown();
-      
-      // Grading Section
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .text('Supervisor Grading', doc.x, doc.y);
-      
-      doc.moveDown(0.5);
-      doc.fontSize(11)
-         .font('Helvetica')
-         .text(`Final Grade: ${gradeData.grade}`, { indent: 20 })
-         .text(`Score: ${gradeData.score}/100`, { indent: 20 });
-      
-      // Grade scale
-      doc.moveDown(0.5);
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .text('Grading Scale:', { indent: 20 });
-      
-      doc.fontSize(9)
-         .font('Helvetica')
-         .text('A = 70-100', { indent: 40 })
-         .text('B = 60-69', { indent: 40 })
-         .text('C = 50-59', { indent: 40 })
-         .text('D = 45-49', { indent: 40 })
-         .text('F = Below 40', { indent: 40 });
-      
-      doc.moveDown();
-      
-      // Remarks
-      doc.fontSize(11)
-         .font('Helvetica-Bold')
-         .text('Supervisor Remarks:', doc.x, doc.y);
-      
-      doc.moveDown(0.3);
-      doc.fontSize(10)
-         .font('Helvetica')
-         .text(gradeData.remarks || 'No remarks provided', {
-           indent: 20,
-           width: doc.page.width - 100
-         });
-      
-      doc.moveDown();
-      
-      // Signature Section
-      doc.fontSize(11)
-         .font('Helvetica-Bold')
-         .text('Supervisor Signature:', doc.x, doc.y);
-      
-      doc.moveDown(0.3);
-      doc.rect(50, doc.y, 200, 80)
-         .stroke();
-      
-      doc.text(`Supervisor: ${supervisorData.name}`, 50, doc.y + 90);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, 50, doc.y + 10);
-      
-      // Footer
-      const addFooter = () => {
-        doc.fontSize(8)
-           .fillColor('#666666')
-           .text(
-             `Generated on ${new Date().toLocaleDateString('en-US', { 
-               year: 'numeric', 
-               month: 'long', 
-               day: 'numeric' 
-             })}`,
-             50,
-             doc.page.height - 30,
-             { align: 'center', width: doc.page.width - 100 }
-           );
       };
-      
-      const pageCount = doc.bufferedPageRange().count;
-      for (let i = 0; i < pageCount; i++) {
-        
-        addFooter();
-      }
-      
+      addFooterAllPages(doc);
+      // Only call doc.end() and set handlers once
       doc.end();
-      
-      stream.on('finish', () => {
-        resolve(outputPath);
-      });
-      
-      stream.on('error', (error) => {
-        reject(error);
-      });
-    } catch (error) {
-      reject(error);
-    }
+      stream.on('finish', () => { resolve(outputPath); });
+      stream.on('error', (error) => { reject(error); });
+    } catch (error) { reject(error); }
   });
 };
 
@@ -797,6 +864,7 @@ export const generateWeeklyReportPDF = async (
   stamps = [],
   outputPath
 ) => {
+  console.log('[PDF] Using new Weekly Report PDF design');
   // Dynamic import of node-fetch for fetching images
   const fetch = (await import('node-fetch')).default;
   
@@ -810,6 +878,8 @@ export const generateWeeklyReportPDF = async (
       const stream = fs.createWriteStream(outputPath);
       doc.pipe(stream);
       
+      // Register fonts safely
+      registerFonts(doc);
       // Try multiple possible locations for logo
       const possiblePaths = [
         path.join(__dirname, '../../public/mtu-logo.png'),
@@ -1098,21 +1168,18 @@ export const generateLogbookPDF = async (
   industrySupervisor,
   outputPath
 ) => {
-  // Dynamic import of node-fetch for fetching images
+  console.log('[PDF] Using new Logbook PDF design');
   const fetch = (await import('node-fetch')).default;
-  
   return new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
         size: 'A4',
-        margins: { top: 0, bottom: 50, left: 50, right: 50 },
-        bufferPages: true
+        margins: { top: 0, bottom: 60, left: SPACING.pageX, right: SPACING.pageX },
+        bufferPages: true,
       });
-      
       const stream = fs.createWriteStream(outputPath);
       doc.pipe(stream);
-      
-      // Try multiple possible locations for logo
+      registerFonts(doc);
       const possiblePaths = [
         path.join(__dirname, '../../public/mtu-logo.png'),
         path.join(__dirname, '../../../public/mtu-logo.png'),
@@ -1120,274 +1187,257 @@ export const generateLogbookPDF = async (
         path.join(process.cwd(), 'public/mtu-logo.png'),
         path.join(process.cwd(), 'src/assets/mtu-logo.png'),
       ];
-      
       let logoPath = null;
       for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-          logoPath = p;
-          break;
-        }
+        if (fs.existsSync(p)) { logoPath = p; break; }
       }
-      
-      // Helper to add new page with header
       const addPageWithHeader = async () => {
         doc.addPage();
         await addMTUHeader(doc, logoPath);
       };
-      
-      // ==========================================
-      // PAGE 1: Cover Page
-      // ==========================================
+
+      // COVER PAGE
       await addMTUHeader(doc, logoPath);
-      
-      doc.moveDown(3);
-      doc.fontSize(24)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('SIWES LOGBOOK', { align: 'center' });
-      
-      doc.moveDown(0.5);
-      doc.fontSize(16)
-         .font('Helvetica')
-         .fillColor('#333333')
-         .text('24-Week Training Record', { align: 'center' });
-      
-      doc.moveDown(3);
-      
-      // Student info box
-      doc.rect(50, doc.y, doc.page.width - 100, 180)
-         .strokeColor('#612E89')
-         .lineWidth(2)
-         .stroke();
-      
-      const boxY = doc.y + 15;
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('Student Information', 70, boxY);
-      
-      doc.moveDown(0.5);
-      doc.fontSize(11)
-         .font('Helvetica')
-         .fillColor('black')
-         .text(`Name: ${studentData.full_name || 'N/A'}`, 70)
-         .text(`Matriculation Number: ${studentData.matric_no || 'N/A'}`, 70)
-         .text(`Department: ${studentData.department || 'N/A'}`, 70)
-         .text(`Faculty: ${studentData.faculty || 'N/A'}`, 70)
-         .text(`Level: ${studentData.level || 'N/A'}`, 70)
-         .text(`Organisation: ${studentData.organisation_name || 'N/A'}`, 70)
-         .text(`Period of Training: ${studentData.period_of_training || 'N/A'}`, 70);
-      
-      doc.moveDown(2);
-      
-      // Industry Supervisor info
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('Industry Supervisor', 50);
-      
-      doc.fontSize(11)
-         .font('Helvetica')
-         .fillColor('black')
-         .text(`Name: ${industrySupervisor.name || 'N/A'}`, { indent: 20 })
-         .text(`Email: ${industrySupervisor.email || 'N/A'}`, { indent: 20 })
-         .text(`Phone: ${industrySupervisor.phone || 'N/A'}`, { indent: 20 });
-      
-      // ==========================================
-      // WEEKLY REPORTS (1-24)
-      // ==========================================
-      
-      // Sort weeks by week_number
+      doc.moveDown(1.2);
+      setFont(doc, 'bold');
+      doc.fontSize(24).fillColor(UI.accent).text('SIWES LOGBOOK', { align: 'center' });
+      setFont(doc, 'regular');
+      doc.fontSize(12).fillColor(UI.secondary).text('24-Week Training Record', { align: 'center' });
+      doc.moveDown(1.4);
+      // Student Card
+      const x = SPACING.pageX;
+      const w = doc.page.width - SPACING.pageX * 2;
+      const y = doc.y;
+      const h = 190;
+      card(doc, { x, y, w, h });
+      cardHeader(doc, x + SPACING.cardPad, y + 14, 'Student Information');
+      let rowY = y + 44;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Name', studentData.full_name || studentData.name); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Matric Number', studentData.matric_no); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Department', studentData.department); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Faculty', studentData.faculty); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Level', studentData.level); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Organisation', studentData.organisation_name); rowY += 18;
+      kvRow(doc, x + SPACING.cardPad, rowY, 'Training Period', studentData.period_of_training);
+      // Supervisor Card
+      doc.y = y + h + 16;
+      const y2 = doc.y;
+      const h2 = 120;
+      card(doc, { x, y: y2, w, h: h2 });
+      cardHeader(doc, x + SPACING.cardPad, y2 + 14, 'Industry Supervisor');
+      let sY = y2 + 44;
+      kvRow(doc, x + SPACING.cardPad, sY, 'Name', industrySupervisor.name); sY += 18;
+      kvRow(doc, x + SPACING.cardPad, sY, 'Email', industrySupervisor.email); sY += 18;
+      kvRow(doc, x + SPACING.cardPad, sY, 'Phone', industrySupervisor.phone);
+      doc.moveDown(1);
+
+      // WEEKLY REPORTS
+      // For each week, fetch associated photo URLs and attach as image_urls
+      for (const week of weeksData) {
+        if (!week.image_urls) {
+          // Fetch photos for this week from DB (assuming a getPhotosForWeek function exists)
+          try {
+            const photos = await options.getPhotosForWeek?.(week.id);
+            week.image_urls = Array.isArray(photos) ? photos.map(p => p.image_url) : [];
+          } catch {
+            week.image_urls = []; 
+          }
+        }
+      }
       const sortedWeeks = [...weeksData].sort((a, b) => a.week_number - b.week_number);
-      
+      // Helper to check if at top of a fresh page (after header)
+      const atTopOfFreshPage = (doc) => doc.y <= 130;
       for (const week of sortedWeeks) {
-        // New page for each week
-        await addPageWithHeader();
-        
-        // Week header
-        doc.fontSize(18)
-           .font('Helvetica-Bold')
-           .fillColor('#612E89')
-           .text(`Week ${week.week_number}`, 50, doc.y);
-        
-        // Date range
+        // Only add a new page if not already at top of a fresh page
+        if (!atTopOfFreshPage(doc)) {
+          await addPageWithHeader();
+        }
+        // Title row
+        setFont(doc, 'bold');
+        doc.fontSize(18).fillColor(UI.primary).text(`Week ${week.week_number}`, SPACING.pageX, doc.y);
+        // Status pill (absolute right, never collides)
+        const st = statusStyle(week.status);
+        const pillW = 110;
+        const pillH = 18;
+        const pillX = doc.page.width - SPACING.pageX - pillW;
+        const pillY = doc.y - 18;
+        doc.save();
+        doc.roundedRect(pillX, pillY, pillW, pillH, 9).fill(st.bg);
+        setFont(doc, 'medium');
+        doc.fontSize(9).fillColor(st.fg).text(st.text, pillX, pillY + 5, { width: pillW, align: 'center' });
+        doc.restore();
+        doc.moveDown(0.6);
+        // Date range (always on new line)
         const startDate = week.start_date ? new Date(week.start_date) : null;
         const endDate = week.end_date ? new Date(week.end_date) : null;
-        
-        if (startDate && endDate) {
-          doc.fontSize(11)
-             .font('Helvetica')
-             .fillColor('#666666')
-             .text(`${startDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}`);
+        setFont(doc, 'regular');
+        doc.fontSize(10).fillColor(UI.secondary).text(
+          startDate && endDate
+            ? `${startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} — ${endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
+            : 'Date range: N/A'
+        );
+        doc.moveDown(0.8);
+        // Activities card
+        const x = SPACING.pageX;
+        const w = doc.page.width - SPACING.pageX * 2;
+        const y = doc.y;
+        const h = 240;
+        card(doc, { x, y, w, h });
+        cardHeader(doc, x + SPACING.cardPad, y + 14, 'Daily Activities');
+        const days = [
+          { key: 'monday_activity', label: 'Monday' },
+          { key: 'tuesday_activity', label: 'Tuesday' },
+          { key: 'wednesday_activity', label: 'Wednesday' },
+          { key: 'thursday_activity', label: 'Thursday' },
+          { key: 'friday_activity', label: 'Friday' },
+          { key: 'saturday_activity', label: 'Saturday' },
+        ];
+        let dY = y + 44;
+        for (const d of days) {
+          setFont(doc, 'medium');
+          doc.fontSize(10).fillColor(UI.accent).text(d.label, x + SPACING.cardPad, dY, { width: 90 });
+          setFont(doc, 'regular');
+          doc.fontSize(10).fillColor(UI.primary).text(
+            safeText(week[d.key], 'No activity logged'),
+            x + SPACING.cardPad + 90,
+            dY,
+            { width: w - SPACING.cardPad * 2 - 90 }
+          );
+          dY += 28;
         }
-        
-        // Status badge
-        const statusColors = {
-          draft: '#6B7280',
-          submitted: '#3B82F6',
-          approved: '#22C55E',
-          rejected: '#EF4444'
-        };
-        
-        doc.moveDown(0.5);
-        doc.fontSize(10)
-           .fillColor(statusColors[week.status] || '#000000')
-           .text(`Status: ${(week.status || 'Unknown').toUpperCase()}`);
-        
-        if (week.score !== null && week.score !== undefined) {
-          doc.fillColor('#612E89')
-             .text(`Score: ${week.score}/100`);
-        }
-        
-        doc.fillColor('black');
-        doc.moveDown();
-        
-        // Daily Activities
-        doc.fontSize(14)
-           .font('Helvetica-Bold')
-           .text('Daily Activities');
-        
-        doc.moveDown(0.5);
-        
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        days.forEach((day, index) => {
-          const activity = week[`${day}_activity`];
-          
-          doc.fontSize(11)
-             .font('Helvetica-Bold')
-             .fillColor('#612E89')
-             .text(`${dayNames[index]}:`, { continued: true });
-          
-          doc.font('Helvetica')
-             .fillColor('black')
-             .text(` ${activity || 'No activity logged'}`);
-          
-          doc.moveDown(0.3);
-        });
-        
-        // Student Comments
-        if (week.comments) {
-          doc.moveDown(0.5);
-          doc.fontSize(12)
-             .font('Helvetica-Bold')
-             .text('Student Comments:');
-          
-          doc.fontSize(10)
-             .font('Helvetica')
-             .text(week.comments, { indent: 20, width: doc.page.width - 120 });
-        }
-        
-        // Supervisor Comments
-        if (week.school_supervisor_comments) {
-          doc.moveDown(0.5);
-          doc.fontSize(12)
-             .font('Helvetica-Bold')
-             .fillColor('#612E89')
-             .text('Supervisor Feedback:');
-          
-          doc.fontSize(10)
-             .font('Helvetica')
-             .fillColor('black')
-             .text(week.school_supervisor_comments, { indent: 20, width: doc.page.width - 120 });
-        }
-        
-        // Evidence Images
-        if (week.image_urls && week.image_urls.length > 0) {
-          // Check if we need new page for images
-          if (doc.y > doc.page.height - 250) {
-            await addPageWithHeader();
+        doc.y = y + h + 14;
+        // Comments card (optional)
+        const comments = week.comments || '';
+        const sup = week.school_supervisor_comments || '';
+        if (comments.trim() || sup.trim()) {
+          const yC = doc.y;
+          const hC = 120;
+          card(doc, { x, y: yC, w, h: hC });
+          cardHeader(doc, x + SPACING.cardPad, yC + 14, 'Comments & Feedback');
+          let cY = yC + 44;
+          if (comments.trim()) {
+            setFont(doc, 'medium');
+            doc.fontSize(10).fillColor(UI.secondary).text('Student:', x + SPACING.cardPad, cY);
+            setFont(doc, 'regular');
+            doc.fontSize(10).fillColor(UI.primary).text(comments, x + SPACING.cardPad + 60, cY, { width: w - 90 });
+            cY += 44;
           }
-          
-          doc.moveDown();
-          doc.fontSize(12)
-             .font('Helvetica-Bold')
-             .text(`Evidence Photos (Week ${week.week_number})`);
-          
-          doc.moveDown(0.5);
-          
-          let imageX = 50;
-          let imageY = doc.y;
-          const imageWidth = 160;
-          const imageHeight = 120;
-          const imagesPerRow = 3;
-          let imageCount = 0;
-          
-          for (const imageUrl of week.image_urls) {
+          if (sup.trim()) {
+            setFont(doc, 'medium');
+            doc.fontSize(10).fillColor(UI.secondary).text('Supervisor:', x + SPACING.cardPad, cY);
+            setFont(doc, 'regular');
+            doc.fontSize(10).fillColor(UI.primary).text(sup, x + SPACING.cardPad + 60, cY, { width: w - 90 });
+          }
+          doc.y = yC + hC + 12;
+        }
+        // Evidence Images (improved layout)
+        if (week.image_urls && week.image_urls.length > 0) {
+          const numImages = week.image_urls.length;
+          if (numImages === 1) {
+            // One large image (hero style)
+            if (doc.y > doc.page.height - 220) {
+              await addPageWithHeader();
+            }
+            doc.moveDown();
+            setFont(doc, 'semibold');
+            doc.fontSize(12).fillColor(UI.accent).text(`Evidence Photo (Week ${week.week_number})`);
+            doc.moveDown(0.5);
             try {
-              const response = await fetch(imageUrl);
-              if (!response.ok) continue;
-              
-              const buffer = await response.buffer();
-              
-              // Check if we need new page
-              if (imageY + imageHeight > doc.page.height - 80) {
-                await addPageWithHeader();
-                imageY = doc.y;
-                imageX = 50;
-                imageCount = 0;
-              }
-              
-              doc.image(buffer, imageX, imageY, {
-                fit: [imageWidth, imageHeight],
-              });
-              
-              imageCount++;
-              
-              if (imageCount % imagesPerRow === 0) {
-                imageY += imageHeight + 15;
-                imageX = 50;
-              } else {
-                imageX += imageWidth + 15;
+              const response = await fetch(week.image_urls[0]);
+              if (response.ok) {
+                const buffer = await response.buffer();
+                doc.image(buffer, x + 10, doc.y, { fit: [220, 160] });
+                doc.y += 170;
               }
             } catch (imgError) {
-              console.error('Failed to load image:', imageUrl, imgError.message);
+              console.error('Failed to load image:', week.image_urls[0], imgError.message);
             }
-          }
-          
-          // Update doc.y after images
-          if (imageCount > 0) {
-            doc.y = imageY + (imageCount % imagesPerRow === 0 ? 0 : imageHeight + 15);
+          } else if (numImages <= 3) {
+            // 2-column grid for 2-3 images
+            if (doc.y > doc.page.height - 220) {
+              await addPageWithHeader();
+            }
+            doc.moveDown();
+            setFont(doc, 'semibold');
+            doc.fontSize(12).fillColor(UI.accent).text(`Evidence Photos (Week ${week.week_number})`);
+            doc.moveDown(0.5);
+            let imageX = x + 10;
+            let imageY = doc.y;
+            const imageWidth = 200;
+            const imageHeight = 140;
+            let imageCount = 0;
+            for (const imageUrl of week.image_urls) {
+              try {
+                const response = await fetch(imageUrl);
+                if (!response.ok) continue;
+                const buffer = await response.buffer();
+                doc.image(buffer, imageX, imageY, { fit: [imageWidth, imageHeight] });
+                imageCount++;
+                if (imageCount % 2 === 0) {
+                  imageY += imageHeight + 15;
+                  imageX = x + 10;
+                } else {
+                  imageX += imageWidth + 20;
+                }
+              } catch (imgError) {
+                console.error('Failed to load image:', imageUrl, imgError.message);
+              }
+            }
+            doc.y = imageY + (imageCount % 2 === 0 ? 0 : imageHeight + 15);
+          } else {
+            // 4+ images: new page, full-width grid
+            await addPageWithHeader();
+            setFont(doc, 'semibold');
+            doc.fontSize(12).fillColor(UI.accent).text(`Evidence Photos – Week ${week.week_number}`);
+            doc.moveDown(0.5);
+            let imageX = x + 10;
+            let imageY = doc.y;
+            const imageWidth = 180;
+            const imageHeight = 120;
+            let imageCount = 0;
+            for (const imageUrl of week.image_urls) {
+              try {
+                const response = await fetch(imageUrl);
+                if (!response.ok) continue;
+                const buffer = await response.buffer();
+                doc.image(buffer, imageX, imageY, { fit: [imageWidth, imageHeight] });
+                imageCount++;
+                if (imageCount % 3 === 0) {
+                  imageY += imageHeight + 15;
+                  imageX = x + 10;
+                } else {
+                  imageX += imageWidth + 20;
+                }
+              } catch (imgError) {
+                console.error('Failed to load image:', imageUrl, imgError.message);
+              }
+            }
+            doc.y = imageY + (imageCount % 3 === 0 ? 0 : imageHeight + 15);
           }
         }
-        
-        // Stamps/Signatures for this week
+        // Stamps/Signatures for this week (existing logic)
         if (week.stamps && week.stamps.length > 0) {
           if (doc.y > doc.page.height - 150) {
             await addPageWithHeader();
           }
-          
           doc.moveDown();
-          doc.fontSize(12)
-             .font('Helvetica-Bold')
-             .fillColor('#22C55E')
-             .text('Digital Stamps & Signatures');
-          
+          setFont(doc, 'semibold');
+          doc.fontSize(12).fillColor('#22C55E').text('Digital Stamps & Signatures');
           doc.fillColor('black');
           doc.moveDown(0.5);
-          
-          let stampX = 50;
+          let stampX = SPACING.pageX;
           const stampWidth = 120;
           const stampHeight = 80;
-          
           for (const stamp of week.stamps) {
             if (!stamp.image_path) continue;
-            
             try {
               const response = await fetch(stamp.image_path);
               if (!response.ok) continue;
-              
               const buffer = await response.buffer();
-              
-              doc.image(buffer, stampX, doc.y, {
-                fit: [stampWidth, stampHeight],
-              });
-              
+              doc.image(buffer, stampX, doc.y, { fit: [stampWidth, stampHeight] });
               stampX += stampWidth + 20;
-              
               if (stampX > doc.page.width - stampWidth) {
-                stampX = 50;
+                stampX = SPACING.pageX;
                 doc.y += stampHeight + 10;
               }
             } catch (stampError) {
@@ -1396,108 +1446,66 @@ export const generateLogbookPDF = async (
           }
         }
       }
-      
-      // ==========================================
+
       // FINAL PAGE: Summary & Signatures
-      // ==========================================
       await addPageWithHeader();
-      
-      doc.fontSize(18)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('Logbook Summary', { align: 'center' });
-      
+      setFont(doc, 'bold');
+      doc.fontSize(18).fillColor(UI.accent).text('Logbook Summary', { align: 'center' });
       doc.moveDown();
-      
       // Calculate summary statistics
       const approvedCount = sortedWeeks.filter(w => w.status === 'approved').length;
       const rejectedCount = sortedWeeks.filter(w => w.status === 'rejected').length;
       const submittedCount = sortedWeeks.filter(w => w.status === 'submitted').length;
       const draftCount = sortedWeeks.filter(w => w.status === 'draft').length;
-      
-      const totalScore = sortedWeeks
-        .filter(w => w.score !== null && w.score !== undefined)
-        .reduce((sum, w) => sum + Number(w.score), 0);
+      const totalScore = sortedWeeks.filter(w => w.score !== null && w.score !== undefined).reduce((sum, w) => sum + Number(w.score), 0);
       const scoredWeeks = sortedWeeks.filter(w => w.score !== null && w.score !== undefined).length;
       const averageScore = scoredWeeks > 0 ? (totalScore / scoredWeeks).toFixed(1) : 'N/A';
-      
-      doc.fontSize(12)
-         .font('Helvetica')
-         .fillColor('black')
-         .text(`Total Weeks: ${sortedWeeks.length}`, { indent: 20 })
-         .text(`Approved: ${approvedCount}`, { indent: 20 })
-         .text(`Rejected: ${rejectedCount}`, { indent: 20 })
-         .text(`Pending: ${submittedCount}`, { indent: 20 })
-         .text(`Draft: ${draftCount}`, { indent: 20 })
-         .text(`Average Score: ${averageScore}`, { indent: 20 });
-      
+      setFont(doc, 'regular');
+      doc.fontSize(12).fillColor(UI.primary)
+        .text(`Total Weeks: ${sortedWeeks.length}`, { indent: 20 })
+        .text(`Approved: ${approvedCount}`, { indent: 20 })
+        .text(`Rejected: ${rejectedCount}`, { indent: 20 })
+        .text(`Pending: ${submittedCount}`, { indent: 20 })
+        .text(`Draft: ${draftCount}`, { indent: 20 })
+        .text(`Average Score: ${averageScore}`, { indent: 20 });
       doc.moveDown(2);
-      
-      // Signature boxes
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .fillColor('#612E89')
-         .text('Signatures');
-      
+      setFont(doc, 'bold');
+      doc.fontSize(14).fillColor(UI.accent).text('Signatures');
       doc.moveDown();
-      
-      // Industry Supervisor signature box
-      doc.fontSize(11)
-         .font('Helvetica')
-         .fillColor('black')
-         .text('Industry Supervisor Signature & Stamp:');
-      
-      doc.rect(50, doc.y + 5, 200, 80)
-         .strokeColor('#cccccc')
-         .stroke();
-      
-      doc.text(`Name: ${industrySupervisor.name || '_______________'}`, 50, doc.y + 95);
-      doc.text('Date: _______________', 50, doc.y + 15);
-      
+      setFont(doc, 'regular');
+      doc.fontSize(11).fillColor(UI.primary).text('Industry Supervisor Signature & Stamp:');
+      doc.rect(SPACING.pageX, doc.y + 5, 200, 80).strokeColor('#cccccc').stroke();
+      doc.text(`Name: ${industrySupervisor.name || '_______________'}`, SPACING.pageX, doc.y + 95);
+      doc.text('Date: _______________', SPACING.pageX, doc.y + 15);
       doc.moveDown(3);
-      
-      // School Supervisor signature box
       doc.text('School Supervisor Signature:');
-      doc.rect(50, doc.y + 5, 200, 80)
-         .stroke();
-      
-      doc.text('Name: _______________', 50, doc.y + 95);
-      doc.text('Date: _______________', 50, doc.y + 15);
-      
-      // Footer on each page with page numbers
-      const addLogbookFooter = (pageNum, totalPages) => {
-        doc.fontSize(8)
-           .fillColor('#666666')
-           .text(
-             `Page ${pageNum} of ${totalPages} | Generated on ${new Date().toLocaleDateString('en-US', { 
-               year: 'numeric', 
-               month: 'long', 
-               day: 'numeric' 
-             })} | Mountain Top University SIWES Logbook`,
-             50,
-             doc.page.height - 30,
-             { align: 'center', width: doc.page.width - 100 }
-           );
+      doc.rect(SPACING.pageX, doc.y + 5, 200, 80).stroke();
+      doc.text('Name: _______________', SPACING.pageX, doc.y + 95);
+      doc.text('Date: _______________', SPACING.pageX, doc.y + 15);
+
+      // FOOTERS: Only add after all content, using switchToPage, to avoid blank pages
+      const addLogbookFooterAllPages = (doc) => {
+        const range = doc.bufferedPageRange();
+        for (let i = range.start; i < range.start + range.count; i++) {
+          doc.switchToPage(i);
+          doc.save();
+          doc.fontSize(8).fillColor('#9ca3af')
+            .text('Mountain Top University • SIWES Logbook', 50, doc.page.height - 35, {
+              width: doc.page.width - 100,
+              align: 'left'
+            });
+          doc.fontSize(8).fillColor('#9ca3af')
+            .text(`Page ${i + 1} / ${range.count}`, 50, doc.page.height - 35, {
+              width: doc.page.width - 100,
+              align: 'right'
+            });
+          doc.restore();
+        }
       };
-      
-      // Add footer to all pages
-      const logbookPageCount = doc.bufferedPageRange().count;
-      for (let i = 0; i < logbookPageCount; i++) {
-    
-        addLogbookFooter(i + 1, logbookPageCount);
-      }
-      
+      addLogbookFooterAllPages(doc);
       doc.end();
-      
-      stream.on('finish', () => {
-        resolve(outputPath);
-      });
-      
-      stream.on('error', (error) => {
-        reject(error);
-      });
-    } catch (error) {
-      reject(error);
-    }
+      stream.on('finish', () => { resolve(outputPath); });
+      stream.on('error', (error) => { reject(error); });
+    } catch (error) { reject(error); }
   });
 };

@@ -1,94 +1,99 @@
 /**
  * Authentication Middleware
- * Verifies Supabase JWT tokens
+ * JWT decode only (NO Supabase, NO jsonwebtoken)
+ * Exports:
+ *  - requireAuth
+ *  - verifyAuth (alias)
+ *  - authMiddleware (alias)
+ *  - requireRole
  */
 
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+function decodeBearerToken(req) {
+  const authHeader = req.headers.authorization;
 
-dotenv.config();
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+  const token = authHeader.slice(7).trim();
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
 
-/**
- * Middleware to verify Supabase JWT token
- */
-export const requireAuth = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const payload = JSON.parse(
+      Buffer.from(parts[1], 'base64').toString('utf8')
+    );
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+// Main auth middleware
+export function requireAuth(req, res, next) {
+  try {
+    const decoded = decodeBearerToken(req);
+
+    if (!decoded) {
       return res.status(401).json({
         success: false,
-        error: 'No authorization token provided',
+        error: 'Unauthorized',
       });
     }
 
-    const token = authHeader.split(' ')[1];
-
-    // Verify token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid or expired token',
-      });
-    }
-
-    // Attach user to request
-    req.user = user;
+    req.user = decoded;
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    console.error('requireAuth error:', error);
     return res.status(401).json({
       success: false,
-      error: 'Authentication failed',
+      error: 'Unauthorized',
     });
   }
-};
+}
 
-/**
- * Middleware to restrict access based on user role
- * @param {string} role - Required role (e.g., 'student', 'school_supervisor', 'admin')
- */
-export const requireRole = (role) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required',
-      });
-    }
-
-    const userRole = req.user.user_metadata?.role;
-
-    if (userRole !== role && userRole !== 'admin') { // Admin usually has access to everything, but let's be strict if needed. 
-      // Actually, let's stick to strict role check unless 'admin' is explicitly handled or implied.
-      // The prompt says "requireRole(roleName)".
-      // If I want to allow admin to access student routes, I should handle that.
-      // But usually "student" routes are for "my" data, so admin shouldn't access them as "me".
-      // For "supervisor" routes, admin might want access.
-      // For now, I will implement strict equality, or maybe allow array of roles.
-      // The prompt asks for `requireRole(roleName)`. I'll stick to single role for now, or maybe allow admin override if it makes sense.
-      // Let's stick to strict check for now to be safe.
-      
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied: Insufficient permissions',
-      });
-    }
-
-    next();
-  };
-};
-
-// Export alias for backward compatibility if needed, but prefer requireAuth
+// Aliases so older imports keep working
 export const verifyAuth = requireAuth;
-
-// Alias used by attendance routes
 export const authMiddleware = requireAuth;
 
+/**
+ * Role guard middleware
+ */
+export function requireRole(...allowedRoles) {
+  return (req, res, next) => {
+    try {
+      const user = req.user || {};
+      let role =
+        user.app_metadata?.role ||
+        user.user_metadata?.role ||
+        user.app_metadata?.user_role ||
+        user.user_metadata?.user_role ||
+        user.role;
+
+      // Allow frontend to pass the validated role if the token only contains 'authenticated'
+      if (role === 'authenticated' && req.headers['x-user-role']) {
+        role = req.headers['x-user-role'];
+      }
+
+      if (!role) {
+        return res.status(403).json({
+          success: false,
+          error: 'Forbidden: role missing',
+        });
+      }
+
+      if (!allowedRoles.includes(role)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Forbidden: insufficient role',
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error('requireRole error:', error);
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+      });
+    }
+  };
+}

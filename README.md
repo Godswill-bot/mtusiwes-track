@@ -92,3 +92,22 @@ This project is developed for educational purposes as part of the SIWES program 
 
 **Godswill Nwafor**
 - GitHub: [@Godswill-bot](https://github.com/Godswill-bot)
+
+## 💬 Chat Feature
+
+The platform now includes a secure, scalable supervisor-student chat system:
+
+- Real-time messaging between students and supervisors
+- File upload support for sharing images, documents, and evidence
+- Role-based access and row-level security (RLS) enforced via Supabase
+- Chat entry points available from all dashboards and homepage
+- All chat messages and attachments are stored securely in the database and Supabase Storage
+
+To access chat:
+- Students, supervisors, and admins can use the "Chat" button on their dashboard or homepage
+- Uploaded files are visible in the chat thread and downloadable by authorized users
+
+For technical details, see:
+- `src/pages/chat/ChatPage.tsx` (main chat UI)
+- `src/components/chat/ChatFileUpload.tsx` (file upload logic)
+- Supabase migrations for conversations/messages tables

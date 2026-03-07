@@ -75,7 +75,15 @@ const Index = () => {
 
   // If logged in, don't show homepage (redirect handled above)
   if (user && userRole) {
-    return null;
+    // If for some reason redirect did not occur, show a fallback message
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-gray-600 text-lg font-semibold">Redirecting to your dashboard...</p>
+          <p className="text-gray-500 text-sm mt-2">If you are seeing this message for more than a few seconds, please contact support or try logging out and in again.</p>
+        </div>
+      </div>
+    );
   }
 
   // Beautiful homepage for non-logged-in users
@@ -86,13 +94,8 @@ const Index = () => {
         {slideshowImages.map((image, index) => (
           <div
             key={index}
-            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? "opacity-100 slide-zoom" : "opacity-0"
-            }`}
-            style={{ 
-              backgroundImage: `url(${image})`,
-              animationPlayState: index === currentSlide ? 'running' : 'paused'
-            }}
+            className={`slideshow-bg ${index === currentSlide ? "active" : "inactive"}`}
+            style={{ backgroundImage: `url(${image})` }}
           />
         ))}
       </div>
@@ -176,6 +179,16 @@ const Index = () => {
               <Info className="mr-2 h-5 w-5" />
               Learn More
             </Button>
+
+            {/* Chat Access Buttons for all roles */}
+            <Button
+              onClick={() => navigate("/chat/info")}
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold rounded-full border-2 border-success/70 text-success bg-white/60 hover:bg-success/90 hover:text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+            >
+              💬 Chat System
+            </Button>
           </div>
 
           {/* Login Links Section */}
@@ -205,6 +218,13 @@ const Index = () => {
                   className="w-full sm:w-auto bg-white/20 text-white border-white/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary"
                 >
                   Admin Login
+                </Button>
+                <Button
+                  onClick={() => navigate("/chat/info")}
+                  variant="outline"
+                  className="w-full sm:w-auto border-success text-success bg-success/10 hover:bg-success/30 hover:text-white hover:border-success backdrop-blur-sm"
+                >
+                  💬 Chat System
                 </Button>
               </div>
               <p className="text-xs text-white/70 mt-4 text-center">

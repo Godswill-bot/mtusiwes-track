@@ -115,10 +115,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Determine role with priority: user_roles > profiles > null
       let determinedRole: AppRole | null = null;
       
-      if (roleData && roleData.role) {
-        determinedRole = roleData.role as AppRole;
-      } else if (profileData && profileData.role) {
-        determinedRole = profileData.role as AppRole;
+      if (roleData && (roleData as any).role) {
+        determinedRole = (roleData as any).role as AppRole;
+      } else if (profileData && (profileData as any).role) {
+        determinedRole = (profileData as any).role as AppRole;
       } else {
         // Log errors only if both queries failed
         if (roleError && profileError) {
@@ -164,14 +164,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             supabase.from("user_roles").select("role").eq("user_id", data.user.id).maybeSingle(),
             supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle()
           ]);
-          
           // Determine role with priority
-          if (supervisorResult.data?.supervisor_type) {
-            userRole = supervisorResult.data.supervisor_type as AppRole;
-          } else if (roleResult.data?.role) {
-            userRole = roleResult.data.role as AppRole;
-          } else if (profileResult.data?.role) {
-            userRole = profileResult.data.role as AppRole;
+          if (supervisorResult.data && (supervisorResult.data as any).supervisor_type) {
+            userRole = (supervisorResult.data as any).supervisor_type as AppRole;
+          } else if (roleResult.data && (roleResult.data as any).role) {
+            userRole = (roleResult.data as any).role as AppRole;
+          } else if (profileResult.data && (profileResult.data as any).role) {
+            userRole = (profileResult.data as any).role as AppRole;
           }
         } catch {
           // Role detection failed - proceed without blocking

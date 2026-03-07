@@ -1,4 +1,36 @@
 /**
+ * Get a week by ID, always including all image_urls for that week
+ * GET /api/weeks/:weekId
+ */
+export const getWeekWithImages = async (req, res) => {
+  try {
+    const { weekId } = req.params;
+    if (!weekId) {
+      return res.status(400).json({ success: false, error: 'Week ID is required' });
+    }
+    // Fetch week data
+    const { data: week, error: weekError } = await supabase
+      .from('weeks')
+      .select('*')
+      .eq('id', weekId)
+      .single();
+    if (weekError || !week) {
+      return res.status(404).json({ success: false, error: 'Week not found' });
+    }
+    // Fetch all photos for this week
+    const { data: photos, error: photoError } = await supabase
+      .from('photos')
+      .select('*')
+      .eq('week_id', weekId);
+    week.image_urls = (photos || []).map(row => row.image_url);
+    week.photos = photos || [];
+    res.json({ success: true, data: week });
+  } catch (error) {
+    console.error('Get week with images error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to fetch week' });
+  }
+};
+/**
  * Weekly Report Controller
  * Handles weekly logbook submissions and supervisor reviews
  */
@@ -205,6 +237,14 @@ export const reviewWeek = async (req, res) => {
       .single();
 
     if (updateError) throw updateError;
+
+    // Fetch all photo URLs for this week and attach to response
+    const { data: photos, error: photoError } = await supabase
+      .from('photos')
+      .select('image_url')
+      .eq('week_id', weekId);
+    const image_urls = (photos || []).map(row => row.image_url);
+    updatedWeek.image_urls = image_urls;
 
     res.json({
       success: true,

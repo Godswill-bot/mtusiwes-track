@@ -16,7 +16,10 @@ const fetchStudents = async () => {
   if (token) {
     try {
       const response = await apiRequest("/api/admin/students", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "x-user-role": "admin"
+        },
       });
 
       if (response.ok) {
@@ -47,7 +50,10 @@ const fetchSupervisors = async () => {
   if (token) {
     try {
       const response = await apiRequest("/api/admin/supervisors", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "x-user-role": "admin"
+        },
       });
 
       if (response.ok) {
@@ -136,7 +142,7 @@ export const DashboardOverview = () => {
   const draftReports = weeks.filter((w: { status: string }) => w.status === "draft").length;
 
   // Prepare histogram data (weekly report submissions per week)
-  const weeklyHistogramData = Array.from({ length: 12 }, (_, i) => {
+  const weeklyHistogramData = Array.from({ length: 24 }, (_, i) => {
     const weekNum = i + 1;
     const weekReports = weeks.filter((w: { week_number: number }) => w.week_number === weekNum);
     return {

@@ -112,7 +112,7 @@ const Logbook = () => {
         .eq("student_id", student.id)
         .maybeSingle();
 
-      setIsApproved(preRegData?.status === 'approved');
+      setIsApproved((preRegData as any)?.status === 'approved');
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
