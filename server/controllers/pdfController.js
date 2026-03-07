@@ -427,7 +427,7 @@ export const generateWeekPDF = async (req, res) => {
 export const compileLogbook = async (req, res) => {
 
   try {
-    const { studentId } = req.body;
+    const { studentId, schoolSignatureUrl } = req.body;
     const userId = req.user?.id;
     console.log('[PDF] compileLogbook called with studentId:', studentId);
     console.log('[DEBUG] compileLogbook called with studentId:', studentId);
@@ -522,7 +522,9 @@ export const compileLogbook = async (req, res) => {
       },
       weeksWithStampsAndImages,
       industrySupervisor,
-      outputPath
+      outputPath,
+      schoolSignatureUrl,
+      studentData.industry_supervisor_signature_url
     );
 
     // Update student record to mark logbook as compiled

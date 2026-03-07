@@ -1166,7 +1166,9 @@ export const generateLogbookPDF = async (
   studentData,
   weeksData,
   industrySupervisor,
-  outputPath
+  outputPath,
+  schoolSignatureUrl = null,
+  industrySignatureUrl = null
 ) => {
   console.log('[PDF] Using new Logbook PDF design');
   const fetch = (await import('node-fetch')).default;
@@ -1474,19 +1476,42 @@ export const generateLogbookPDF = async (
       doc.moveDown();
       setFont(doc, 'regular');
       doc.fontSize(11).fillColor(UI.primary).text('Industry Supervisor Signature & Stamp:');
-      doc.rect(SPACING.pageX, doc.y + 5, 200, 80).strokeColor('#cccccc').stroke();
-      doc.text(`Name: ${industrySupervisor.name || '_______________'}`, SPACING.pageX, doc.y + 95);
-      doc.text('Date: _______________', SPACING.pageX, doc.y + 15);
-      doc.moveDown(3);
-      doc.text('School Supervisor Signature:');
-      doc.rect(SPACING.pageX, doc.y + 5, 200, 80).stroke();
-      doc.text('Name: _______________', SPACING.pageX, doc.y + 95);
-      doc.text('Date: _______________', SPACING.pageX, doc.y + 15);
-
-      // FOOTERS: Only add after all content, using switchToPage, to avoid blank pages
-      const addLogbookFooterAllPages = (doc) => {
-        const range = doc.bufferedPageRange();
-        for (let i = range.start; i < range.start + range.count; i++) {
+        const indBoxY = doc.y + 5;
+        doc.rect(SPACING.pageX, indBoxY, 200, 80).strokeColor('#cccccc').stroke();
+        
+        if (industrySignatureUrl) {
+          try {
+            const response = await fetch(industrySignatureUrl);
+            if (response.ok) {
+              const buffer = await response.buffer();
+              doc.image(buffer, SPACING.pageX + 5, indBoxY + 5, { width: 190, height: 70, fit: [190, 70], align: 'center', valign: 'center' });
+            }
+          } catch (e) {
+            console.error("Failed to load industry signature image:", e);
+          }
+        }
+        
+        doc.text(`Name: ${industrySupervisor.name || '_______________'}`, SPACING.pageX, indBoxY + 90);
+        doc.text('Date: _______________', SPACING.pageX, doc.y + 15);
+        
+        doc.moveDown(3);
+        doc.text('School Supervisor Signature:');
+        const schBoxY = doc.y + 5;
+        doc.rect(SPACING.pageX, schBoxY, 200, 80).strokeColor('#cccccc').stroke();
+        
+        if (schoolSignatureUrl) {
+          try {
+            const response = await fetch(schoolSignatureUrl);
+            if (response.ok) {
+              const buffer = await response.buffer();
+              doc.image(buffer, SPACING.pageX + 5, schBoxY + 5, { width: 190, height: 70, fit: [190, 70], align: 'center', valign: 'center' });
+            }
+          } catch (e) {
+            console.error("Failed to load school signature image:", e);
+          }
+        }
+        
+        doc.text('Name: _______________', SPACING.pageX, schBoxY + 90);
           doc.switchToPage(i);
           doc.save();
           doc.fontSize(8).fillColor('#9ca3af')

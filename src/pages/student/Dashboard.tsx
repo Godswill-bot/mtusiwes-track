@@ -16,6 +16,8 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { StudentNotifications } from "@/components/student/StudentNotifications";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SignaturePad } from "@/components/ui/signature-pad";
 
 const StudentDashboard = () => {
   const { user, userRole, profile } = useAuth();
@@ -45,6 +47,7 @@ const StudentDashboard = () => {
   });
   const [allWeeksCompleted, setAllWeeksCompleted] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [showIndustrySignaturePad, setShowIndustrySignaturePad] = useState(false);
 
   // Fetch current session
   const { data: currentSession } = useQuery({
@@ -232,6 +235,45 @@ const StudentDashboard = () => {
       loadDashboardData();
     }
   }, [user, loadDashboardData]);
+
+  const handleUploadIndustrySignature = async (file: File) => {
+    if (!user?.id || !studentInfo?.id) return;
+    try {
+      const fileName = `industry_supervisor_${user.id}_${Date.now()}.png`;
+
+      // Upload file to Supabase storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('student-photos')
+        .upload(`signatures/${fileName}`, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('student-photos')
+        .getPublicUrl(`signatures/${fileName}`);
+
+      // Update student table with URL
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ industry_supervisor_signature_url: publicUrl })
+        .eq('id', studentInfo.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setStudentInfo(prev => prev ? { ...prev, industry_supervisor_signature_url: publicUrl } : prev);
+      
+      toast.success("Industry supervisor signature saved successfully");
+      setShowIndustrySignaturePad(false);
+    } catch (error) {
+      console.error("Error uploading signature:", error);
+      toast.error("Failed to upload signature. Please try again.");
+    }
+  };
 
   if (portalLoading || loading) {
     return (
@@ -495,6 +537,22 @@ const StudentDashboard = () => {
                       {studentInfo.industry_supervisor_email && (
                         <p className="text-xs text-muted-foreground">{studentInfo.industry_supervisor_email}</p>
                       )}
+                      <div className="mt-2">
+                        {studentInfo.industry_supervisor_signature_url ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            <CheckCircle className="w-3 h-3 mr-1" /> Signature Added
+                          </Badge>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs"
+                            onClick={() => setShowIndustrySignaturePad(true)}
+                          >
+                            Add Signature
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     {studentInfo.school_supervisor_name && (
                       <div>
@@ -670,6 +728,18 @@ const StudentDashboard = () => {
               />
             </>
           )}
+
+          <Dialog open={showIndustrySignaturePad} onOpenChange={setShowIndustrySignaturePad}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Industry Supervisor Signature</DialogTitle>
+              </DialogHeader>
+              <SignaturePad 
+                onSave={handleUploadIndustrySignature}
+                onCancel={() => setShowIndustrySignaturePad(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>

@@ -15,6 +15,7 @@ import { PDFDownloadButton } from "@/components/PDFDownloadButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { apiRequest } from "@/utils/api";
+import { SignaturePad } from "@/components/SignaturePad";
 
 interface WeekInfo {
   id: string;
@@ -59,8 +60,7 @@ export const FullScreenStudentModal = ({
   onRefresh,
   onOpenReport,
 }: FullScreenStudentModalProps) => {
-  const [compilingLogbook, setCompilingLogbook] = useState(false);
-
+  const [compilingLogbook, setCompilingLogbook] = useState(false);    const [showSignaturePad, setShowSignaturePad] = useState(false);
   const categorizedWeeks = useMemo(() => {
     if (!student) return { pending: [], approved: [], rejected: [], all: [] };
     
@@ -92,23 +92,47 @@ export const FullScreenStudentModal = ({
       };
     }, [student, categorizedWeeks]);
 
-    const handleCompileLogbook = async () => {
+    const handleCompileLogbook = async (signatureFile?: File) => {
       if (!student) return;
-    
+
     setCompilingLogbook(true);
+    setShowSignaturePad(false);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+      const { data: { session, user } } = await supabase.auth.getSession();
+      if (!session?.access_token || !user) {
         toast.error("Authentication required");
         return;
       }
 
+      let schoolSignatureUrl = null;
+      if (signatureFile) {
+        toast.info("Uploading signature...");
+        const fileExt = signatureFile.name.split(".").pop();
+        const fileName = `school-supervisor/${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("student-photos")
+          .upload(fileName, signatureFile);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from("student-photos")
+          .getPublicUrl(fileName);
+          
+        schoolSignatureUrl = publicUrl;
+      }
+
+      toast.info("Generating Logbook... this might take a moment.");
       const response = await apiRequest('/api/pdf/compile-logbook', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ studentId: student.id }),
+        body: JSON.stringify({ 
+          studentId: student.id,
+          schoolSignatureUrl
+        }),
       });
 
       if (!response.ok) {
@@ -180,7 +204,7 @@ export const FullScreenStudentModal = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleCompileLogbook}
+                onClick={() => setShowSignaturePad(true)}
                 disabled={compilingLogbook}
               >
                 {compilingLogbook ? (
@@ -191,7 +215,7 @@ export const FullScreenStudentModal = ({
                 ) : (
                   <>
                     <BookOpen className="h-4 w-4 mr-2" />
-                    Compile Logbook
+                    Sign & Compile Logbook
                   </>
                 )}
               </Button>
@@ -331,6 +355,20 @@ export const FullScreenStudentModal = ({
           </div>
         </div>
       </DialogContent>
+
+      <Dialog open={showSignaturePad} onOpenChange={setShowSignaturePad}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Sign Logbook</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <SignaturePad
+              onSignatureComplete={handleCompileLogbook}
+              onCancel={() => setShowSignaturePad(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
