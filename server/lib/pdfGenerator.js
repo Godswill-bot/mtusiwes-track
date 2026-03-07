@@ -629,7 +629,7 @@ export const generateStudentPDF = async (
            .fontSize(8)
            .fillColor('#9ca3af')
            .text(
-             `Mountain Top University • SIWES Logbook • Page ${pageNum}/${totalPages}`,
+             `Mountain Top University - SIWES Logbook • Page ${pageNum}/${totalPages}`,
              50,
              doc.page.height - 28,
              { align: 'center', width: doc.page.width - 100 }
@@ -1168,7 +1168,7 @@ export const generateLogbookPDF = async (
   industrySupervisor,
   outputPath,
   schoolSignatureUrl = null,
-  industrySignatureUrl = null
+  industrySignatureUrl = null 
 ) => {
   console.log('[PDF] Using new Logbook PDF design');
   const fetch = (await import('node-fetch')).default;
@@ -1521,7 +1521,7 @@ export const generateLogbookPDF = async (
           doc.switchToPage(i);
           doc.save();
           doc.fontSize(8).fillColor('#9ca3af')
-            .text('Mountain Top University • SIWES Logbook', 50, doc.page.height - 35, {
+            .text('Mountain Top University - SIWES Logbook', 50, doc.page.height - 35, {
               width: doc.page.width - 100,
               align: 'left'
             });
@@ -1539,4 +1539,4 @@ export const generateLogbookPDF = async (
       stream.on('error', (error) => { reject(error); });
     } catch (error) { reject(error); }
   });
-};
+};
