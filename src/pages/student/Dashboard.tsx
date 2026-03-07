@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { StudentNotifications } from "@/components/student/StudentNotifications";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SignaturePad } from "@/components/ui/signature-pad";
+import { SignaturePad } from "@/components/SignaturePad";
 
 const StudentDashboard = () => {
   const { user, userRole, profile } = useAuth();
@@ -735,7 +735,7 @@ const StudentDashboard = () => {
                 <DialogTitle>Industry Supervisor Signature</DialogTitle>
               </DialogHeader>
               <SignaturePad 
-                onSave={handleUploadIndustrySignature}
+                onSignatureComplete={handleUploadIndustrySignature}
                 onCancel={() => setShowIndustrySignaturePad(false)}
               />
             </DialogContent>
