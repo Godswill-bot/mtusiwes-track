@@ -89,7 +89,11 @@ export const FullScreenStudentModal = ({
         totalWeeks: student.weeks.length,
         avgScore,
         completionRate: Math.round((Math.min(24, totalSubmitted) / 24) * 100), // Based on 24 weeks total
-    if (!student) return;
+      };
+    }, [student, categorizedWeeks]);
+
+    const handleCompileLogbook = async () => {
+      if (!student) return;
     
     setCompilingLogbook(true);
     try {
