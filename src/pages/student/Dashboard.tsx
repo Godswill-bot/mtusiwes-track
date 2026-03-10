@@ -307,12 +307,12 @@ const StudentDashboard = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
           </Button>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-primary">
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">
                 Welcome back, {profile?.full_name || "Student"}!
               </h1>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
                 {siwesLocked 
                   ? "Your SIWES has been completed and graded. View your final results below."
                   : "Track your SIWES progress and manage your weekly logbook"
@@ -320,8 +320,8 @@ const StudentDashboard = () => {
               </p>
             </div>
             {!siwesLocked && (
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => navigate("/student/profile/edit")}>
+              <div className="flex gap-2 self-start sm:self-auto">
+                <Button variant="outline" size="sm" className="sm:size-default" onClick={() => navigate("/student/profile/edit")}>
                   Edit Profile
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/student/pre-siwes/edit")}>
@@ -652,7 +652,7 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              <div className="grid md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Button 
                   onClick={() => navigate("/student/logbook")} 
                   className="h-24 flex-col gap-2"

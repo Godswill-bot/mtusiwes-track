@@ -98,8 +98,8 @@ export const FullScreenStudentModal = ({
     setCompilingLogbook(true);
     setShowSignaturePad(false);
     try {
-      const { data: { session, user } } = await supabase.auth.getSession();
-      if (!session?.access_token || !user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token || !session.user) {
         toast.error("Authentication required");
         return;
       }
@@ -178,20 +178,20 @@ export const FullScreenStudentModal = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-hidden flex flex-col p-0">
         {/* Header */}
-        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
-          <div className="flex items-center justify-between">
+        <DialogHeader className="px-4 sm:px-6 py-4 border-b flex-shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-6 w-6 text-primary" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-xl">{student.profile.full_name}</DialogTitle>
-                <p className="text-sm text-muted-foreground">
+                <DialogTitle className="text-lg sm:text-xl">{student.profile.full_name}</DialogTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground break-words">
                   {student.matric_no} • {student.department}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
               <StudentGradingModal 
                 studentId={student.id}
                 studentName={student.profile.full_name}
@@ -206,6 +206,7 @@ export const FullScreenStudentModal = ({
                 size="sm"
                 onClick={() => setShowSignaturePad(true)}
                 disabled={compilingLogbook}
+                className="w-full sm:w-auto"
               >
                 {compilingLogbook ? (
                   <>
@@ -224,10 +225,10 @@ export const FullScreenStudentModal = ({
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
           <div className="max-w-6xl mx-auto space-y-6">
             {/* Student Info Cards */}
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-3">

@@ -54,27 +54,30 @@ export const Navbar = () => {
           </div>
 
           {user && (
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {profile && (
-                <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-primary/10 rounded-full">
+                <div className="flex items-center space-x-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-primary/10 rounded-full">
                   {profileImageUrl ? (
-                    <Avatar className="h-7 w-7 border border-primary/20">
+                    <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-primary/20">
                       <AvatarImage src={profileImageUrl} alt={profile.full_name} />
-                      <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                      <AvatarFallback className="text-[10px] sm:text-xs bg-primary/20 text-primary">
                         {getInitials(profile.full_name)}
                       </AvatarFallback>
                     </Avatar>
                   ) : (
-                    <User className="h-4 w-4 text-primary" />
+                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                   )}
-                  <span className="text-sm font-medium text-primary">
+                  <span className="text-xs sm:text-sm font-medium text-primary hidden sm:inline-block">
                     {profile.full_name} ({getRoleDisplay(profile.role)})
+                  </span>
+                  <span className="text-[10px] font-medium text-primary sm:hidden max-w-[80px] truncate">
+                    {profile.full_name.split(' ')[0]}
                   </span>
                 </div>
               )}
-              <Button onClick={signOut} variant="outline" size="sm">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+              <Button onClick={signOut} variant="outline" size="sm" className="px-2 sm:px-3">
+                <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
               </Button>
             </div>
           )}

@@ -220,10 +220,11 @@ const StudentAttendance = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <Button
               variant="ghost"
               onClick={() => navigate("/student/dashboard")}
+              className="w-fit"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
@@ -231,8 +232,8 @@ const StudentAttendance = () => {
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold">My Attendance</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold">My Attendance</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               {siwesLocked 
                 ? "Your SIWES is completed. Attendance records are locked."
                 : "Check in daily to record your attendance at work"
@@ -343,42 +344,42 @@ const StudentAttendance = () => {
           )}
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Total Days</CardDescription>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
+              <CardHeader className="pb-2 p-4 sm:p-6">
+                <CardDescription className="text-xs sm:text-sm">Total Days</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   {totalDays}
                 </CardTitle>
               </CardHeader>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Verified Days</CardDescription>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+              <CardHeader className="pb-2 p-4 sm:p-6">
+                <CardDescription className="text-xs sm:text-sm">Verified Days</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                   {verifiedDays}
                 </CardTitle>
               </CardHeader>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Complete Days</CardDescription>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-blue-500" />
+              <CardHeader className="pb-2 p-4 sm:p-6">
+                <CardDescription className="text-xs sm:text-sm">Complete Days</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                   {daysWithCheckOut}
                 </CardTitle>
               </CardHeader>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Total Hours</CardDescription>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-purple-500" />
+              <CardHeader className="pb-2 p-4 sm:p-6">
+                <CardDescription className="text-xs sm:text-sm">Total Hours</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
                   {totalHoursWorked}h
                 </CardTitle>
               </CardHeader>

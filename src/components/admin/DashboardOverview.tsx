@@ -189,56 +189,56 @@ export const DashboardOverview = () => {
       <PortalToggle />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="shadow-card bg-gradient-to-br from-purple-50 to-white border-purple-200">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <Users className="h-8 w-8 text-purple-600" />
-              <span className="text-3xl font-bold text-purple-700">{totalStudents}</span>
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
+              <span className="text-2xl sm:text-3xl font-bold text-purple-700">{totalStudents}</span>
             </div>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium text-purple-600">Total Students</p>
-            <p className="text-xs text-muted-foreground">Registered in system</p>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <p className="text-xs sm:text-sm font-medium text-purple-600">Total Students</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Registered in system</p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card bg-gradient-to-br from-green-50 to-white border-green-200">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <UserCog className="h-8 w-8 text-green-600" />
-              <span className="text-3xl font-bold text-green-700">{totalSupervisors}</span>
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+              <UserCog className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              <span className="text-2xl sm:text-3xl font-bold text-green-700">{totalSupervisors}</span>
             </div>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium text-green-600">Total Supervisors</p>
-            <p className="text-xs text-muted-foreground">{schoolSupervisors} school, {industrySupervisors} industry</p>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <p className="text-xs sm:text-sm font-medium text-green-600">Total Supervisors</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">{schoolSupervisors} school, {industrySupervisors} industry</p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card bg-gradient-to-br from-blue-50 to-white border-blue-200">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <FileText className="h-8 w-8 text-blue-600" />
-              <span className="text-3xl font-bold text-blue-700">{totalReports}</span>
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+              <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <span className="text-2xl sm:text-3xl font-bold text-blue-700">{totalReports}</span>
             </div>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium text-blue-600">Weekly Reports</p>
-            <p className="text-xs text-muted-foreground">{approvedReports} approved</p>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <p className="text-xs sm:text-sm font-medium text-blue-600">Weekly Reports</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">{approvedReports} approved</p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card bg-gradient-to-br from-amber-50 to-white border-amber-200">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <Clock className="h-8 w-8 text-amber-600" />
-              <span className="text-3xl font-bold text-amber-700">{pendingReports}</span>
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600" />
+              <span className="text-2xl sm:text-3xl font-bold text-amber-700">{pendingReports}</span>
             </div>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium text-amber-600">Pending Reviews</p>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <p className="text-xs sm:text-sm font-medium text-amber-600">Pending Reviews</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Awaiting approval</p>
           </CardContent>
         </Card>
       </div>

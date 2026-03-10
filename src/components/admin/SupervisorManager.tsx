@@ -638,17 +638,17 @@ const SupervisorTable = ({
                       {isVirtual ? (
                         <span className="text-xs text-muted-foreground italic">From pre-registration</span>
                       ) : (
-                        <div className="flex flex-wrap gap-1 justify-end">
-                          <Button variant="outline" size="sm" onClick={() => onAssign(sup)} className="text-xs">
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-end">
+                          <Button variant="outline" size="sm" onClick={() => onAssign(sup)} className="text-xs w-full sm:w-auto">
                             Assign
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => onResetPassword(sup)} className="text-xs">
+                          <Button variant="outline" size="sm" onClick={() => onResetPassword(sup)} className="text-xs w-full sm:w-auto">
                             Reset
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => onToggleStatus(sup)} className="text-xs">
+                          <Button variant="outline" size="sm" onClick={() => onToggleStatus(sup)} className="text-xs w-full sm:w-auto">
                             {sup.is_active ? "Off" : "On"}
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={() => onDelete(sup)} className="text-xs">
+                          <Button variant="destructive" size="sm" onClick={() => onDelete(sup)} className="text-xs w-full sm:w-auto">
                             Delete
                           </Button>
                         </div>

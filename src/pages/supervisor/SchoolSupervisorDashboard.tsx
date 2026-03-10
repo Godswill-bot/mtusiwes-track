@@ -359,7 +359,7 @@ const SchoolSupervisorDashboard = () => {
 
         {/* Session Information Cards */}
         {(acceptanceDate || attachmentPeriod) && (
-          <div className="grid md:grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {acceptanceDate && (
               <Card className="border-2 border-blue-200 bg-blue-50">
                 <CardHeader>
@@ -369,7 +369,7 @@ const SchoolSupervisorDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-lg font-bold text-blue-900">
+                  <p className="text-base sm:text-lg font-bold text-blue-900">
                     {format(new Date(acceptanceDate as string), "EEEE, MMMM dd, yyyy")}
                   </p>
                 </CardContent>
@@ -385,7 +385,7 @@ const SchoolSupervisorDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-words">
                     {format(new Date((attachmentPeriod as {from_date: string}).from_date), "MMM dd, yyyy")} - {format(new Date((attachmentPeriod as {to_date: string}).to_date), "MMM dd, yyyy")}
                   </p>
                 </CardContent>
@@ -396,7 +396,7 @@ const SchoolSupervisorDashboard = () => {
 
         {/* Printable Students Table */}
         {students.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-8 overflow-x-auto pb-2">
             <PrintableStudentsTable 
               students={students}
               supervisorName={profile?.full_name || "School Supervisor"}
@@ -407,12 +407,12 @@ const SchoolSupervisorDashboard = () => {
 
         {/* Tabs for Reports and Attendance */}
         <Tabs defaultValue="reports" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="reports">
+          <TabsList className="w-full sm:w-auto overflow-x-auto flex flex-nowrap whitespace-nowrap justify-start sm:justify-center p-1 scrollbar-hide">
+            <TabsTrigger value="reports" className="flex-shrink-0">
               <FileCheck className="h-4 w-4 mr-2" />
               Weekly Reports
             </TabsTrigger>
-            <TabsTrigger value="attendance">
+            <TabsTrigger value="attendance" className="flex-shrink-0">
               <Calendar className="h-4 w-4 mr-2" />
               Attendance
             </TabsTrigger>
@@ -420,12 +420,12 @@ const SchoolSupervisorDashboard = () => {
 
           <TabsContent value="reports">
             {/* Quick Actions */}
-            <div className="flex gap-2 mb-4">
-              <Button onClick={() => navigate("/supervisor/students")} variant="outline">
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <Button onClick={() => navigate("/supervisor/students")} variant="outline" className="w-full sm:w-auto">
                 <Users className="h-4 w-4 mr-2" />
                 View All Students
               </Button>
-              <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline">
+              <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline" className="w-full sm:w-auto">
                 <FileCheck className="h-4 w-4 mr-2" />
                 Manage Registrations
               </Button>

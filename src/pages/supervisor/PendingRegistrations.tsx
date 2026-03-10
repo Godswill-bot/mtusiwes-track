@@ -378,56 +378,58 @@ const PendingRegistrations = () => {
       <Card key={student.id} className={`shadow-card ${status === "approved" ? "border-green-200 bg-green-50" : status === "rejected" ? "border-red-200 bg-red-50" : ""}`}>
         <CardContent className="pt-6">
           <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="grid md:grid-cols-2 gap-4 flex-1">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 w-full">
                 <div>
                   <p className="text-sm text-muted-foreground">Student</p>
-                  <p className="font-medium">{student.matric_no}</p>
+                  <p className="font-medium text-sm sm:text-base">{student.matric_no}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Department</p>
-                  <p className="font-medium">{student.department}</p>
+                  <p className="font-medium text-sm sm:text-base">{student.department}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Organisation</p>
-                  <p className="font-medium">{student.organisation_name}</p>
+                  <p className="font-medium text-sm sm:text-base">{student.organisation_name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Industry Supervisor</p>
-                  <p className="font-medium">{student.industry_supervisor_name}</p>
+                  <p className="font-medium text-sm sm:text-base">{student.industry_supervisor_name}</p>
                 </div>
               </div>
-              {status === "approved" && (
-                <Badge className="bg-green-600">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Approved
-                </Badge>
-              )}
-              {status === "rejected" && (
-                <Badge variant="destructive">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  Rejected
-                </Badge>
-              )}
+              <div className="w-full sm:w-auto flex flex-row items-center justify-between sm:justify-end gap-2">
+                {status === "approved" && (
+                  <Badge className="bg-green-600">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Approved
+                  </Badge>
+                )}
+                {status === "rejected" && (
+                  <Badge variant="destructive">
+                    <XCircle className="h-3 w-3 mr-1" />
+                    Rejected
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {status === "approved" && student.pre_registration_approved_at && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground mt-2">
                 Approved on: {new Date(student.pre_registration_approved_at).toLocaleDateString()}
               </div>
             )}
 
             {status === "rejected" && rejectionReason && (
-              <div className="p-3 bg-red-100 border border-red-300 rounded-md">
+              <div className="p-3 bg-red-100 border border-red-300 rounded-md mt-2">
                 <p className="text-sm font-medium text-red-800">Rejection Reason:</p>
                 <p className="text-sm text-red-700">{rejectionReason}</p>
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 mt-4">
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" onClick={() => setSelectedStudent(student)}>
+                  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setSelectedStudent(student)}>
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
@@ -440,7 +442,7 @@ const PendingRegistrations = () => {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label>Matric Number</Label>
                         <p className="text-sm">{student.matric_no}</p>

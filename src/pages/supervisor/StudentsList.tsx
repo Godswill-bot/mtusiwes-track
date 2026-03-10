@@ -215,16 +215,16 @@ const StudentsList = () => {
             Back to Dashboard
           </Button>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-primary">Assigned Students</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">Assigned Students</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
                 Students under your supervision
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start sm:self-auto bg-primary/5 px-4 py-2 rounded-lg">
               <Users className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">{students.length}</span>
+              <span className="text-xl sm:text-2xl font-bold">{students.length}</span>
             </div>
           </div>
 
@@ -236,7 +236,7 @@ const StudentsList = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {students.map((student) => (
                 <Card key={student.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>

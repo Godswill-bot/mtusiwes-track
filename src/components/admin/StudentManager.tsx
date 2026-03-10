@@ -407,7 +407,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="full_name">Full Name</Label>
                     <Input
@@ -515,7 +515,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Organisation Name</Label>
                     <Input
@@ -556,7 +556,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Industry Supervisor Name</Label>
                     <Input
@@ -681,20 +681,8 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                     </TableCell>
                     {!compact && (
                       <TableCell className="text-right">
-                        <div className="flex flex-wrap gap-1 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setSchoolSupervisorId(student.supervisor_id ?? undefined);
-                              setIndustrySupervisorId(student.industry_supervisor_id ?? undefined);
-                              setAssignOpen(true);
-                            }}
-                            className="text-xs"
-                          >
-                            Assign
-                          </Button>
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-end">
+                          
                           <Button
                             variant="outline"
                             size="sm"
@@ -703,18 +691,18 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                               setEditFormState(student);
                               setEditOpen(true);
                             }}
-                            className="text-xs"
+                            className="text-xs w-full sm:w-auto"
                           >
                             Edit
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => resetPassword(student)} className="text-xs">
+                          <Button variant="outline" size="sm" onClick={() => resetPassword(student)} className="text-xs w-full sm:w-auto">
                             Reset
                           </Button>
                           <Button
                             variant={student.is_active ? "secondary" : "outline"}
                             size="sm"
                             onClick={() => toggleStatusMutation.mutate(student)}
-                            className="text-xs"
+                            className="text-xs w-full sm:w-auto"
                           >
                             {student.is_active ? (
                               <ShieldOff className="h-3 w-3 mr-1" />
@@ -723,7 +711,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                             )}
                             {student.is_active ? "Off" : "On"}
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={() => deleteStudent(student)} className="text-xs">
+                          <Button variant="destructive" size="sm" onClick={() => deleteStudent(student)} className="text-xs w-full sm:w-auto">
                             Delete
                           </Button>
                             <Button
@@ -740,7 +728,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                                   }
                                 }
                               }}
-                              className="text-xs"
+                              className="text-xs w-full sm:w-auto"
                               aria-label={expandedStudentId === student.id ? "Collapse" : "Expand"}
                             >
                               {expandedStudentId === student.id ? <span>&#9660; Weekly Reports</span> : <span>&#9654; Weekly Reports</span>}

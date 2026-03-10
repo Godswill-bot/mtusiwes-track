@@ -586,47 +586,49 @@ const Logbook = () => {
             </Alert>
           )}
 
-          <div className="flex items-center justify-between mb-6">
+<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <Button
               variant="ghost"
               onClick={() => navigate("/student/dashboard")}
-              className="hover:bg-white/50"
+              className="hover:bg-white/50 w-fit"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
 
             <Button 
-              variant="outline" 
+              variant="outline"
               onClick={handleDownloadPDF} 
               disabled={downloading}
-              className="bg-white hover:bg-gray-50"
+              className="bg-white hover:bg-gray-50 w-full sm:w-auto"
             >
               <Download className="h-4 w-4 mr-2" />
               {downloading ? "Generating PDF..." : "Download Logbook"}
             </Button>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-primary">Weekly Logbook</h1>
-              <p className="text-muted-foreground">Week {currentWeek}</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">Weekly Logbook</h1>
+              <p className="text-muted-foreground mt-1">Week {currentWeek}</p>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 self-start sm:self-auto bg-white p-2 rounded-lg shadow-sm border border-border">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
                 disabled={currentWeek === 1}
+                className="h-8 w-8 sm:h-10 sm:w-10"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="font-semibold px-4">Week {currentWeek} of 24</span>
+              <span className="font-semibold px-2 sm:px-4 text-sm sm:text-base whitespace-nowrap">Week {currentWeek} of 24</span>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentWeek(Math.min(24, currentWeek + 1))}
                 disabled={currentWeek >= 24}
+                className="h-8 w-8 sm:h-10 sm:w-10"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -634,88 +636,100 @@ const Logbook = () => {
           </div>
 
           {weekData && (
-            <Card className="shadow-elevated">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>
-                      {format(new Date(weekData.start_date), "MMM dd")} -{" "}
-                      {format(new Date(weekData.end_date), "MMM dd, yyyy")}
-                    </CardTitle>
-                    <CardDescription>Record your daily activities</CardDescription>
-                  </div>
-                  {getStatusBadge(weekData.status)}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].map((day) => (
-                  <div key={day} className="space-y-3 p-4 border border-border rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <label className="font-medium capitalize text-lg">{day}</label>
-                      <span className="text-sm text-muted-foreground">
-                        {format(addDays(new Date(weekData.start_date), ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].indexOf(day)), "MMM dd")}
-                      </span>
+            <div className="mt-6">
+              <Card className="shadow-elevated">
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-lg sm:text-xl">
+                        {format(new Date(weekData.start_date), "MMM dd")} -{" "}
+                        {format(new Date(weekData.end_date), "MMM dd, yyyy")}
+                      </CardTitle>
+                      <CardDescription>Record your daily activities</CardDescription>
                     </div>
-                    <Textarea
-                      value={weekData[`${day}_activity` as keyof Week] as string || ""}
-                      onChange={(e) => updateActivity(day, e.target.value)}
-                      placeholder={`Describe your ${day} activities...`}
-                      rows={3}
-                      disabled={!canEdit}
-                    />
-                    {weekData.id && (
-                      <PhotoUpload
-                        weekId={weekData.id}
-                        day={day}
-                        photos={photos[day] || []}
-                        onPhotosChange={() => fetchWeekData()}
+                    <div className="self-start sm:self-auto">
+                      {getStatusBadge(weekData.status)}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 sm:space-y-6 px-3 sm:px-6">
+                  {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].map((day) => (
+                    <div key={day} className="space-y-2 sm:space-y-3 p-3 sm:p-4 border border-border rounded-lg bg-white">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <label className="font-medium capitalize text-base sm:text-lg text-gray-800">{day}</label>
+                        <span className="text-xs sm:text-sm text-muted-foreground font-medium bg-gray-100 px-2 py-1 rounded w-fit">
+                          {format(addDays(new Date(weekData.start_date), ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].indexOf(day)), "MMM dd")}
+                        </span>
+                      </div>
+                      <Textarea
+                        value={weekData[`${day}_activity` as keyof Week] as string || ""}
+                        onChange={(e) => updateActivity(day, e.target.value)}
+                        placeholder={`Describe your ${day} activities...`}
+                        rows={3}
                         disabled={!canEdit}
+                        className="resize-none sm:resize-y text-sm sm:text-base focus:ring-primary/50"
                       />
-                    )}
-                  </div>
-                ))}
+                      {weekData.id && (
+                        <div className="pt-2">
+                          <PhotoUpload
+                            weekId={weekData.id}
+                            day={day}
+                            photos={photos[day] || []}
+                            onPhotosChange={() => fetchWeekData()}
+                            disabled={!canEdit}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
 
-                <div className="space-y-2">
-                  <label className="font-medium">Comments/Notes</label>
-                  <Textarea
-                    value={weekData.comments || ""}
-                    onChange={(e) => setWeekData({ ...weekData, comments: e.target.value })}
-                    placeholder="Additional comments or observations..."
-                    rows={4}
-                    disabled={!canEdit}
-                  />
-                </div>
-
-                {canEdit && (
-                  <div className="flex space-x-4 pt-4">
-                    <Button onClick={() => handleSave(false)} disabled={saving} variant="outline">
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Draft
-                    </Button>
-                    <Button onClick={() => handleSave(true)} disabled={saving}>
-                      <Send className="h-4 w-4 mr-2" />
-                      Submit for Approval
-                    </Button>
+                  <div className="space-y-2 bg-gray-50 p-3 sm:p-4 rounded-lg border border-border">
+                    <label className="font-medium text-gray-800">Comments/Notes</label>
+                    <Textarea
+                      value={weekData.comments || ""}
+                      onChange={(e) => setWeekData({ ...weekData, comments: e.target.value })}
+                      placeholder="Additional comments or observations..."
+                      rows={4}
+                      disabled={!canEdit}
+                      className="bg-white text-sm sm:text-base"
+                    />
                   </div>
-                )}
 
-                {weekData.status === "rejected" && (
-                  <div className="p-4 bg-destructive/10 border border-destructive rounded-lg">
-                    <p className="text-sm font-medium text-destructive">
-                      This week has been rejected. Please review supervisor feedback and resubmit.
-                    </p>
-                  </div>
-                )}
+                  {canEdit && (
+                    <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+                      <Button onClick={() => handleSave(false)} disabled={saving} variant="outline" className="w-full sm:w-auto h-12 sm:h-10">
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Draft
+                      </Button>
+                      <Button onClick={() => handleSave(true)} disabled={saving} className="w-full sm:w-auto h-12 sm:h-10">
+                        <Send className="h-4 w-4 mr-2" />
+                        Submit for Approval
+                      </Button>
+                    </div>
+                  )}
 
-                {weekData.status === "approved" && (
-                  <div className="p-4 bg-primary/10 border border-primary rounded-lg">
-                    <p className="text-sm font-medium text-primary">
-                      ✓ This week has been approved by your supervisor
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  {weekData.status === "rejected" && (
+                    <div className="p-3 sm:p-4 bg-destructive/10 border border-destructive rounded-lg flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                      <p className="text-sm font-medium text-destructive">
+                        This week has been rejected. Please review supervisor feedback and resubmit.
+                      </p>
+                    </div>
+                  )}
+
+                  {weekData.status === "approved" && (
+                    <div className="p-3 sm:p-4 bg-primary/10 border border-primary rounded-lg flex items-start gap-3">
+                      <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="text-primary text-xs font-bold">✓</span>
+                      </div>
+                      <p className="text-sm font-medium text-primary">
+                        This week has been approved by your supervisor
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       </main>

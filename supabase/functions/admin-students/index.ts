@@ -260,16 +260,13 @@ const deleteStudent = async (
     .eq("id", payload.student_id)
     .maybeSingle();
 
-  const { error } = await supabase
-    .from("students")
-    .delete()
-    .eq("id", payload.student_id);
+const { data: deleteData, error: rpcError } = await supabase.rpc("force_delete_user", { 
+      target_user_id: payload.user_id 
+    });
 
-  if (error) {
-    throw error;
-  }
-
-  await supabase.auth.admin.deleteUser(payload.user_id);
+    if (rpcError) {
+      throw rpcError;
+    }
 
   await logAudit(adminId, {
     actionType: "DELETE",
