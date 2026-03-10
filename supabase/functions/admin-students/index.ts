@@ -39,22 +39,7 @@ interface CreateStudentPayload extends BasePayload {
   industry_supervisor_name: string;
   industry_supervisor_email?: string;
   industry_supervisor_phone?: string;
-  school_supervisor_name?: string;
-  school_supervisor_email?: string;
-  period_of_training: string;
-  phone: string;
-  other_info?: string;
-}
-
-interface UpdateStudentPayload extends BasePayload {
-  action: "update_student";
-  student_id: string;
-  updates: Record<string, unknown>;
-}
-
-interface DeleteStudentPayload extends BasePayload {
-  action: "delete_student";
-  student_id: string;
+    supervisor_id?: string;
   user_id: string;
 }
 
@@ -184,8 +169,7 @@ const createStudent = async (
       products_services: payload.products_services,
       industry_supervisor_name: payload.industry_supervisor_name,
       industry_supervisor_email: payload.industry_supervisor_email ?? null,
-      industry_supervisor_phone: payload.industry_supervisor_phone ?? null,
-      school_supervisor_name: payload.school_supervisor_name ?? null,
+      industry_supervisor_phone: payload.industry_supervisor_phone ?? null,        supervisor_id: payload.supervisor_id ?? null,      school_supervisor_name: payload.school_supervisor_name ?? null,
       school_supervisor_email: payload.school_supervisor_email ?? null,
       period_of_training: payload.period_of_training,
       other_info: payload.other_info ?? null,

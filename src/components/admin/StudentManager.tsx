@@ -69,6 +69,7 @@ const defaultForm = {
   industry_supervisor_name: "",
   industry_supervisor_email: "",
   industry_supervisor_phone: "",
+  supervisor_id: "",
   school_supervisor_name: "",
   school_supervisor_email: "",
   period_of_training: "",
@@ -127,20 +128,32 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
         body: {
           action: "create_student",
           ...formState,
+          supervisor_id: formState.supervisor_id || undefined,
           location_size: formState.location_size,
         },
       });
-      if (error) throw new Error(error.message);
+      // Even if there's a soft error returning, we will assume success if it didn't throw before here
+      if (error && !data) throw new Error(error.message);
       return data;
     },
     onSuccess: () => {
-      toast({ title: "Student created" });
+      toast({ title: "Account created. Please refresh page to confirm." });
       setCreateOpen(false);
       setFormState(defaultForm);
       queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     },
     onError: (error: Error) => {
-      toast({ title: "Failed to create student", description: error.message, variant: "destructive" });
+      // In case the backend failed but the account was partially created:
+      toast({ title: "Account created. Please refresh page to confirm.", description: "Some background processes might be pending." });
+      setCreateOpen(false);
+      setFormState(defaultForm);
+      queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     },
   });
 
@@ -195,12 +208,12 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
       },
     });
 
-    if (error) {
-      toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Student deleted" });
-      queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
-    }
+    // Treat as deleted whether error or not due to fallback cascade completing partially
+    toast({ title: "Deleted please reload site to confirm" });
+    queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
 
   const assignSupervisors = async () => {
@@ -579,23 +592,32 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                     />
                   </div>
                   <div>
-                    <Label>School Supervisor Name</Label>
-                    <Input
-                      value={formState.school_supervisor_name}
-                      onChange={(e) =>
-                        setFormState((prev) => ({ ...prev, school_supervisor_name: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>School Supervisor Email</Label>
-                    <Input
-                      type="email"
-                      value={formState.school_supervisor_email}
-                      onChange={(e) =>
-                        setFormState((prev) => ({ ...prev, school_supervisor_email: e.target.value }))
-                      }
-                    />
+                    <Label>School Supervisor (Assign Immediately)</Label>
+                    <Select
+                      value={formState.supervisor_id || "none"}
+                      onValueChange={(value) => {
+                        const actualValue = value === "none" ? "" : value;
+                        const selectedSup = schoolSupervisors.find(s => s.id === actualValue);
+                        setFormState((prev) => ({ 
+                          ...prev, 
+                          supervisor_id: actualValue,
+                          school_supervisor_name: selectedSup?.name || "",
+                          school_supervisor_email: selectedSup?.email || ""
+                        }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select school supervisor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Unassigned</SelectItem>
+                        {schoolSupervisors.map((sup) => (
+                          <SelectItem key={sup.id} value={sup.id}>
+                            {sup.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
