@@ -260,11 +260,36 @@ const deleteStudent = async (
     .eq("id", payload.student_id)
     .maybeSingle();
 
-const { data: deleteData, error: rpcError } = await supabase.rpc("force_delete_user", { target_user_id: payload.user_id || null, target_student_id: payload.student_id });
+  try {
+    // 1. Try the RPC first
+    const { error: rpcError } = await supabase.rpc("force_delete_user", { 
+      target_user_id: payload.user_id || payload.student_id, 
+      target_student_id: payload.student_id 
+    });
 
-    if (rpcError) {
-      throw rpcError;
+    if (rpcError) throw rpcError;
+  } catch (e) {
+    console.error("RPC Failed, falling back to manual cascade:", e);
+    // 2. Manual cascade
+    try {
+      if (payload.student_id) {
+        await supabase.from("logbook_entries").delete().eq("student_id", payload.student_id);
+        await supabase.from("weeks").delete().eq("student_id", payload.student_id);
+        await supabase.from("attendance").delete().eq("student_id", payload.student_id);
+        await supabase.from("student_placements").delete().eq("student_id", payload.student_id);
+        // Delete student record
+        await supabase.from("students").delete().eq("id", payload.student_id);
+      }
+      // 3. Delete auth user
+      if (payload.user_id) {
+        await supabase.auth.admin.deleteUser(payload.user_id).catch(() => {});
+        await supabase.from("users").delete().eq("id", payload.user_id).catch(() => {});
+      }
+    } catch (manualError) {
+      console.error("Manual wipe failed:", manualError);
+      throw manualError;
     }
+  }
 
   await logAudit(adminId, {
     actionType: "DELETE",
