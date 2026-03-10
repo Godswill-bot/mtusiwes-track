@@ -12,26 +12,7 @@ const fetchStudents = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
 
-  // Try backend API first
-  if (token) {
-    try {
-      const response = await apiRequest("/api/admin/students", {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "x-user-role": "admin"
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return result.data;
-      }
-    } catch {
-      // Backend unavailable, fall through to Supabase fallback
-    }
-  }
-
-  // Fallback: Direct Supabase query
+  
   const { data, error } = await supabase
     .from("students")
     .select("*")
@@ -46,26 +27,7 @@ const fetchSupervisors = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
 
-  // Try backend API first
-  if (token) {
-    try {
-      const response = await apiRequest("/api/admin/supervisors", {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "x-user-role": "admin"
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return result.data;
-      }
-    } catch {
-      // Backend unavailable, fall through to Supabase fallback
-    }
-  }
-
-  // Fallback: Direct Supabase query
+  
   const { data, error } = await supabase
     .from("supervisors")
     .select("*")
