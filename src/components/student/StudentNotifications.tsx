@@ -34,7 +34,7 @@ export const StudentNotifications = () => {
       if (!user?.id) return [];
 
       // 1. Query personal notifications
-      const { data: personalNotes, error: notifError } = await supabase
+      const { data: personalNotes, error: notifError } = await (supabase as any)
         .from('notifications')
         .select('id, title, message, type, is_read, link, created_at')
         .eq('user_id', user.id)
@@ -44,7 +44,7 @@ export const StudentNotifications = () => {
       if (notifError) console.error('Failed to fetch notifications:', notifError);
 
       // 2. Query global announcements
-      const { data: globalAnnouncements, error: annError } = await supabase
+      const { data: globalAnnouncements, error: annError } = await (supabase as any)
         .from('announcements')
         .select('id, title, body, created_at')
         .order('created_at', { ascending: false })
@@ -76,7 +76,7 @@ export const StudentNotifications = () => {
 
   const markReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('notifications')
         .update({ is_read: true })
         .eq('id', notificationId);
@@ -156,7 +156,7 @@ export const StudentNotifications = () => {
   return (
     <Card className="mb-6">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Bell className="h-5 w-5" />
             Notifications
@@ -167,7 +167,7 @@ export const StudentNotifications = () => {
             )}
           </CardTitle>
           {notifications.length > 0 && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="ghost"
                 size="sm"

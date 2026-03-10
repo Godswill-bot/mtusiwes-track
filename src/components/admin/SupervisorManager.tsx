@@ -273,9 +273,9 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
     return (
       <div className="h-full flex flex-col">
         <Tabs value={activeType} onValueChange={(value) => setActiveType(value as "industry_supervisor" | "school_supervisor")} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="mb-4 flex-shrink-0">
-            <TabsTrigger value="industry_supervisor">Industry</TabsTrigger>
-            <TabsTrigger value="school_supervisor">School</TabsTrigger>
+            <TabsList className="mb-4 flex-shrink-0 w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="industry_supervisor" className="flex-1">Industry</TabsTrigger>
+              <TabsTrigger value="school_supervisor" className="flex-1">School</TabsTrigger>
           </TabsList>
           <TabsContent value="industry_supervisor" className="flex-1 flex flex-col min-h-0 mt-0">
             <SupervisorTable
@@ -413,9 +413,9 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
       </CardHeader>
       <CardContent className="pt-6">
         <Tabs value={activeType} onValueChange={(value) => setActiveType(value as "industry_supervisor" | "school_supervisor")}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="industry_supervisor">Industry Supervisors</TabsTrigger>
-            <TabsTrigger value="school_supervisor">School Supervisors</TabsTrigger>
+            <TabsList className="mb-4 w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="industry_supervisor" className="flex-1">Industry Supervisors</TabsTrigger>
+              <TabsTrigger value="school_supervisor" className="flex-1">School Supervisors</TabsTrigger>
           </TabsList>
           <TabsContent value="industry_supervisor" className="mt-0">
             <SupervisorTable

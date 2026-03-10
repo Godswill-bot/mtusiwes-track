@@ -407,14 +407,12 @@ const SchoolSupervisorDashboard = () => {
 
         {/* Tabs for Reports and Attendance */}
         <Tabs defaultValue="reports" className="space-y-4">
-          <TabsList className="w-full sm:w-auto overflow-x-auto flex flex-nowrap whitespace-nowrap justify-start sm:justify-center p-1 scrollbar-hide">
-            <TabsTrigger value="reports" className="flex-shrink-0">
-              <FileCheck className="h-4 w-4 mr-2" />
-              Weekly Reports
-            </TabsTrigger>
-            <TabsTrigger value="attendance" className="flex-shrink-0">
-              <Calendar className="h-4 w-4 mr-2" />
-              Attendance
+            <TabsList className="w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="reports" className="flex-1 min-w-[150px]">
+                <FileCheck className="h-4 w-4 mr-2" />
+                Weekly Reports
+              </TabsTrigger>
+              <TabsTrigger value="attendance" className="flex-1 min-w-[150px]">
             </TabsTrigger>
           </TabsList>
 

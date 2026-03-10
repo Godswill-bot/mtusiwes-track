@@ -108,7 +108,7 @@ export const FullScreenStudentModal = ({
       if (signatureFile) {
         toast.info("Uploading signature...");
         const fileExt = signatureFile.name.split(".").pop();
-        const fileName = `school-supervisor/${user.id}/${Date.now()}.${fileExt}`;
+        const fileName = `school-supervisor/${session.user.id}/${Date.now()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from("student-photos")
@@ -280,19 +280,19 @@ export const FullScreenStudentModal = ({
 
             {/* Reports Tabs */}
             <Tabs defaultValue="all" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="all">
+              <TabsList className="w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
+                <TabsTrigger value="all" className="flex-1 min-w-[120px]">
                   All Reports ({categorizedWeeks.all.length})
                 </TabsTrigger>
-                <TabsTrigger value="pending" className="flex items-center gap-2">
+                <TabsTrigger value="pending" className="flex-1 min-w-[120px] flex items-center justify-center gap-2">
                   <Clock className="h-3 w-3" />
                   Pending ({categorizedWeeks.pending.length})
                 </TabsTrigger>
-                <TabsTrigger value="approved" className="flex items-center gap-2">
+                <TabsTrigger value="approved" className="flex-1 min-w-[120px] flex items-center justify-center gap-2">
                   <CheckCircle className="h-3 w-3" />
                   Approved ({categorizedWeeks.approved.length})
                 </TabsTrigger>
-                <TabsTrigger value="rejected" className="flex items-center gap-2">
+                <TabsTrigger value="rejected" className="flex-1 min-w-[120px] flex items-center justify-center gap-2">
                   <XCircle className="h-3 w-3" />
                   Rejected ({categorizedWeeks.rejected.length})
                 </TabsTrigger>

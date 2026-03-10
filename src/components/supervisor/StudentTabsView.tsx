@@ -207,7 +207,7 @@ export const StudentTabsView = ({
             {sortedStudents.map((student) => (
               <TabsContent key={student.id} value={student.id} className="mt-0">
                 {/* Student Header */}
-                <div className="flex items-start justify-between p-4 bg-muted/30 rounded-lg mb-4">
+                <div className="flex flex-col md:flex-row md:items-start justify-between p-4 bg-muted/30 rounded-lg mb-4 gap-4">
                   <div>
                     <h3 className="font-semibold text-lg">{student.profile.full_name}</h3>
                     <p className="text-sm text-muted-foreground">
@@ -217,7 +217,7 @@ export const StudentTabsView = ({
                       {student.organisation_name}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"

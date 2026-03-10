@@ -152,11 +152,11 @@ export const AdminNotifications = () => {
   };
 
   return (
-    <>
+    <div className="space-y-6">
       <AdminAnnouncement />
       <Card className="shadow-elevated">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-primary" />
               <CardTitle>Notifications</CardTitle>
@@ -166,7 +166,7 @@ export const AdminNotifications = () => {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -283,7 +283,7 @@ export const AdminNotifications = () => {
           )}
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 };
 

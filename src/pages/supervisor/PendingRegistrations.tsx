@@ -554,20 +554,20 @@ const PendingRegistrations = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="pending">
-                  <Clock className="h-4 w-4 mr-2" />
-                  Pending ({pendingStudents.length})
-                </TabsTrigger>
-                <TabsTrigger value="approved">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approved ({approvedStudents.length})
-                </TabsTrigger>
-                <TabsTrigger value="rejected">
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Rejected ({rejectedStudents.length})
-                </TabsTrigger>
-              </TabsList>
+                <TabsList className="w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
+                  <TabsTrigger value="pending" className="flex-1 min-w-[120px]">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Pending ({pendingStudents.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="approved" className="flex-1 min-w-[120px]">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Approved ({approvedStudents.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="rejected" className="flex-1 min-w-[120px]">
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Rejected ({rejectedStudents.length})
+                  </TabsTrigger>
+                </TabsList>
 
               <TabsContent value="pending" className="space-y-4 mt-4">
                 {pendingStudents.length === 0 ? (
