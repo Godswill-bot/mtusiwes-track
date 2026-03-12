@@ -106,6 +106,7 @@ const PreSiwes = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Comprehensive custom validation to prevent silent HTML5 failures
     if (!user) {
       toast.error("You must be logged in to submit the form.");
       return;
@@ -113,6 +114,11 @@ const PreSiwes = () => {
 
     if (!formData.matric_no?.trim()) {
       toast.error("Please enter your matriculation number.");
+      return;
+    }
+
+    if (!formData.level?.trim()) {
+      toast.error("Please enter your current level (e.g., 300).");
       return;
     }
 
@@ -126,8 +132,33 @@ const PreSiwes = () => {
       return;
     }
 
+    if (!formData.organisation_name?.trim()) {
+      toast.error("Please enter your SIWES organisation name.");
+      return;
+    }
+
+    if (!formData.organisation_address?.trim()) {
+      toast.error("Please enter your SIWES organisation's full address.");
+      return;
+    }
+
+    if (!formData.nature_of_business?.trim()) {
+      toast.error("Please enter the nature of business of the organisation.");
+      return;
+    }
+
     if (!formData.start_date || !formData.end_date) {
-      toast.error("Please select start and end dates.");
+      toast.error("Please select both start and end dates.");
+      return;
+    }
+
+    if (new Date(formData.end_date) <= new Date(formData.start_date)) {
+      toast.error("Your end date must be after your start date.");
+      return;
+    }
+
+    if (!formData.industry_supervisor_name?.trim()) {
+      toast.error("Please enter your industry supervisor's name.");
       return;
     }
 
@@ -464,7 +495,7 @@ const PreSiwes = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} noValidate className="space-y-6">
                 <div className="border-t pt-6 space-y-4">
                   <h3 className="font-semibold text-lg">Student Information</h3>
 
