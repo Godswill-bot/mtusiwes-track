@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 
 type WeekRecord = Database["public"]["Tables"]["weeks"]["Row"];
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ShieldCheck, ShieldOff, UserPlus } from "lucide-react";
+import { Download, Loader2, ShieldCheck, ShieldOff, UserPlus } from "lucide-react";
 
 type StudentRecord = Database["public"]["Tables"]["students"]["Row"];
 type SupervisorRecord = Database["public"]["Tables"]["supervisors"]["Row"];
@@ -288,6 +288,35 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
     });
   }, [studentsQuery.data, filter]);
 
+  const downloadAsCSV = () => {
+    const headers = ["Name", "Matric No.", "Email", "Faculty", "Department", "Phone", "School Supervisor", "Industry Supervisor", "Ind. Supervisor Email", "Ind. Supervisor Phone", "Organisation", "Organisation Address", "Status"];
+    const rows = filteredStudents.map((s) => [
+      s.full_name || "",
+      s.matric_no || "",
+      s.email || "",
+      s.faculty || "",
+      s.department || "",
+      s.phone || "",
+      s.school_supervisor_name || "",
+      s.industry_supervisor_name || "",
+      s.industry_supervisor_email || "",
+      s.industry_supervisor_phone || "",
+      s.organisation_name || "",
+      s.organisation_address || "",
+      s.is_active ? "Active" : "Inactive",
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `students_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
     // Fetch weekly reports for a student
     const fetchStudentWeeks = async (studentId: string) => {
       setLoadingWeeks(studentId);
@@ -389,6 +418,15 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
               onChange={(e) => setFilter(e.target.value)}
               className="flex-1 sm:max-w-xs"
             />
+            <Button
+              variant="outline"
+              onClick={downloadAsCSV}
+              disabled={!filteredStudents.length}
+              className="w-full sm:w-auto whitespace-nowrap"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
+            </Button>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto whitespace-nowrap">
@@ -653,7 +691,9 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                 <TableHead className="min-w-[80px]">Faculty</TableHead>
                 <TableHead className="min-w-[110px]">Department</TableHead>
                 <TableHead className="min-w-[100px]">Phone</TableHead>
+                <TableHead className="min-w-[160px]">School Supervisor</TableHead>
                 <TableHead className="min-w-[180px]">Industry Supervisor</TableHead>
+                <TableHead className="min-w-[180px]">Organisation</TableHead>
                 <TableHead className="min-w-[70px]">Status</TableHead>
                 {!compact && <TableHead className="text-right min-w-[180px]">Actions</TableHead>}
               </TableRow>
@@ -671,6 +711,9 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                     <TableCell className="break-words text-sm">{student.faculty || "—"}</TableCell>
                     <TableCell className="break-words text-sm">{student.department || "—"}</TableCell>
                     <TableCell className="break-words text-sm">{student.phone || "—"}</TableCell>
+                    <TableCell className="max-w-[160px]">
+                      <div className="text-sm font-medium break-words">{student.school_supervisor_name || "—"}</div>
+                    </TableCell>
                     <TableCell className="max-w-[180px]">
                       <div className="text-sm font-medium break-words">{student.industry_supervisor_name || "—"}</div>
                       {student.industry_supervisor_email && (
@@ -678,6 +721,12 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                       )}
                       {student.industry_supervisor_phone && (
                         <div className="text-xs text-muted-foreground">{student.industry_supervisor_phone}</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-[180px]">
+                      <div className="text-sm font-medium break-words">{student.organisation_name || "—"}</div>
+                      {student.organisation_address && (
+                        <div className="text-xs text-muted-foreground break-words">{student.organisation_address}</div>
                       )}
                     </TableCell>
                     <TableCell>
@@ -745,7 +794,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                   </TableRow>
                     {expandedStudentId === student.id && (
                       <TableRow>
-                        <TableCell colSpan={compact ? 8 : 9} className="bg-muted/30 p-4">
+                        <TableCell colSpan={compact ? 8 : 11} className="bg-muted/30 p-4">
                           {loadingWeeks === student.id ? (
                             <div className="flex items-center justify-center py-4">
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading weekly reports...

@@ -4,12 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, Mail, Phone, Building } from "lucide-react";
+import { ArrowLeft, Download, Users, Mail, Phone, Building } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Student {
   id: string;
+  full_name: string | null;
   matric_no: string;
   department: string;
   faculty: string;
@@ -65,6 +66,7 @@ const StudentsList = () => {
           student_id,
           students (
             id,
+            full_name,
             matric_no,
             department,
             faculty,
@@ -107,12 +109,12 @@ const StudentsList = () => {
         .select("id, full_name")
         .in("id", userIds);
 
-      // Combine data
+      // Combine data — prefer full_name stored on students table, fall back to profiles
       const studentsWithProfiles = studentsData.map(student => {
         const profile = profilesData?.find(p => p.id === student.user_id);
         return {
           ...student,
-          profile: { full_name: profile?.full_name || "Unknown" }
+          profile: { full_name: student.full_name || profile?.full_name || "Unknown" }
         };
       });
 
@@ -148,6 +150,7 @@ const StudentsList = () => {
         .from("students")
         .select(`
           id,
+          full_name,
           matric_no,
           department,
           faculty,
@@ -176,7 +179,7 @@ const StudentsList = () => {
         const profile = profilesData?.find(p => p.id === student.user_id);
         return {
           ...student,
-          profile: { full_name: profile?.full_name || "Unknown" }
+          profile: { full_name: student.full_name || profile?.full_name || "Unknown" }
         };
       });
 
@@ -192,6 +195,32 @@ const StudentsList = () => {
       fetchAssignedStudents();
     }
   }, [user, userRole, fetchAssignedStudents]);
+
+  const downloadAsCSV = () => {
+    const headers = ["Name", "Matric No.", "Faculty", "Department", "Email", "Phone", "Organisation", "Organisation Address", "Industry Supervisor", "School Supervisor"];
+    const rows = students.map((s) => [
+      s.full_name || s.profile.full_name || "",
+      s.matric_no || "",
+      s.faculty || "",
+      s.department || "",
+      s.email || "",
+      s.phone || "",
+      s.organisation_name || "",
+      s.organisation_address || "",
+      s.industry_supervisor_name || "",
+      s.school_supervisor_name || "",
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `my_students_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
@@ -222,9 +251,17 @@ const StudentsList = () => {
                 Students under your supervision
               </p>
             </div>
-            <div className="flex items-center gap-2 self-start sm:self-auto bg-primary/5 px-4 py-2 rounded-lg">
-              <Users className="h-5 w-5 text-primary" />
-              <span className="text-xl sm:text-2xl font-bold">{students.length}</span>
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              {students.length > 0 && (
+                <Button variant="outline" onClick={downloadAsCSV}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download CSV
+                </Button>
+              )}
+              <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-lg">
+                <Users className="h-5 w-5 text-primary" />
+                <span className="text-xl sm:text-2xl font-bold">{students.length}</span>
+              </div>
             </div>
           </div>
 
