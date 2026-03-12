@@ -652,7 +652,7 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Button 
                   onClick={() => navigate("/student/logbook")} 
                   className="h-24 flex-col gap-2"
