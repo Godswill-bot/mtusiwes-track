@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import mtuLogo from "@/assets/mtu-logo.png";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,66 +16,68 @@ const EmailVerification = () => {
 
   useEffect(() => {
     const verifyEmail = async () => {
-      const token = searchParams.get("token");
-      const type = searchParams.get("type");
+      try {
+        // Wait a slight moment to see if Supabase naturally caught the session from URL
+        let { data: { session } } = await supabase.auth.getSession();
+        let currentUser = session?.user;
 
-      if (type === "signup" && token) {
-        try {
+        // Parse hash fragment manually since Supabase implicit flow puts tokens there
+        const hash = window.location.hash.substring(1);
+        const hashParams = new URLSearchParams(hash);
+        
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const errorDesc = hashParams.get("error_description");
+
+        const tokenQuery = searchParams.get("token");
+        const typeQuery = searchParams.get("type");
+
+        if (errorDesc) {
+          throw new Error(errorDesc.replace(/\+/g, ' '));
+        }
+
+        // If not automatically logged in but we have tokens in the hash
+        if (!currentUser && accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          if (error) throw error;
+          currentUser = data.user;
+        }
+
+        // Fallback for explicit query parameters (OTP link)
+        if (!currentUser && typeQuery === "signup" && tokenQuery) {
           const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: token,
+            token_hash: tokenQuery,
             type: "signup",
           });
-
           if (error) throw error;
-
-          if (data.user) {
-            // Fetch user role from profiles
-            const { data: profileData, error: profileError } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", data.user.id)
-              .maybeSingle();
-
-            if (profileError) {
-              console.error("Error fetching profile:", profileError);
-            }
-
-            const role = profileData?.role || null;
-            setUserRole(role);
-
-            if (role === "student") {
-              setMessage("Email verified successfully! You can now proceed to generate your SIWES letter.");
-            } else if (role === "school_supervisor") {
-              setMessage("Email verified successfully! You can now log in to your supervisor dashboard.");
-            } else {
-              setMessage("Email verified successfully!");
-            }
-
-            setStatus("success");
-          }
-        } catch (error: unknown) {
-          setStatus("error");
-          const errorMessage = error instanceof Error ? error.message : "Failed to verify email. Please try again.";
-          setMessage(errorMessage);
+          currentUser = data.user;
         }
-      } else {
+
+        if (currentUser) {
+          // Fetch user role
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", currentUser.id)
+            .maybeSingle();
+
+          setUserRole(profileData?.role || null);
+          setStatus("success");
+        } else {
+          // If we reach here, no valid tokens were found in hash or query
+          throw new Error("Invalid or expired verification link.");
+        }
+      } catch (error: any) {
         setStatus("error");
-        setMessage("Invalid verification link.");
+        setMessage(error.message || "Failed to verify email. Please try again.");
       }
     };
 
     verifyEmail();
   }, [searchParams]);
-
-  const handleContinue = () => {
-    if (userRole === "student") {
-      navigate("/student/siwes-letter");
-    } else if (userRole === "school_supervisor") {
-      navigate("/school-supervisor/login");
-    } else {
-      navigate("/");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
@@ -98,17 +100,38 @@ const EmailVerification = () => {
             <>
               <Alert className="border-green-500 bg-green-50">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  {message}
+                <AlertDescription className="text-green-800 font-medium">
+                  Verified successfully! Please click the option below to continue.
                 </AlertDescription>
               </Alert>
-              <Button onClick={handleContinue} className="w-full" size="lg">
-                {userRole === "student" 
-                  ? "Continue to SIWES Letter" 
-                  : userRole === "school_supervisor"
-                  ? "Continue to Login"
-                  : "Continue"}
-              </Button>
+              
+              <div className="mt-6 flex flex-col gap-3">
+                {userRole === "student" && (
+                  <Button 
+                    onClick={() => navigate("/student/login")} 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    Student Login
+                  </Button>
+                )}
+                
+                {userRole === "school_supervisor" && (
+                  <Button 
+                    onClick={() => navigate("/school-supervisor/login")} 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    Supervisor Login
+                  </Button>
+                )}
+
+                {(!userRole || (userRole !== "student" && userRole !== "school_supervisor")) && (
+                  <Button onClick={() => navigate("/")} className="w-full" size="lg">
+                    Continue to Home
+                  </Button>
+                )}
+              </div>
             </>
           )}
 
@@ -118,7 +141,7 @@ const EmailVerification = () => {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{message}</AlertDescription>
               </Alert>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-4">
                 <Button 
                   onClick={() => navigate("/student/login")} 
                   className="flex-1" 
