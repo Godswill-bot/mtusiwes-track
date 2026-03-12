@@ -82,6 +82,22 @@ export const register = async (req, res) => {
       });
     }
 
+    if (userRole === 'student') {
+      const normalizedEmail = String(email).toLowerCase().trim();
+      const { data: blockedEmail } = await supabase
+        .from('blocked_student_emails')
+        .select('email, blocked_reason')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      if (blockedEmail) {
+        return res.status(403).json({
+          success: false,
+          error: blockedEmail.blocked_reason || 'This email is no longer eligible for student self-service signup.',
+        });
+      }
+    }
+
     // Check if email already exists
     const emailCheck = await checkEmailExists(email);
     if (emailCheck.exists) {

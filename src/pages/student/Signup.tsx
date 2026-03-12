@@ -99,6 +99,22 @@ const StudentSignup = () => {
         return;
       }
 
+    // Prevent self-service signup for blocked student emails
+    try {
+      const { data: isBlocked, error: blockCheckError } = await (supabase as any).rpc(
+        "is_student_email_blocked",
+        { p_email: email.toLowerCase().trim() }
+      );
+
+      if (!blockCheckError && isBlocked) {
+        setError("This MTU email is no longer eligible for student self-service signup. Please contact the SIWES admin.");
+        return;
+      }
+    } catch (blockCheckException) {
+      // Do not block signup when this check fails unexpectedly.
+      console.warn("Unable to verify blocked email status:", blockCheckException);
+    }
+
     // Validate matric number
     if (!validateMatricNo(matricNo)) {
       setError("Matric number must be 11 digits (e.g., 22010306034)");

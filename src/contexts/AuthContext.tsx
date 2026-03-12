@@ -201,6 +201,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string, role: AppRole) => {
     try {
+      if (role === "student") {
+        const { data: isBlocked, error: blockError } = await (supabase as any).rpc(
+          "is_student_email_blocked",
+          { p_email: email.toLowerCase().trim() }
+        );
+
+        if (!blockError && isBlocked) {
+          throw new Error("This MTU email is no longer eligible for student self-service signup. Please contact the SIWES admin.");
+        }
+      }
+
       const redirectUrl = `${window.location.origin}/email-verification`;
       
       const { data, error } = await supabase.auth.signUp({

@@ -17,7 +17,8 @@ type StudentAction =
   | "update_student"
   | "delete_student"
   | "assign_supervisors"
-  | "set_student_status";
+  | "set_student_status"
+  | "reset_students_for_new_cycle";
 
 interface BasePayload {
   action: StudentAction;
@@ -43,6 +44,18 @@ interface CreateStudentPayload extends BasePayload {
   user_id: string;
 }
 
+interface UpdateStudentPayload extends BasePayload {
+  action: "update_student";
+  student_id: string;
+  updates: Record<string, unknown>;
+}
+
+interface DeleteStudentPayload extends BasePayload {
+  action: "delete_student";
+  student_id: string;
+  user_id?: string;
+}
+
 interface AssignSupervisorsPayload extends BasePayload {
   action: "assign_supervisors";
   student_id: string;
@@ -56,12 +69,18 @@ interface SetStudentStatusPayload extends BasePayload {
   is_active: boolean;
 }
 
+interface ResetStudentsForNewCyclePayload extends BasePayload {
+  action: "reset_students_for_new_cycle";
+  confirmation_text: string;
+}
+
 type StudentsPayload =
   | CreateStudentPayload
   | UpdateStudentPayload
   | DeleteStudentPayload
   | AssignSupervisorsPayload
-  | SetStudentStatusPayload;
+  | SetStudentStatusPayload
+  | ResetStudentsForNewCyclePayload;
 
 const respond = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -89,6 +108,8 @@ serve(async (req) => {
         return await assignSupervisors(adminCtx.adminId, payload);
       case "set_student_status":
         return await setStudentStatus(adminCtx.adminId, payload);
+      case "reset_students_for_new_cycle":
+        return await resetStudentsForNewCycle(adminCtx.adminId, payload);
       default:
         return respond({ error: "Unsupported action" }, 400);
     }
@@ -343,5 +364,129 @@ const setStudentStatus = async (
   });
 
   return respond({ student: data });
+};
+
+const resetStudentsForNewCycle = async (
+  adminId: string | null,
+  payload: ResetStudentsForNewCyclePayload,
+) => {
+  if (payload.confirmation_text !== "RESET STUDENTS") {
+    throw new Error("Confirmation text mismatch. Type RESET STUDENTS to continue.");
+  }
+
+  const { data: portalConfig, error: portalError } = await supabase
+    .from("portal_settings")
+    .select("student_portal_open")
+    .eq("id", "1")
+    .maybeSingle();
+
+  if (portalError) {
+    throw portalError;
+  }
+
+  if (portalConfig?.student_portal_open !== false) {
+    throw new Error("Close the student portal before running student reset.");
+  }
+
+  const { data: studentRows, error: studentsError } = await supabase
+    .from("students")
+    .select("id, user_id, email, is_active, siwes_locked")
+    .not("user_id", "is", null);
+
+  if (studentsError) {
+    throw studentsError;
+  }
+
+  const students = studentRows ?? [];
+  if (students.length === 0) {
+    return respond({
+      success: true,
+      totalStudents: 0,
+      blockedCount: 0,
+      deletedAuthCount: 0,
+      message: "No student accounts found for reset.",
+    });
+  }
+
+  const blocklistRows = students
+    .filter((student) => !!student.email)
+    .map((student) => ({
+      email: String(student.email).toLowerCase().trim(),
+      blocked_reason: "Blocked after SIWES termination reset",
+      blocked_by_admin_id: adminId,
+      source_student_id: student.id,
+    }));
+
+  if (blocklistRows.length > 0) {
+    const { error: blocklistError } = await supabase
+      .from("blocked_student_emails")
+      .upsert(blocklistRows, { onConflict: "email" });
+
+    if (blocklistError) {
+      throw blocklistError;
+    }
+  }
+
+  const uniqueUserIds = Array.from(new Set(students.map((student) => student.user_id).filter(Boolean)));
+  const failedAuthDeletes: string[] = [];
+  let deletedAuthCount = 0;
+
+  for (const userId of uniqueUserIds) {
+    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
+
+    if (deleteAuthError) {
+      failedAuthDeletes.push(userId);
+    } else {
+      deletedAuthCount += 1;
+    }
+  }
+
+  if (uniqueUserIds.length > 0) {
+    await supabase
+      .from("user_roles")
+      .delete()
+      .in("user_id", uniqueUserIds)
+      .eq("role", "student");
+
+    await supabase
+      .from("profiles")
+      .delete()
+      .in("id", uniqueUserIds)
+      .eq("role", "student");
+  }
+
+  const studentIds = students.map((student) => student.id);
+  if (studentIds.length > 0) {
+    const { error: updateError } = await supabase
+      .from("students")
+      .update({
+        is_active: false,
+        siwes_locked: true,
+      })
+      .in("id", studentIds);
+
+    if (updateError) {
+      throw updateError;
+    }
+  }
+
+  await logAudit(adminId, {
+    actionType: "RESET_STUDENTS",
+    tableName: "students",
+    newValue: {
+      totalStudents: students.length,
+      blockedCount: blocklistRows.length,
+      deletedAuthCount,
+      failedAuthDeletes,
+    },
+  });
+
+  return respond({
+    success: true,
+    totalStudents: students.length,
+    blockedCount: blocklistRows.length,
+    deletedAuthCount,
+    failedAuthDeletes,
+  });
 };
 

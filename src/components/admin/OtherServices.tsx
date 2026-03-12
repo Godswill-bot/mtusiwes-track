@@ -3,11 +3,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Download, FileText, Calendar, CheckSquare, Loader2 } from "lucide-react";
+import { Download, FileText, Calendar, CheckSquare, Loader2, ShieldAlert } from "lucide-react";
 import { AnimatedCard } from "@/components/animations/MotionWrappers";
 import { format } from "date-fns";
 
@@ -103,6 +112,8 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
   const [acceptanceDate, setAcceptanceDate] = useState<string>("");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [resetConfirmationText, setResetConfirmationText] = useState("");
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const { data: sessions = [], isPending: sessionsPending } = useQuery({
     queryKey: ["academic-sessions"],
@@ -190,6 +201,46 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
     },
     onError: (error: unknown) => {
       toast.error(error instanceof Error ? error.message : "Failed to set attachment period");
+    },
+  });
+
+  const resetStudentsMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("admin-students", {
+        body: {
+          action: "reset_students_for_new_cycle",
+          confirmation_text: resetConfirmationText,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data: {
+      totalStudents: number;
+      blockedCount: number;
+      deletedAuthCount: number;
+      failedAuthDeletes?: string[];
+    }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
+
+      const failedCount = data.failedAuthDeletes?.length || 0;
+      if (failedCount > 0) {
+        toast.warning(
+          `Reset finished with warnings. ${data.deletedAuthCount}/${data.totalStudents} auth accounts deleted, ${data.blockedCount} emails blocked, ${failedCount} auth deletions failed.`
+        );
+      } else {
+        toast.success(
+          `Student reset complete. ${data.deletedAuthCount} auth accounts removed and ${data.blockedCount} emails blocked.`
+        );
+      }
+
+      setResetDialogOpen(false);
+      setResetConfirmationText("");
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : "Failed to reset students");
     },
   });
 
@@ -745,6 +796,84 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
                   CSV
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </AnimatedCard>
+
+        <AnimatedCard delay={0.8}>
+          <Card className="h-full flex flex-col border-destructive/30">
+            <CardHeader className="pb-2 flex-shrink-0">
+              <CardTitle className="flex items-center gap-2 text-base text-destructive">
+                <ShieldAlert className="h-4 w-4" />
+                Student Reset (End of SIWES)
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Removes student login accounts, preserves historical student records, and permanently blocks those emails from self-service signup.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 flex-1 flex flex-col justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                Requirement: student portal must be closed before this action can run.
+              </p>
+
+              <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="w-full">
+                    Run Student Reset
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Confirm Student Reset</DialogTitle>
+                    <DialogDescription>
+                      This will delete all current student auth accounts, keep historical student records in the database, and block those emails from future self-service student signup.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-confirmation">
+                      Type <span className="font-semibold">RESET STUDENTS</span> to continue
+                    </Label>
+                    <Input
+                      id="reset-confirmation"
+                      value={resetConfirmationText}
+                      onChange={(e) => setResetConfirmationText(e.target.value)}
+                      placeholder="RESET STUDENTS"
+                    />
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setResetDialogOpen(false);
+                        setResetConfirmationText("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={
+                        resetConfirmationText !== "RESET STUDENTS" ||
+                        resetStudentsMutation.isPending
+                      }
+                      onClick={() => resetStudentsMutation.mutate()}
+                    >
+                      {resetStudentsMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Resetting...
+                        </>
+                      ) : (
+                        "Confirm Reset"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </AnimatedCard>
