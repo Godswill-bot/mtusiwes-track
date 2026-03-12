@@ -9,9 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PrintableStudentsTable } from "@/components/supervisor/PrintableStudentsTable";
-import { StudentAttendanceTabsView } from "@/components/supervisor/StudentAttendanceTabsView";
+
 import { StudentTabsView } from "@/components/supervisor/StudentTabsView";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/utils/api";
 
@@ -405,45 +404,26 @@ const SchoolSupervisorDashboard = () => {
           </div>
         )}
 
-        {/* Tabs for Reports and Attendance */}
-        <Tabs defaultValue="reports" className="space-y-4">
-            <TabsList className="w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
-              <TabsTrigger value="reports" className="flex-1 min-w-[150px]">
-                <FileCheck className="h-4 w-4 mr-2" />
-                Weekly Reports
-              </TabsTrigger>
-              <TabsTrigger value="attendance" className="flex-1 min-w-[150px]">
-            </TabsTrigger>
-          </TabsList>
+        {/* Quick Actions */}
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <Button onClick={() => navigate("/supervisor/students")} variant="outline" className="w-full sm:w-auto">
+            <Users className="h-4 w-4 mr-2" />
+            View All Students
+          </Button>
+          <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline" className="w-full sm:w-auto">
+            <FileCheck className="h-4 w-4 mr-2" />
+            Manage Registrations
+          </Button>
+        </div>
 
-          <TabsContent value="reports">
-            {/* Quick Actions */}
-            <div className="flex flex-col sm:flex-row gap-2 mb-4">
-              <Button onClick={() => navigate("/supervisor/students")} variant="outline" className="w-full sm:w-auto">
-                <Users className="h-4 w-4 mr-2" />
-                View All Students
-              </Button>
-              <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline" className="w-full sm:w-auto">
-                <FileCheck className="h-4 w-4 mr-2" />
-                Manage Registrations
-              </Button>
-            </div>
-            
-            {/* Student Tabs View with Full-Screen Reports */}
-            <StudentTabsView 
-              students={students}
-              onRefresh={fetchForwardedSubmissions}
-              onCompileLogbook={handleCompileLogbook}
-              compilingLogbook={compilingLogbook}
-              supervisorId={supervisorRecordId || user?.id || ""}
-            />
-          </TabsContent>
-
-          <TabsContent value="attendance">
-            {/* Enhanced Attendance View with Student Tabs */}
-            <StudentAttendanceTabsView />
-          </TabsContent>
-        </Tabs>
+        {/* Student Tabs View with Full-Screen Reports */}
+        <StudentTabsView 
+          students={students}
+          onRefresh={fetchForwardedSubmissions}
+          onCompileLogbook={handleCompileLogbook}
+          compilingLogbook={compilingLogbook}
+          supervisorId={supervisorRecordId || user?.id || ""}
+        />
       </div>
     </div>
   );

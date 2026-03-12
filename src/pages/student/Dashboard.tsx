@@ -692,16 +692,7 @@ const StudentDashboard = () => {
                   <FileText className="h-6 w-6" />
                   <span>View Registration</span>
                 </Button>
-                <Button 
-                  onClick={() => navigate("/student/attendance")}
-                  variant="outline"
-                  className="h-24 flex-col gap-2"
-                  size="lg"
-                  disabled={siwesLocked}
-                >
-                  {siwesLocked ? <Lock className="h-6 w-6" /> : <Calendar className="h-6 w-6" />}
-                  <span>{siwesLocked ? "View Attendance (Read-Only)" : "My Attendance"}</span>
-                </Button>
+
               </div>
 
               {/* Supervisor ↔ Student Chat Drawer */}

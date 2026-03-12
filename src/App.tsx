@@ -18,7 +18,6 @@ import PreSiwes from "./pages/student/PreSiwes";
 import PreSiwesEdit from "./pages/student/PreSiwesEdit";
 import ProfileEdit from "./pages/student/ProfileEdit";
 import Logbook from "./pages/student/Logbook";
-import StudentAttendance from "./pages/student/Attendance";
 import SchoolSupervisorDashboard from "./pages/supervisor/SchoolSupervisorDashboard";
 import WeeklyReportView from "./pages/supervisor/WeeklyReportView";
 import StudentsList from "./pages/supervisor/StudentsList";
@@ -155,14 +154,6 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
                   <StudentChatPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/student/attendance" 
-              element={
-                <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentAttendance />
                 </ProtectedRoute>
               } 
             />
