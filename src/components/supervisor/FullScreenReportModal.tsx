@@ -286,53 +286,57 @@ export const FullScreenReportModal = ({
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-hidden flex flex-col p-0">
           {/* Header */}
-          <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* Navigation arrows */}
-                {allWeeks && allWeeks.length > 1 && (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={!prevWeek}
-                      onClick={() => prevWeek && onNavigateWeek?.(prevWeek.id)}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      {currentIndex + 1} / {allWeeks.length}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={!nextWeek}
-                      onClick={() => nextWeek && onNavigateWeek?.(nextWeek.id)}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                <div>
-                  <DialogTitle className="text-xl">
-                    Week {weekData?.week_number} - Weekly Report
-                  </DialogTitle>
-                  {weekData && (
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(weekData.start_date), "MMM d")} - {format(new Date(weekData.end_date), "MMM d, yyyy")}
-                    </p>
-                  )}
+          <DialogHeader className="px-4 sm:px-6 py-4 border-b flex-shrink-0">
+            {/* Row 1: navigation + title + close (always visible) */}
+            <div className="flex items-start gap-3 pr-8">
+              {/* Navigation arrows */}
+              {allWeeks && allWeeks.length > 1 && (
+                <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={!prevWeek}
+                    onClick={() => prevWeek && onNavigateWeek?.(prevWeek.id)}
+                    className="h-7 w-7 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {currentIndex + 1} / {allWeeks.length}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={!nextWeek}
+                    onClick={() => nextWeek && onNavigateWeek?.(nextWeek.id)}
+                    className="h-7 w-7 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <DialogTitle className="text-lg sm:text-xl leading-tight">
+                  Week {weekData?.week_number} – Weekly Report
+                </DialogTitle>
+                {weekData && (
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {format(new Date(weekData.start_date), "MMM d")} – {format(new Date(weekData.end_date), "MMM d, yyyy")}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                {weekData && getStatusBadge(weekData.status)}
-                <Button variant="outline" size="sm" onClick={handlePrint}>
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
+            </div>
+            {/* Row 2: status badge + action buttons */}
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              {weekData && getStatusBadge(weekData.status)}
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" size="sm" onClick={handlePrint} className="print:hidden">
+                  <Printer className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Print</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
+                <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="print:hidden">
+                  <Download className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Download</span>
                 </Button>
               </div>
             </div>

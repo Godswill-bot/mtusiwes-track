@@ -638,7 +638,7 @@ const WeeklyReportView = () => {
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Button
               variant="ghost"
               onClick={() => navigate(userRole === "school_supervisor" ? "/supervisor/school/dashboard" : "/supervisor/dashboard")}
@@ -647,27 +647,33 @@ const WeeklyReportView = () => {
               Back to Dashboard
             </Button>
             <div className="flex gap-2 print:hidden">
-              <Button variant="outline" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Print
+              <Button variant="outline" size="sm" onClick={handlePrint}>
+                <Printer className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Print</span>
+                <span className="sm:hidden">Print</span>
               </Button>
-              <Button variant="outline" onClick={handleDownloadPDF}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+                <Download className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Download</span>
+                <span className="sm:hidden">Download</span>
               </Button>
             </div>
           </div>
 
           <Card>
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle>Week {weekData.week_number} - Weekly Report</CardTitle>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-xl leading-tight">
+                    Week {weekData.week_number} – Weekly Report
+                  </CardTitle>
                   <CardDescription>
-                    {format(new Date(weekData.start_date), "MMM d")} - {format(new Date(weekData.end_date), "MMM d, yyyy")}
+                    {format(new Date(weekData.start_date), "MMM d")} – {format(new Date(weekData.end_date), "MMM d, yyyy")}
                   </CardDescription>
                 </div>
-                {getStatusBadge(weekData.status)}
+                <div className="flex-shrink-0">
+                  {getStatusBadge(weekData.status)}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
