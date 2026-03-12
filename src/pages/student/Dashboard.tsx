@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, CalendarCheck, CalendarRange, Lock, Award } from "lucide-react";
+import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, CalendarCheck, CalendarRange, Lock, Award, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
@@ -652,7 +652,7 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Button 
                   onClick={() => navigate("/student/logbook")} 
                   className="h-24 flex-col gap-2"
@@ -682,6 +682,16 @@ const StudentDashboard = () => {
                     <span className="text-xs text-muted-foreground">(No supervisor assigned)</span>
                   )}
                 </Button>
+                <Button 
+                  onClick={() => navigate("/student/announcements")}
+                  variant="outline"
+                  className="h-24 flex-col gap-2"
+                  size="lg"
+                >
+                  <Bell className="h-6 w-6" />
+                  <span>Announcements</span>
+                </Button>
+
                 <Button 
                   onClick={() => navigate("/student/pre-siwes")} 
                   variant="outline"

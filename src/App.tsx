@@ -25,6 +25,7 @@ import PendingRegistrations from "./pages/supervisor/PendingRegistrations";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminAnnouncementPage from "./pages/admin/AdminAnnouncementPage";
 import StudentAnnouncementViewer from "./pages/student/StudentAnnouncementViewer";
+import StudentAnnouncements from "./pages/student/Announcements";
 import SiwesInfo from "./pages/SiwesInfo";
 import EmailVerification from "./pages/EmailVerification";
 import EmailVerificationOTP from "./pages/student/EmailVerificationOTP";
@@ -223,6 +224,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminAnnouncementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/announcements"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentAnnouncements />
                 </ProtectedRoute>
               }
             />
