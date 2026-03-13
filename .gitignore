@@ -69,6 +69,11 @@ supabase/scripts/
 *.bak
 *.backup
 
+# Local helper/debug scripts
+script.js
+server/check.js
+test-rls.cjs
+
 # Lock files (optional - keep if you want consistent installs)
 # package-lock.json
 # bun.lockb
