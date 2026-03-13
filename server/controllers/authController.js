@@ -238,16 +238,59 @@ export const register = async (req, res) => {
           console.error('Error linking student to session:', sessionErr);
         }
 
-        // Automatically assign student to a random school supervisor
+        // Automatically assign student to a school supervisor
         try {
-          const { error: assignmentError } = await supabase.rpc(
+          const { data: assignedSupervisorId, error: assignmentError } = await supabase.rpc(
             'assign_student_to_school_supervisor',
             { p_student_id: insertedStudent.id }
           );
 
-          if (assignmentError) {
-            console.error('Error assigning supervisor during registration:', assignmentError);
-            // Don't block registration if assignment fails
+          if (assignmentError || !assignedSupervisorId) {
+            console.error('RPC assignment failed or returned no supervisor:', assignmentError);
+
+            // Fallback: direct assignment using service-role access
+            const { data: currentSession } = await supabase
+              .from('academic_sessions')
+              .select('id')
+              .eq('is_current', true)
+              .maybeSingle();
+
+            if (currentSession?.id) {
+              const { data: availableSupervisors } = await supabase
+                .from('supervisors')
+                .select('id, name, email')
+                .eq('supervisor_type', 'school_supervisor')
+                .eq('is_active', true);
+
+              if (availableSupervisors && availableSupervisors.length > 0) {
+                const randSup = availableSupervisors[Math.floor(Math.random() * availableSupervisors.length)];
+
+                const { error: directAssignError } = await supabase
+                  .from('supervisor_assignments')
+                  .upsert(
+                    {
+                      student_id: insertedStudent.id,
+                      supervisor_id: randSup.id,
+                      session_id: currentSession.id,
+                      assignment_type: 'school_supervisor',
+                      assigned_at: new Date().toISOString(),
+                    },
+                    { onConflict: 'supervisor_id,student_id,session_id,assignment_type' }
+                  );
+
+                if (directAssignError) {
+                  console.error('Fallback assignment failed during registration:', directAssignError);
+                } else {
+                  await supabase
+                    .from('students')
+                    .update({
+                      school_supervisor_name: randSup.name,
+                      school_supervisor_email: randSup.email,
+                    })
+                    .eq('id', insertedStudent.id);
+                }
+              }
+            }
           }
         } catch (assignmentErr) {
           console.error('Unexpected error during supervisor assignment:', assignmentErr);

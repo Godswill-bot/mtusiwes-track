@@ -285,7 +285,7 @@ const StudentSignup = () => {
                        session_id: sessionData.id,
                        assignment_type: 'school_supervisor',
                        assigned_at: new Date().toISOString()
-                     }, { onConflict: 'student_id, session_id, assignment_type' });
+                     }, { onConflict: 'supervisor_id,student_id,session_id,assignment_type' });
                      
                      if (!upsertErr) {
                        await supabase.from('students').update({
