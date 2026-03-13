@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -701,7 +701,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
             <TableBody>
               {filteredStudents && filteredStudents.length > 0 ? (
                 filteredStudents.map((student) => (
-                    <>
+                    <Fragment key={student.id}>
                       <TableRow key={student.id}>
                     <TableCell className="max-w-[140px]">
                       <div className="font-semibold break-words text-sm">{student.full_name ?? "—"}</div>
@@ -823,7 +823,6 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                                         <TableCell>{week.end_date}</TableCell>
                                         <TableCell>{week.school_supervisor_comments || "—"}</TableCell>
                                       </TableRow>
-                                      // Optionally add more detailed info here
                                     ))}
                                   </TableBody>
                                 </Table>
@@ -835,7 +834,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 ))
               ) : (
                 <TableRow>
