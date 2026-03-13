@@ -244,6 +244,51 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
     },
   });
 
+  const backfillAssignmentsMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("admin-students", {
+        body: {
+          action: "backfill_school_supervisor_assignments",
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data: {
+      preRegistrationCount: number;
+      attemptedAssignments: number;
+      createdAssignments: number;
+      failedAssignments?: string[];
+      syncedPreRegistrationRows: number;
+      syncedStudents: number;
+      message?: string;
+    }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-registrations"] });
+
+      if (data.message) {
+        toast.info(data.message);
+        return;
+      }
+
+      const failedCount = data.failedAssignments?.length || 0;
+      if (failedCount > 0) {
+        toast.warning(
+          `Backfill complete with warnings. Created ${data.createdAssignments}/${data.attemptedAssignments} missing assignments, synced ${data.syncedStudents} students, ${failedCount} failed.`
+        );
+      } else {
+        toast.success(
+          `Backfill complete. Created ${data.createdAssignments} assignments and synced ${data.syncedStudents} students.`
+        );
+      }
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : "Failed to backfill assignments");
+    },
+  });
+
   const handleDownloadMasterList = async (format: "pdf" | "csv") => {
     if (!selectedSession) {
       toast.error("Please select an academic session");
@@ -801,6 +846,40 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
         </AnimatedCard>
 
         <AnimatedCard delay={0.8}>
+          <Card className="h-full flex flex-col border-primary/20">
+            <CardHeader className="pb-2 flex-shrink-0">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CheckSquare className="h-4 w-4" />
+                Backfill Pending Assignments
+              </CardTitle>
+              <CardDescription className="text-xs">
+                One-click fix for already-submitted pre-SIWES records that have no assigned school supervisor.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 flex-1 flex flex-col justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                Uses current session only and updates `pre_registration` plus student supervisor fields used by the admin table.
+              </p>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => backfillAssignmentsMutation.mutate()}
+                disabled={backfillAssignmentsMutation.isPending}
+              >
+                {backfillAssignmentsMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Running Backfill...
+                  </>
+                ) : (
+                  "Run Backfill Now"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </AnimatedCard>
+
+        <AnimatedCard delay={0.9}>
           <Card className="h-full flex flex-col border-destructive/30">
             <CardHeader className="pb-2 flex-shrink-0">
               <CardTitle className="flex items-center gap-2 text-base text-destructive">

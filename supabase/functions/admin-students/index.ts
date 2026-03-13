@@ -18,7 +18,8 @@ type StudentAction =
   | "delete_student"
   | "assign_supervisors"
   | "set_student_status"
-  | "reset_students_for_new_cycle";
+  | "reset_students_for_new_cycle"
+  | "backfill_school_supervisor_assignments";
 
 interface BasePayload {
   action: StudentAction;
@@ -74,13 +75,18 @@ interface ResetStudentsForNewCyclePayload extends BasePayload {
   confirmation_text: string;
 }
 
+interface BackfillSchoolSupervisorAssignmentsPayload extends BasePayload {
+  action: "backfill_school_supervisor_assignments";
+}
+
 type StudentsPayload =
   | CreateStudentPayload
   | UpdateStudentPayload
   | DeleteStudentPayload
   | AssignSupervisorsPayload
   | SetStudentStatusPayload
-  | ResetStudentsForNewCyclePayload;
+  | ResetStudentsForNewCyclePayload
+  | BackfillSchoolSupervisorAssignmentsPayload;
 
 const respond = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -110,6 +116,8 @@ serve(async (req) => {
         return await setStudentStatus(adminCtx.adminId, payload);
       case "reset_students_for_new_cycle":
         return await resetStudentsForNewCycle(adminCtx.adminId, payload);
+      case "backfill_school_supervisor_assignments":
+        return await backfillSchoolSupervisorAssignments(adminCtx.adminId);
       default:
         return respond({ error: "Unsupported action" }, 400);
     }
@@ -487,6 +495,173 @@ const resetStudentsForNewCycle = async (
     blockedCount: blocklistRows.length,
     deletedAuthCount,
     failedAuthDeletes,
+  });
+};
+
+const backfillSchoolSupervisorAssignments = async (adminId: string | null) => {
+  const { data: currentSession, error: currentSessionError } = await supabase
+    .from("academic_sessions")
+    .select("id")
+    .eq("is_current", true)
+    .maybeSingle();
+
+  if (currentSessionError) {
+    throw currentSessionError;
+  }
+
+  if (!currentSession?.id) {
+    throw new Error("No current academic session found.");
+  }
+
+  const sessionId = currentSession.id;
+
+  const { data: preRegs, error: preRegError } = await supabase
+    .from("pre_registration")
+    .select("id, student_id, supervisor_id")
+    .eq("session_id", sessionId);
+
+  if (preRegError) {
+    throw preRegError;
+  }
+
+  const preRegistrationRows = preRegs ?? [];
+  const candidateStudentIds = Array.from(
+    new Set(preRegistrationRows.map((row) => row.student_id).filter(Boolean)),
+  );
+
+  if (candidateStudentIds.length === 0) {
+    return respond({
+      success: true,
+      sessionId,
+      preRegistrationCount: 0,
+      attemptedAssignments: 0,
+      createdAssignments: 0,
+      failedAssignments: [],
+      syncedPreRegistrationRows: 0,
+      syncedStudents: 0,
+      message: "No pre-registration records found in current session.",
+    });
+  }
+
+  const { data: existingAssignments, error: existingAssignmentsError } = await supabase
+    .from("supervisor_assignments")
+    .select("student_id")
+    .eq("session_id", sessionId)
+    .eq("assignment_type", "school_supervisor")
+    .in("student_id", candidateStudentIds);
+
+  if (existingAssignmentsError) {
+    throw existingAssignmentsError;
+  }
+
+  const alreadyAssigned = new Set((existingAssignments ?? []).map((row) => row.student_id));
+  const missingStudentIds = candidateStudentIds.filter((id) => !alreadyAssigned.has(id));
+
+  const failedAssignments: string[] = [];
+  let createdAssignments = 0;
+
+  for (const studentId of missingStudentIds) {
+    const { data: assignedSupervisorId, error: assignError } = await supabase.rpc(
+      "assign_student_to_school_supervisor",
+      { p_student_id: studentId },
+    );
+
+    if (assignError || !assignedSupervisorId) {
+      failedAssignments.push(studentId);
+    } else {
+      createdAssignments += 1;
+    }
+  }
+
+  const { data: latestAssignments, error: latestAssignmentsError } = await supabase
+    .from("supervisor_assignments")
+    .select("student_id, supervisor_id")
+    .eq("session_id", sessionId)
+    .eq("assignment_type", "school_supervisor")
+    .in("student_id", candidateStudentIds);
+
+  if (latestAssignmentsError) {
+    throw latestAssignmentsError;
+  }
+
+  const studentToSupervisor = new Map<string, string>();
+  for (const row of latestAssignments ?? []) {
+    if (row.student_id && row.supervisor_id) {
+      studentToSupervisor.set(row.student_id, row.supervisor_id);
+    }
+  }
+
+  const supervisorIds = Array.from(new Set(Array.from(studentToSupervisor.values())));
+  const { data: supervisors, error: supervisorsError } = await supabase
+    .from("supervisors")
+    .select("id, name, email")
+    .in("id", supervisorIds);
+
+  if (supervisorsError) {
+    throw supervisorsError;
+  }
+
+  const supervisorLookup = new Map<string, { name: string; email: string }>();
+  for (const sup of supervisors ?? []) {
+    supervisorLookup.set(sup.id, { name: sup.name, email: sup.email });
+  }
+
+  let syncedPreRegistrationRows = 0;
+  for (const row of preRegistrationRows) {
+    const assignedSupervisorId = studentToSupervisor.get(row.student_id);
+    if (!assignedSupervisorId || row.supervisor_id === assignedSupervisorId) continue;
+
+    const { error: updatePreRegError } = await supabase
+      .from("pre_registration")
+      .update({ supervisor_id: assignedSupervisorId })
+      .eq("id", row.id);
+
+    if (!updatePreRegError) {
+      syncedPreRegistrationRows += 1;
+    }
+  }
+
+  let syncedStudents = 0;
+  for (const [studentId, supervisorId] of studentToSupervisor.entries()) {
+    const supervisor = supervisorLookup.get(supervisorId);
+    if (!supervisor) continue;
+
+    const { error: updateStudentError } = await supabase
+      .from("students")
+      .update({
+        school_supervisor_name: supervisor.name,
+        school_supervisor_email: supervisor.email,
+      })
+      .eq("id", studentId);
+
+    if (!updateStudentError) {
+      syncedStudents += 1;
+    }
+  }
+
+  await logAudit(adminId, {
+    actionType: "BACKFILL_SUPERVISOR_ASSIGNMENTS",
+    tableName: "supervisor_assignments",
+    newValue: {
+      sessionId,
+      preRegistrationCount: preRegistrationRows.length,
+      attemptedAssignments: missingStudentIds.length,
+      createdAssignments,
+      failedAssignments,
+      syncedPreRegistrationRows,
+      syncedStudents,
+    },
+  });
+
+  return respond({
+    success: true,
+    sessionId,
+    preRegistrationCount: preRegistrationRows.length,
+    attemptedAssignments: missingStudentIds.length,
+    createdAssignments,
+    failedAssignments,
+    syncedPreRegistrationRows,
+    syncedStudents,
   });
 };
 
