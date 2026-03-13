@@ -260,9 +260,10 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
       preRegistrationCount: number;
       attemptedAssignments: number;
       createdAssignments: number;
-      failedAssignments?: string[];
+      failedAssignments?: Array<{ student_id: string; reason: string }>;
       syncedPreRegistrationRows: number;
       syncedStudents: number;
+      activeSchoolSupervisors?: number;
       message?: string;
     }) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
@@ -275,8 +276,9 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
 
       const failedCount = data.failedAssignments?.length || 0;
       if (failedCount > 0) {
+        const sampleReason = data.failedAssignments?.[0]?.reason;
         toast.warning(
-          `Backfill complete with warnings. Created ${data.createdAssignments}/${data.attemptedAssignments} missing assignments, synced ${data.syncedStudents} students, ${failedCount} failed.`
+          `Backfill complete with warnings. Created ${data.createdAssignments}/${data.attemptedAssignments} missing assignments, synced ${data.syncedStudents} students, ${failedCount} failed.${sampleReason ? ` First issue: ${sampleReason}.` : ""}`
         );
       } else {
         toast.success(

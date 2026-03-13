@@ -563,7 +563,18 @@ const backfillSchoolSupervisorAssignments = async (adminId: string | null) => {
   const alreadyAssigned = new Set((existingAssignments ?? []).map((row) => row.student_id));
   const missingStudentIds = candidateStudentIds.filter((id) => !alreadyAssigned.has(id));
 
-  const failedAssignments: string[] = [];
+  const { data: activeSchoolSupervisors, error: activeSupervisorsError } = await supabase
+    .from("supervisors")
+    .select("id, name, email")
+    .eq("supervisor_type", "school_supervisor")
+    .eq("is_active", true);
+
+  if (activeSupervisorsError) {
+    throw activeSupervisorsError;
+  }
+
+  const activeSupervisors = activeSchoolSupervisors ?? [];
+  const failedAssignments: Array<{ student_id: string; reason: string }> = [];
   let createdAssignments = 0;
 
   for (const studentId of missingStudentIds) {
@@ -572,11 +583,43 @@ const backfillSchoolSupervisorAssignments = async (adminId: string | null) => {
       { p_student_id: studentId },
     );
 
-    if (assignError || !assignedSupervisorId) {
-      failedAssignments.push(studentId);
-    } else {
+    if (!assignError && assignedSupervisorId) {
       createdAssignments += 1;
+      continue;
     }
+
+    // Fallback: direct assignment if RPC fails or returns null.
+    if (activeSupervisors.length === 0) {
+      failedAssignments.push({
+        student_id: studentId,
+        reason: "No active school supervisors available",
+      });
+      continue;
+    }
+
+    const randomSupervisor = activeSupervisors[Math.floor(Math.random() * activeSupervisors.length)];
+    const { error: directAssignError } = await supabase
+      .from("supervisor_assignments")
+      .upsert(
+        {
+          student_id: studentId,
+          supervisor_id: randomSupervisor.id,
+          session_id: sessionId,
+          assignment_type: "school_supervisor",
+          assigned_at: new Date().toISOString(),
+        },
+        { onConflict: "supervisor_id,student_id,session_id,assignment_type" },
+      );
+
+    if (directAssignError) {
+      failedAssignments.push({
+        student_id: studentId,
+        reason: directAssignError.message,
+      });
+      continue;
+    }
+
+    createdAssignments += 1;
   }
 
   const { data: latestAssignments, error: latestAssignmentsError } = await supabase
@@ -656,6 +699,7 @@ const backfillSchoolSupervisorAssignments = async (adminId: string | null) => {
       failedAssignments,
       syncedPreRegistrationRows,
       syncedStudents,
+      activeSchoolSupervisors: activeSupervisors.length,
     },
   });
 
@@ -668,6 +712,7 @@ const backfillSchoolSupervisorAssignments = async (adminId: string | null) => {
     failedAssignments,
     syncedPreRegistrationRows,
     syncedStudents,
+    activeSchoolSupervisors: activeSupervisors.length,
   });
 };
 
