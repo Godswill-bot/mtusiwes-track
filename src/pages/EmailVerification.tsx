@@ -18,7 +18,7 @@ const EmailVerification = () => {
     const verifyEmail = async () => {
       try {
         // Wait a slight moment to see if Supabase naturally caught the session from URL
-        let { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         let currentUser = session?.user;
 
         // Parse hash fragment manually since Supabase implicit flow puts tokens there

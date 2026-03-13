@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -63,6 +63,39 @@ const PendingRegistrations = () => {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [studentToReject, setStudentToReject] = useState<Student | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const matchesSearch = (student: Student) => {
+    if (!searchTerm.trim()) return true;
+    const needle = searchTerm.toLowerCase();
+    return [
+      student.matric_no,
+      student.department,
+      student.faculty,
+      student.organisation_name,
+      student.industry_supervisor_name,
+      student.email,
+      student.phone,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(needle);
+  };
+
+  const filteredPendingStudents = useMemo(
+    () => pendingStudents.filter(matchesSearch),
+    [pendingStudents, searchTerm],
+  );
+
+  const filteredApprovedStudents = useMemo(
+    () => approvedStudents.filter(matchesSearch),
+    [approvedStudents, searchTerm],
+  );
+
+  const filteredRejectedStudents = useMemo(
+    () => rejectedStudents.filter(matchesSearch),
+    [rejectedStudents, searchTerm],
+  );
 
 
   const fetchAllStudents = useCallback(async () => {
@@ -553,49 +586,55 @@ const PendingRegistrations = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <Input
+              placeholder="Search registrations"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-4 w-full sm:max-w-md"
+            />
             <Tabs defaultValue="pending" className="w-full">
                 <TabsList className="w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
                   <TabsTrigger value="pending" className="flex-1 min-w-[120px]">
                     <Clock className="h-4 w-4 mr-2" />
-                    Pending ({pendingStudents.length})
+                    Pending ({filteredPendingStudents.length})
                   </TabsTrigger>
                   <TabsTrigger value="approved" className="flex-1 min-w-[120px]">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Approved ({approvedStudents.length})
+                    Approved ({filteredApprovedStudents.length})
                   </TabsTrigger>
                   <TabsTrigger value="rejected" className="flex-1 min-w-[120px]">
                     <XCircle className="h-4 w-4 mr-2" />
-                    Rejected ({rejectedStudents.length})
+                    Rejected ({filteredRejectedStudents.length})
                   </TabsTrigger>
                 </TabsList>
 
               <TabsContent value="pending" className="space-y-4 mt-4">
-                {pendingStudents.length === 0 ? (
+                {filteredPendingStudents.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">
-                    No pending registrations
+                    {pendingStudents.length === 0 ? "No pending registrations" : "No pending registrations match your search"}
                   </p>
                 ) : (
-                  pendingStudents.map((student) => renderStudentCard(student, "pending"))
+                  filteredPendingStudents.map((student) => renderStudentCard(student, "pending"))
                 )}
               </TabsContent>
 
               <TabsContent value="approved" className="space-y-4 mt-4">
-                {approvedStudents.length === 0 ? (
+                {filteredApprovedStudents.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">
-                    No approved registrations
+                    {approvedStudents.length === 0 ? "No approved registrations" : "No approved registrations match your search"}
                   </p>
                 ) : (
-                  approvedStudents.map((student) => renderStudentCard(student, "approved"))
+                  filteredApprovedStudents.map((student) => renderStudentCard(student, "approved"))
                 )}
               </TabsContent>
 
               <TabsContent value="rejected" className="space-y-4 mt-4">
-                {rejectedStudents.length === 0 ? (
+                {filteredRejectedStudents.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">
-                    No rejected registrations
+                    {rejectedStudents.length === 0 ? "No rejected registrations" : "No rejected registrations match your search"}
                   </p>
                 ) : (
-                  rejectedStudents.map((student) => renderStudentCard(student, "rejected"))
+                  filteredRejectedStudents.map((student) => renderStudentCard(student, "rejected"))
                 )}
               </TabsContent>
             </Tabs>

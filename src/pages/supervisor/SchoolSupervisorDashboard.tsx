@@ -4,10 +4,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, CalendarCheck, CalendarRange, Calendar } from "lucide-react";
+import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { PrintableStudentsTable } from "@/components/supervisor/PrintableStudentsTable";
 
 import { StudentTabsView } from "@/components/supervisor/StudentTabsView";
@@ -76,41 +75,6 @@ const SchoolSupervisorDashboard = () => {
     },
   });
 
-  // Fetch acceptance letter date
-  const { data: acceptanceDate } = useQuery({
-    queryKey: ["system-settings", currentSession?.id, "acceptance_letter_date"],
-    queryFn: async () => {
-      if (!currentSession?.id) return null;
-      const { data, error } = await supabase
-        .from("system_settings")
-        .select("setting_value")
-        .eq("session_id", currentSession.id)
-        .eq("setting_key", "acceptance_letter_date")
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
-    },
-    enabled: !!currentSession?.id,
-  });
-
-  // Fetch period of attachment
-  const { data: attachmentPeriod } = useQuery({
-    queryKey: ["system-settings", currentSession?.id, "attachment_period"],
-    queryFn: async () => {
-      if (!currentSession?.id) return null;
-      const { data, error } = await supabase
-        .from("system_settings")
-        .select("setting_value")
-        .eq("session_id", currentSession.id)
-        .eq("setting_key", "attachment_period")
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
-    },
-    enabled: !!currentSession?.id,
-  });
 
 
 
@@ -355,43 +319,6 @@ const SchoolSupervisorDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Session Information Cards */}
-        {(acceptanceDate || attachmentPeriod) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {acceptanceDate && (
-              <Card className="border-2 border-blue-200 bg-blue-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-800 text-base">
-                    <CalendarCheck className="h-5 w-5" />
-                    Acceptance Letter Deadline
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-base sm:text-lg font-bold text-blue-900">
-                    {format(new Date(acceptanceDate as string), "EEEE, MMMM dd, yyyy")}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {attachmentPeriod && typeof attachmentPeriod === 'object' && (attachmentPeriod as {from_date?: string; to_date?: string}).from_date && (attachmentPeriod as {from_date?: string; to_date?: string}).to_date && (
-              <Card className="border-2 border-green-200 bg-green-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-800 text-base">
-                    <CalendarRange className="h-5 w-5" />
-                    Period of Attachment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground break-words">
-                    {format(new Date((attachmentPeriod as {from_date: string}).from_date), "MMM dd, yyyy")} - {format(new Date((attachmentPeriod as {to_date: string}).to_date), "MMM dd, yyyy")}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
 
         {/* Printable Students Table */}
         {students.length > 0 && (

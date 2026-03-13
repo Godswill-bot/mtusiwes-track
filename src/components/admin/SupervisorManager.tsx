@@ -80,6 +80,7 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
   const [createOpen, setCreateOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [activeType, setActiveType] = useState<"industry_supervisor" | "school_supervisor">("industry_supervisor");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedSupervisor, setSelectedSupervisor] = useState<SupervisorRecord | null>(null);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [formState, setFormState] = useState(defaultSupervisorForm);
@@ -206,6 +207,15 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
     [supervisorsQuery.data, activeType],
   );
 
+  const matchesSearch = (sup: CombinedSupervisor) => {
+    if (!searchTerm.trim()) return true;
+    const needle = searchTerm.toLowerCase();
+    return [sup.name || "", sup.email || "", sup.phone || ""]
+      .join(" ")
+      .toLowerCase()
+      .includes(needle);
+  };
+
   // Create virtual industry supervisors from students' pre-registration form data
   const industrySupervisorsFromStudents = useMemo<CombinedSupervisor[]>(() => {
     const students = studentsQuery.data || [];
@@ -264,14 +274,25 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
   // Combine real supervisors with virtual ones for industry tab
   const combinedIndustrySupervisors = useMemo<CombinedSupervisor[]>(() => {
     if (activeType !== "industry_supervisor") return filteredSupervisors;
-    return [...filteredSupervisors, ...industrySupervisorsFromStudents];
-  }, [activeType, filteredSupervisors, industrySupervisorsFromStudents]);
+    return [...filteredSupervisors, ...industrySupervisorsFromStudents].filter(matchesSearch);
+  }, [activeType, filteredSupervisors, industrySupervisorsFromStudents, searchTerm]);
+
+  const searchedSchoolSupervisors = useMemo(
+    () => filteredSupervisors.filter(matchesSearch),
+    [filteredSupervisors, searchTerm],
+  );
 
   const studentPool = useMemo(() => studentsQuery.data || [], [studentsQuery.data]);
 
   if (compact) {
     return (
       <div className="h-full flex flex-col">
+        <Input
+          placeholder="Search supervisors"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-3"
+        />
         <Tabs value={activeType} onValueChange={(value) => setActiveType(value as "industry_supervisor" | "school_supervisor")} className="flex-1 flex flex-col min-h-0">
             <TabsList className="mb-4 flex-shrink-0 w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
               <TabsTrigger value="industry_supervisor" className="flex-1">Industry</TabsTrigger>
@@ -301,7 +322,7 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
           </TabsContent>
           <TabsContent value="school_supervisor" className="flex-1 flex flex-col min-h-0 mt-0">
             <SupervisorTable
-              supervisors={filteredSupervisors}
+              supervisors={searchedSchoolSupervisors}
               students={studentPool}
               loading={supervisorsQuery.isLoading}
               onResetPassword={resetPassword}
@@ -412,6 +433,12 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
         </div>
       </CardHeader>
       <CardContent className="pt-6">
+        <Input
+          placeholder="Search supervisors"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-4 w-full sm:max-w-sm"
+        />
         <Tabs value={activeType} onValueChange={(value) => setActiveType(value as "industry_supervisor" | "school_supervisor")}>
             <TabsList className="mb-4 w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
               <TabsTrigger value="industry_supervisor" className="flex-1">Industry Supervisors</TabsTrigger>
@@ -441,7 +468,7 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
           </TabsContent>
           <TabsContent value="school_supervisor" className="mt-0">
             <SupervisorTable
-              supervisors={filteredSupervisors}
+              supervisors={searchedSchoolSupervisors}
               students={studentPool}
               loading={supervisorsQuery.isLoading}
               onResetPassword={resetPassword}

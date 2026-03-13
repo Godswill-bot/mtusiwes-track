@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Download, Users, Mail, Phone, Building } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ const StudentsList = () => {
   const { userRole, user } = useAuth();
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -198,7 +200,7 @@ const StudentsList = () => {
 
   const downloadAsCSV = () => {
     const headers = ["Name", "Matric No.", "Faculty", "Department", "Email", "Phone", "Organisation", "Organisation Address", "Industry Supervisor", "School Supervisor"];
-    const rows = students.map((s) => [
+    const rows = filteredStudents.map((s) => [
       s.full_name || s.profile.full_name || "",
       s.matric_no || "",
       s.faculty || "",
@@ -221,6 +223,24 @@ const StudentsList = () => {
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  const filteredStudents = useMemo(() => {
+    if (!searchTerm.trim()) return students;
+    const needle = searchTerm.toLowerCase();
+    return students.filter((s) =>
+      [
+        s.full_name || s.profile.full_name || "",
+        s.matric_no || "",
+        s.department || "",
+        s.faculty || "",
+        s.email || "",
+        s.organisation_name || "",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [students, searchTerm]);
 
   if (loading) {
     return (
@@ -260,21 +280,30 @@ const StudentsList = () => {
               )}
               <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-lg">
                 <Users className="h-5 w-5 text-primary" />
-                <span className="text-xl sm:text-2xl font-bold">{students.length}</span>
+                <span className="text-xl sm:text-2xl font-bold">{filteredStudents.length}</span>
               </div>
             </div>
           </div>
 
-          {students.length === 0 ? (
+          <Input
+            placeholder="Search assigned students"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full sm:max-w-md"
+          />
+
+          {filteredStudents.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">No students assigned to you yet.</p>
+                <p className="text-muted-foreground">
+                  {students.length === 0 ? "No students assigned to you yet." : "No students match your search."}
+                </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {students.map((student) => (
+              {filteredStudents.map((student) => (
                 <Card key={student.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle className="text-xl">{student.profile.full_name}</CardTitle>

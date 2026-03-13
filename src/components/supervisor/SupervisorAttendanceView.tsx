@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, Clock, CheckCircle, XCircle, Loader2, Users, Eye, FileDown, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -43,6 +44,7 @@ interface SupervisorAttendanceViewProps {
 export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendanceViewProps) => {
   const { user } = useAuth();
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Get auth token
   const getAuthToken = useCallback(async () => {
@@ -130,6 +132,28 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
     }
   };
 
+  const filteredStudents = (summary?.students || []).filter((student) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    const todayStatus = student.todayStatus
+      ? student.todayStatus.checkedOut
+        ? "done"
+        : student.todayStatus.checkedIn
+          ? "working"
+          : "not started"
+      : "absent";
+
+    return (
+      student.fullName.toLowerCase().includes(term) ||
+      student.matricNo.toLowerCase().includes(term) ||
+      student.department.toLowerCase().includes(term) ||
+      String(student.totalDays).includes(term) ||
+      String(student.daysWithCheckOut).includes(term) ||
+      todayStatus.includes(term)
+    );
+  });
+
   if (isPending) {
     return (
       <Card>
@@ -159,7 +183,7 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
   return (
     <Card className="shadow-card">
       <CardHeader>
-        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
@@ -169,10 +193,18 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
               Today: {summary?.date ? format(new Date(summary.date), "EEEE, MMMM d, yyyy") : "N/A"}
             </CardDescription>
           </div>
-          <Badge variant="outline" className="text-base px-3 py-1">
-            <Users className="h-4 w-4 mr-1" />
-            {summary?.students.length || 0} Students
-          </Badge>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search student, matric, department, status"
+                className="w-full sm:w-96"
+              />
+              <Badge variant="outline" className="text-base px-3 py-1">
+                <Users className="h-4 w-4 mr-1" />
+                {filteredStudents.length} of {summary?.students.length || 0}
+              </Badge>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -180,6 +212,11 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
           <div className="text-center py-12 text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No students assigned to you yet</p>
+          </div>
+        ) : filteredStudents.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No student matches your search</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -194,7 +231,7 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {summary.students.map((student) => (
+                {filteredStudents.map((student) => (
                   <TableRow key={student.studentId}>
                     <TableCell>
                       <div>

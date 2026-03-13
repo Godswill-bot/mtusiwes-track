@@ -18,8 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
-type WeekRecord = Database["public"]["Tables"]["weeks"]["Row"];
 import { useToast } from "@/components/ui/use-toast";
 import { Download, Loader2, ShieldCheck, ShieldOff, UserPlus } from "lucide-react";
 
@@ -81,9 +79,6 @@ interface StudentManagerProps {
 }
 
 export const StudentManager = ({ compact = false }: StudentManagerProps) => {
-    const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
-    const [studentWeeks, setStudentWeeks] = useState<Record<string, WeekRecord[]>>({});
-    const [loadingWeeks, setLoadingWeeks] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -316,19 +311,6 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
     link.click();
     URL.revokeObjectURL(url);
   };
-
-    // Fetch weekly reports for a student
-    const fetchStudentWeeks = async (studentId: string) => {
-      setLoadingWeeks(studentId);
-      const { data, error } = await supabase
-        .from("weeks")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("week_number", { ascending: true });
-      setLoadingWeeks(null);
-      if (error) return [];
-      return data as WeekRecord[];
-    };
 
   const schoolSupervisors = useMemo(
     () =>
@@ -769,76 +751,15 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                           <Button variant="destructive" size="sm" onClick={() => deleteStudent(student)} className="text-xs w-full sm:w-auto">
                             Delete
                           </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                if (expandedStudentId === student.id) {
-                                  setExpandedStudentId(null);
-                                } else {
-                                  setExpandedStudentId(student.id);
-                                  if (!studentWeeks[student.id]) {
-                                    const weeks = await fetchStudentWeeks(student.id);
-                                    setStudentWeeks((prev) => ({ ...prev, [student.id]: weeks }));
-                                  }
-                                }
-                              }}
-                              className="text-xs w-full sm:w-auto"
-                              aria-label={expandedStudentId === student.id ? "Collapse" : "Expand"}
-                            >
-                              {expandedStudentId === student.id ? <span>&#9660; Weekly Reports</span> : <span>&#9654; Weekly Reports</span>}
-                            </Button>
                         </div>
                       </TableCell>
                     )}
                   </TableRow>
-                    {expandedStudentId === student.id && (
-                      <TableRow>
-                        <TableCell colSpan={compact ? 8 : 11} className="bg-muted/30 p-4">
-                          {loadingWeeks === student.id ? (
-                            <div className="flex items-center justify-center py-4">
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading weekly reports...
-                            </div>
-                          ) : (
-                            <>
-                              {(studentWeeks[student.id] && studentWeeks[student.id].length > 0) ? (
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Week</TableHead>
-                                      <TableHead>Status</TableHead>
-                                      <TableHead>Comments</TableHead>
-                                      <TableHead>Start Date</TableHead>
-                                      <TableHead>End Date</TableHead>
-                                      <TableHead>Supervisor Comments</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {studentWeeks[student.id].map((week) => (
-                                      <TableRow key={week.id}>
-                                        <TableCell>Week {week.week_number}</TableCell>
-                                        <TableCell><Badge className="capitalize whitespace-nowrap">{week.status}</Badge></TableCell>
-                                        <TableCell>{week.comments || "—"}</TableCell>
-                                        <TableCell>{week.start_date}</TableCell>
-                                        <TableCell>{week.end_date}</TableCell>
-                                        <TableCell>{week.school_supervisor_comments || "—"}</TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
-                              ) : (
-                                <div className="text-center py-4 text-muted-foreground">No weekly reports found</div>
-                              )}
-                            </>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    )}
                   </Fragment>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={compact ? 8 : 9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={compact ? 8 : 10} className="text-center py-8 text-muted-foreground">
                     {studentsQuery.isPending ? "Loading students..." : "No students found"}
                   </TableCell>
                 </TableRow>

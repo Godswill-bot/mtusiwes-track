@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
@@ -89,6 +90,8 @@ interface SupervisorAttendanceSummary {
 export const StudentAttendanceTabsView = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("");
+  const [studentSearchTerm, setStudentSearchTerm] = useState("");
+  const [recordSearchTerm, setRecordSearchTerm] = useState("");
   const [fullScreenStudent, setFullScreenStudent] = useState<{
     id: string;
     name: string;
@@ -136,10 +139,30 @@ export const StudentAttendanceTabsView = () => {
 
   // Set initial active tab when data loads
   useMemo(() => {
-    if (summary?.students?.length && !activeTab) {
-      setActiveTab(summary.students[0].studentId);
+    const filteredStudents = (summary?.students || []).filter((student) => {
+      const term = studentSearchTerm.trim().toLowerCase();
+      if (!term) return true;
+      const todayStatus = student.todayStatus
+        ? student.todayStatus.checkedOut
+          ? "done"
+          : student.todayStatus.checkedIn
+            ? "working"
+            : "not started"
+        : "absent";
+      return (
+        student.fullName.toLowerCase().includes(term) ||
+        student.matricNo.toLowerCase().includes(term) ||
+        student.department.toLowerCase().includes(term) ||
+        String(student.totalDays).includes(term) ||
+        String(student.daysWithCheckOut).includes(term) ||
+        todayStatus.includes(term)
+      );
+    });
+
+    if (filteredStudents.length && (!activeTab || !filteredStudents.some((student) => student.studentId === activeTab))) {
+      setActiveTab(filteredStudents[0].studentId);
     }
-  }, [summary, activeTab]);
+  }, [summary, activeTab, studentSearchTerm]);
 
   // Fetch detailed attendance for the active student
   const {
@@ -265,6 +288,49 @@ export const StudentAttendanceTabsView = () => {
     );
   };
 
+  const filteredStudents = (summary?.students || []).filter((student) => {
+    const term = studentSearchTerm.trim().toLowerCase();
+    if (!term) return true;
+    const todayStatus = student.todayStatus
+      ? student.todayStatus.checkedOut
+        ? "done"
+        : student.todayStatus.checkedIn
+          ? "working"
+          : "not started"
+      : "absent";
+    return (
+      student.fullName.toLowerCase().includes(term) ||
+      student.matricNo.toLowerCase().includes(term) ||
+      student.department.toLowerCase().includes(term) ||
+      String(student.totalDays).includes(term) ||
+      String(student.daysWithCheckOut).includes(term) ||
+      todayStatus.includes(term)
+    );
+  });
+
+  const filteredAttendance = (studentDetail?.attendance || []).filter((record) => {
+    const term = recordSearchTerm.trim().toLowerCase();
+    if (!term) return true;
+    const formattedDate = format(parseISO(record.date), "MMM d, yyyy").toLowerCase();
+    const day = format(parseISO(record.date), "EEE").toLowerCase();
+    const checkIn = formatTime(record.check_in_time).toLowerCase();
+    const checkOut = formatTime(record.check_out_time).toLowerCase();
+    const hours = (calculateHours(record.check_in_time, record.check_out_time) || "").toLowerCase();
+    const status = record.check_in_time && record.check_out_time
+      ? "complete"
+      : record.check_in_time
+        ? "in progress"
+        : "no check-in";
+    return (
+      formattedDate.includes(term) ||
+      day.includes(term) ||
+      checkIn.includes(term) ||
+      checkOut.includes(term) ||
+      hours.includes(term) ||
+      status.includes(term)
+    );
+  });
+
   // Loading state
   if (summaryPending) {
     return (
@@ -331,7 +397,7 @@ export const StudentAttendanceTabsView = () => {
     <>
       <Card className="shadow-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
@@ -344,18 +410,32 @@ export const StudentAttendanceTabsView = () => {
                   : "N/A"}
               </CardDescription>
             </div>
-            <Badge variant="outline" className="text-base px-3 py-1">
-              <Users className="h-4 w-4 mr-1" />
-              {summary.students.length} Students
-            </Badge>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Input
+                value={studentSearchTerm}
+                onChange={(event) => setStudentSearchTerm(event.target.value)}
+                placeholder="Search student, matric, department, status"
+                className="w-full sm:w-96"
+              />
+              <Badge variant="outline" className="text-base px-3 py-1">
+                <Users className="h-4 w-4 mr-1" />
+                {filteredStudents.length} of {summary.students.length}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          {filteredStudents.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No student matches your search</p>
+            </div>
+          ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {/* Scrollable Tab List */}
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex h-auto p-1 mb-4">
-                {summary.students.map((student) => (
+                {filteredStudents.map((student) => (
                   <TabsTrigger
                     key={student.studentId}
                     value={student.studentId}
@@ -387,7 +467,7 @@ export const StudentAttendanceTabsView = () => {
             </ScrollArea>
 
             {/* Tab Content for Each Student */}
-            {summary.students.map((student) => (
+            {filteredStudents.map((student) => (
               <TabsContent
                 key={student.studentId}
                 value={student.studentId}
@@ -475,6 +555,14 @@ export const StudentAttendanceTabsView = () => {
                 {/* Attendance Records Table */}
                 {activeTab === student.studentId && (
                   <div className="border rounded-lg">
+                    <div className="p-4 border-b">
+                      <Input
+                        value={recordSearchTerm}
+                        onChange={(event) => setRecordSearchTerm(event.target.value)}
+                        placeholder="Search records by date, day, time, status"
+                        className="w-full sm:w-96"
+                      />
+                    </div>
                     {detailPending ? (
                       <div className="flex items-center justify-center py-12">
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -494,6 +582,11 @@ export const StudentAttendanceTabsView = () => {
                         <Calendar className="h-12 w-12 mb-4 opacity-30" />
                         <p>No attendance records yet</p>
                       </div>
+                    ) : filteredAttendance.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <Calendar className="h-12 w-12 mb-4 opacity-30" />
+                        <p>No attendance record matches your search</p>
+                      </div>
                     ) : (
                       <ScrollArea className="h-[400px]">
                         <Table>
@@ -509,7 +602,7 @@ export const StudentAttendanceTabsView = () => {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {studentDetail?.attendance.map((record, index) => {
+                            {filteredAttendance.map((record, index) => {
                               const hours = calculateHours(
                                 record.check_in_time,
                                 record.check_out_time
@@ -576,6 +669,7 @@ export const StudentAttendanceTabsView = () => {
               </TabsContent>
             ))}
           </Tabs>
+          )}
         </CardContent>
       </Card>
 

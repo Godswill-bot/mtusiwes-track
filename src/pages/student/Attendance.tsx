@@ -7,6 +7,7 @@ import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, Loader2, LogIn, LogOut, Lock, AlertCircle } from "lucide-react";
 import { format, parseISO, differenceInHours, differenceInMinutes } from "date-fns";
@@ -41,6 +42,7 @@ const StudentAttendance = () => {
   const { portalOpen, loading: portalLoading } = usePortalStatus();
   const [studentId, setStudentId] = useState<string | null>(null);
   const [siwesLocked, setSiwesLocked] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Get student ID and lock status
   useEffect(() => {
@@ -201,6 +203,25 @@ const StudentAttendance = () => {
     const hours = differenceInHours(checkOutTime, checkInTime);
     return total + (hours > 0 ? hours : 0);
   }, 0);
+
+  const filteredAttendanceRecords = attendanceRecords.filter((record) => {
+    const normalizedTerm = searchTerm.trim().toLowerCase();
+    if (!normalizedTerm) return true;
+
+    const dateLabel = format(parseISO(record.date), "EEEE, MMM d, yyyy").toLowerCase();
+    const checkIn = (record.check_in_time || "").toLowerCase();
+    const checkOut = (record.check_out_time || "").toLowerCase();
+    const hoursWorked = calculateHoursWorked(record.check_in_time, record.check_out_time).toLowerCase();
+    const status = record.verified ? "verified" : "pending";
+
+    return (
+      dateLabel.includes(normalizedTerm) ||
+      checkIn.includes(normalizedTerm) ||
+      checkOut.includes(normalizedTerm) ||
+      hoursWorked.includes(normalizedTerm) ||
+      status.includes(normalizedTerm)
+    );
+  });
 
   if (portalLoading) {
     return (
@@ -389,10 +410,18 @@ const StudentAttendance = () => {
           {/* Attendance Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Attendance History
-              </CardTitle>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Attendance History
+                </CardTitle>
+                <Input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search by date, time, or status"
+                  className="w-full sm:w-80"
+                />
+              </div>
               <CardDescription>
                 Your complete check-in and check-out records
               </CardDescription>
@@ -413,6 +442,11 @@ const StudentAttendance = () => {
                     }
                   </p>
                 </div>
+              ) : filteredAttendanceRecords.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No attendance record matches your search.</p>
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
@@ -426,7 +460,7 @@ const StudentAttendance = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {attendanceRecords.map((record) => (
+                      {filteredAttendanceRecords.map((record) => (
                         <TableRow key={record.id}>
                           <TableCell className="font-medium">
                             {format(parseISO(record.date), "EEEE, MMM d, yyyy")}

@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface AuditLog {
   id: string;
@@ -52,6 +54,7 @@ const fetchAuditLogs = async (): Promise<AuditLog[]> => {
 };
 
 export const AuditLogPanel = () => {
+  const [searchTerm, setSearchTerm] = useState("");
   const auditQuery = useQuery({
     queryKey: ["admin", "audit"],
     queryFn: fetchAuditLogs,
@@ -66,10 +69,34 @@ export const AuditLogPanel = () => {
     }
   }, [auditQuery.error]);
 
+  const filteredLogs = useMemo(() => {
+    const logs = auditQuery.data || [];
+    if (!searchTerm.trim()) return logs;
+    const needle = searchTerm.toLowerCase();
+    return logs.filter((log) =>
+      [
+        log.action_type,
+        log.table_name,
+        log.user_type || "",
+        log.user_email || "",
+        log.record_id || "",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [auditQuery.data, searchTerm]);
+
   return (
     <Card className="shadow-card h-full flex flex-col">
       <CardHeader className="pb-4 border-b flex-shrink-0">
         <CardTitle className="text-xl sm:text-2xl">Audit Trail</CardTitle>
+        <Input
+          placeholder="Search audit logs"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mt-3 w-full sm:max-w-sm"
+        />
       </CardHeader>
       <CardContent className="flex-1 pt-6 overflow-hidden flex flex-col min-h-0">
         <div className="overflow-x-auto overflow-y-auto flex-1 -mx-1 px-1">
@@ -85,8 +112,8 @@ export const AuditLogPanel = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(auditQuery.data && auditQuery.data.length > 0) ? (
-                auditQuery.data.map((log) => (
+              {(filteredLogs && filteredLogs.length > 0) ? (
+                filteredLogs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell>
                       <Badge className="whitespace-nowrap">{log.action_type}</Badge>

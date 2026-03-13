@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Printer, Download } from "lucide-react";
 
@@ -28,6 +29,19 @@ export const PrintableStudentsTable = ({
   title = "Students Assigned to Supervisor"
 }: PrintableStudentsTableProps) => {
   const printRef = useRef<HTMLDivElement>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredStudents = students.filter((student) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      student.profile.full_name.toLowerCase().includes(term) ||
+      student.matric_no.toLowerCase().includes(term) ||
+      student.department.toLowerCase().includes(term) ||
+      (student.level || "400").toLowerCase().includes(term) ||
+      student.organisation_name.toLowerCase().includes(term)
+    );
+  });
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -151,7 +165,7 @@ export const PrintableStudentsTable = ({
               </tr>
             </thead>
             <tbody>
-              ${students.map((student, index) => `
+              ${filteredStudents.map((student, index) => `
                 <tr>
                   <td>${index + 1}</td>
                   <td>${student.profile.full_name}</td>
@@ -165,7 +179,7 @@ export const PrintableStudentsTable = ({
           </table>
           
           <div class="summary">
-            <p><strong>Total Students:</strong> ${students.length}</p>
+            <p><strong>Total Students:</strong> ${filteredStudents.length}</p>
           </div>
           
           <div class="footer">
@@ -186,7 +200,7 @@ export const PrintableStudentsTable = ({
 
   const handleDownloadCSV = () => {
     const headers = ['S/N', 'Student Name', 'Matric Number', 'Department', 'Level', 'Organisation'];
-    const rows = students.map((student, index) => [
+    const rows = filteredStudents.map((student, index) => [
       index + 1,
       student.profile.full_name,
       student.matric_no,
@@ -210,7 +224,7 @@ export const PrintableStudentsTable = ({
   return (
     <Card className="shadow-card">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Assigned Students ({students.length})</CardTitle>
+        <CardTitle className="text-lg">Assigned Students ({filteredStudents.length}/{students.length})</CardTitle>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
             <Download className="h-4 w-4 mr-2" />
@@ -223,6 +237,14 @@ export const PrintableStudentsTable = ({
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <Input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search student, matric, department, level, organisation"
+            className="w-full sm:w-96"
+          />
+        </div>
         <div ref={printRef}>
           <div className="overflow-x-auto">
             <Table>
@@ -237,8 +259,8 @@ export const PrintableStudentsTable = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.length > 0 ? (
-                  students.map((student, index) => (
+                {filteredStudents.length > 0 ? (
+                  filteredStudents.map((student, index) => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell className="font-medium">{student.profile.full_name}</TableCell>
@@ -251,7 +273,7 @@ export const PrintableStudentsTable = ({
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No students assigned
+                      No student matches your search
                     </TableCell>
                   </TableRow>
                 )}

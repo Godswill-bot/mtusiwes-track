@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Download, FileText, Calendar, CheckSquare, Loader2, ShieldAlert } from "lucide-react";
 import { AnimatedCard } from "@/components/animations/MotionWrappers";
-import { format } from "date-fns";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -66,41 +65,6 @@ const setCurrentSession = async (sessionId: string) => {
   if (setError) throw setError;
   return sessionId;
 };
-// Get system setting
-const getSystemSetting = async (sessionId: string, key: string) => {
-  const { data, error } = await supabase
-     
-    .from("system_settings" as any)
-    .select("setting_value")
-    .eq("session_id", sessionId)
-    .eq("setting_key", key)
-    .maybeSingle();
-
-  if (error && error.code !== 'PGRST116') throw error;
-  // Always return null if missing, never undefined
-  if (!data || typeof data.setting_value === 'undefined') return null;
-  return data.setting_value;
-};
-
-// Set system setting
-const updateSystemSetting = async (sessionId: string, key: string, value: unknown) => {
-   
-  const { error } = await supabase
-    .from("system_settings")
-    .upsert(
-      {
-        session_id: sessionId,
-        setting_key: key,
-        setting_value: value,
-      },
-      {
-        onConflict: "session_id,setting_key",
-      }
-    );
-
-  if (error) throw error;
-  return value;
-};
 
 interface OtherServicesProps {
   compact?: boolean;
@@ -109,9 +73,6 @@ interface OtherServicesProps {
 export const OtherServices = ({ compact = false }: OtherServicesProps) => {
   const queryClient = useQueryClient();
   const [selectedSession, setSelectedSession] = useState<string>("");
-  const [acceptanceDate, setAcceptanceDate] = useState<string>("");
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
   const [resetConfirmationText, setResetConfirmationText] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
@@ -125,42 +86,11 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
     queryFn: fetchCurrentSession,
   });
 
-  const { data: currentAcceptanceDate } = useQuery({
-    queryKey: ["system-settings", currentSession?.id, "acceptance_letter_date"],
-    queryFn: () => getSystemSetting(currentSession?.id || "", "acceptance_letter_date"),
-    enabled: !!currentSession?.id,
-  });
-
-  const { data: attachmentPeriod } = useQuery({
-    queryKey: ["system-settings", currentSession?.id, "attachment_period"],
-    queryFn: () => getSystemSetting(currentSession?.id || "", "attachment_period"),
-    enabled: !!currentSession?.id,
-  });
-
   useEffect(() => {
     if (sessions.length > 0 && !selectedSession) {
       setSelectedSession(currentSession?.id || sessions[0].id);
     }
   }, [sessions, currentSession, selectedSession]);
-
-  useEffect(() => {
-    if (currentAcceptanceDate && typeof currentAcceptanceDate === 'string') {
-      try {
-        const date = new Date(currentAcceptanceDate);
-        setAcceptanceDate(format(date, "yyyy-MM-dd"));
-      } catch (e) {
-        // Invalid date
-      }
-    }
-  }, [currentAcceptanceDate]);
-
-  useEffect(() => {
-    if (attachmentPeriod && typeof attachmentPeriod === 'object') {
-      const period = attachmentPeriod as { from_date?: string; to_date?: string };
-      setFromDate(period.from_date || "");
-      setToDate(period.to_date || "");
-    }
-  }, [attachmentPeriod]);
 
   const setCurrentSessionMutation = useMutation({
     mutationFn: setCurrentSession,
@@ -173,36 +103,6 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
     },
   });
 
-  const setAcceptanceDateMutation = useMutation({
-    mutationFn: async (date: string) => {
-      if (!currentSession?.id) throw new Error("No current session selected");
-      return updateSystemSetting(currentSession.id, "acceptance_letter_date", date);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["system-settings"] });
-      toast.success("Acceptance letter submission date set successfully");
-    },
-    onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : "Failed to set acceptance letter date");
-    },
-  });
-
-  const setAttachmentPeriodMutation = useMutation({
-    mutationFn: async ({ from, to }: { from: string; to: string }) => {
-      if (!currentSession?.id) throw new Error("No current session selected");
-      return updateSystemSetting(currentSession.id, "attachment_period", {
-        from_date: from,
-        to_date: to,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["system-settings"] });
-      toast.success("Period of attachment set successfully");
-    },
-    onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : "Failed to set attachment period");
-    },
-  });
 
   const resetStudentsMutation = useMutation({
     mutationFn: async () => {
@@ -396,42 +296,6 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
       toast.success(`Supervisor assignments downloaded successfully`);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Failed to download supervisor assignments");
-    }
-  };
-
-  const handleDownloadWeeklyReports = async (format: "pdf" | "csv") => {
-    if (!selectedSession) {
-      toast.error("Please select an academic session");
-      return;
-    }
-
-    try {
-      const sessionName = sessions.find((s) => s.id === selectedSession)?.session_name || "unknown";
-      const endpoint = format === "pdf"
-        ? "/api/admin/download-weekly-reports-pdf"
-        : "/api/admin/download-weekly-reports-csv";
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: selectedSession }),
-      });
-
-      if (!response.ok) throw new Error("Download failed");
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `weekly_reports_${sessionName}_${Date.now()}.${format === "pdf" ? "pdf" : "csv"}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.success(`Weekly reports downloaded successfully`);
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to download weekly reports");
     }
   };
 
@@ -636,110 +500,6 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
           </Card>
         </AnimatedCard>
 
-        {/* Set Date for Acceptance Letter Submission */}
-        <AnimatedCard delay={0.4}>
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-2 flex-shrink-0">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Calendar className="h-4 w-4" />
-                Acceptance Letter Date
-              </CardTitle>
-              <CardDescription className="text-xs">Set submission deadline</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 flex-1 flex flex-col justify-between pt-2">
-              <div className="space-y-2">
-                <Label className="text-sm">Submission Date</Label>
-                <Input
-                  type="date"
-                  className="h-9"
-                  value={acceptanceDate}
-                  onChange={(e) => setAcceptanceDate(e.target.value)}
-                />
-              </div>
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (!acceptanceDate) {
-                    toast.error("Please select a date");
-                    return;
-                  }
-                  setAcceptanceDateMutation.mutate(acceptanceDate);
-                }}
-                className="w-full"
-                disabled={setAcceptanceDateMutation.isPending || !acceptanceDate}
-              >
-                {setAcceptanceDateMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Setting...
-                  </>
-                ) : (
-                  "Set Now"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </AnimatedCard>
-
-        {/* Set Period of Attachment */}
-        <AnimatedCard delay={0.5}>
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-2 flex-shrink-0">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Calendar className="h-4 w-4" />
-                Attachment Period
-              </CardTitle>
-              <CardDescription className="text-xs">Set the training period</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 flex-1 flex flex-col justify-between pt-2">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs">From</Label>
-                  <Input
-                    type="date"
-                    className="h-9 text-xs"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">To</Label>
-                  <Input
-                    type="date"
-                    className="h-9 text-xs"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                  />
-                </div>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (!fromDate || !toDate) {
-                    toast.error("Please select both dates");
-                    return;
-                  }
-                  if (new Date(fromDate) > new Date(toDate)) {
-                    toast.error("From date must be before to date");
-                    return;
-                  }
-                  setAttachmentPeriodMutation.mutate({ from: fromDate, to: toDate });
-                }}
-                className="w-full"
-                disabled={setAttachmentPeriodMutation.isPending || !fromDate || !toDate}
-              >
-                {setAttachmentPeriodMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Setting...
-                  </>
-                ) : (
-                  "Set Now"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </AnimatedCard>
 
         {/* Download Supervisor Assigned */}
         <AnimatedCard delay={0.6}>
@@ -794,60 +554,7 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
           </Card>
         </AnimatedCard>
 
-        {/* Download Weekly Reports */}
         <AnimatedCard delay={0.7}>
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-2 flex-shrink-0">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <FileText className="h-4 w-4" />
-                Weekly Reports
-              </CardTitle>
-              <CardDescription className="text-xs">Download all weekly reports</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 flex-1 flex flex-col justify-between pt-2">
-              <div className="space-y-2">
-                <Label className="text-sm">Academic Session</Label>
-                <Select value={selectedSession} onValueChange={setSelectedSession}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Select session" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sessions.map((session) => (
-                      <SelectItem key={session.id} value={session.id}>
-                        {session.session_name}
-                        {session.is_current && " (Current)"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDownloadWeeklyReports("pdf")}
-                  className="flex-1 text-xs"
-                  disabled={!selectedSession}
-                >
-                  <FileText className="h-3 w-3 mr-1" />
-                  PDF
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleDownloadWeeklyReports("csv")}
-                  className="flex-1 text-xs"
-                  disabled={!selectedSession}
-                >
-                  <Download className="h-3 w-3 mr-1" />
-                  CSV
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimatedCard>
-
-        <AnimatedCard delay={0.8}>
           <Card className="h-full flex flex-col border-primary/20">
             <CardHeader className="pb-2 flex-shrink-0">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -881,7 +588,7 @@ export const OtherServices = ({ compact = false }: OtherServicesProps) => {
           </Card>
         </AnimatedCard>
 
-        <AnimatedCard delay={0.9}>
+        <AnimatedCard delay={0.8}>
           <Card className="h-full flex flex-col border-destructive/30">
             <CardHeader className="pb-2 flex-shrink-0">
               <CardTitle className="flex items-center gap-2 text-base text-destructive">

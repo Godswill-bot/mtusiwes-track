@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { StudentManager } from "@/components/admin/StudentManager";
 import { SupervisorManager } from "@/components/admin/SupervisorManager";
-import { WeeklyControlPanel } from "@/components/admin/WeeklyControlPanel";
 // AttendanceControlPanel removed - Admin should only view PDFs saved by supervisors
 import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
 import { PortalToggle } from "@/components/admin/PortalToggle";
@@ -15,7 +14,7 @@ import { DashboardOverview } from "@/components/admin/DashboardOverview";
 // SupervisorAssignment removed - assignments are now automatic
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Users, UserCog, FileText, History, Bell, Settings, LayoutDashboard, Menu, X } from "lucide-react";
+import { AlertCircle, Users, UserCog, History, Bell, Settings, LayoutDashboard, Menu, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -72,7 +71,6 @@ type ActiveTab =
   | "dashboard" 
   | "students" 
   | "supervisors" 
-  | "weekly" 
   | "audit" 
   | "notifications"
   | "other-services"
@@ -155,7 +153,6 @@ const AdminDashboard = () => {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "students", label: "Students", icon: Users },
     { id: "supervisors", label: "Supervisors", icon: UserCog },
-    { id: "weekly", label: "Weekly Reports", icon: FileText },
     { id: "audit", label: "Audit Trail", icon: History },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "other-services", label: "Other Services", icon: Settings },
@@ -167,8 +164,6 @@ const AdminDashboard = () => {
         return <StudentManager />;
       case "supervisors":
         return <SupervisorManager />;
-      case "weekly":
-        return <WeeklyControlPanel />;
       case "audit":
         return <AuditLogPanel />;
       case "notifications":

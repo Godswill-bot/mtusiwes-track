@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Download, Info, Calendar } from "lucide-react";
+import { Loader2, Download, Info, Calendar, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useMemo } from "react";
 
 type AttendanceRecord = Database["public"]["Tables"]["attendance"]["Row"] & {
   student?: {
@@ -39,6 +41,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
  */
 export const AttendanceControlPanel = () => {
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
   const attendanceQuery = useQuery({
@@ -105,6 +108,23 @@ export const AttendanceControlPanel = () => {
     }
   };
 
+  const filteredAttendance = useMemo(() => {
+    const rows = attendanceQuery.data || [];
+    if (!searchTerm.trim()) return rows;
+    const needle = searchTerm.toLowerCase();
+    return rows.filter((record) =>
+      [
+        record.student?.full_name || "",
+        record.student?.matric_no || "",
+        record.date || "",
+        record.status || "",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [attendanceQuery.data, searchTerm]);
+
   return (
     <Card className="shadow-card h-full flex flex-col">
       <CardHeader className="pb-4 border-b flex-shrink-0">
@@ -134,6 +154,13 @@ export const AttendanceControlPanel = () => {
           </AlertDescription>
         </Alert>
 
+        <Input
+          placeholder="Search attendance records"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-4 w-full sm:max-w-sm"
+        />
+
         <div className="overflow-x-auto overflow-y-auto flex-1 -mx-1 px-1">
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
@@ -156,8 +183,8 @@ export const AttendanceControlPanel = () => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : attendanceQuery.data && attendanceQuery.data.length > 0 ? (
-                attendanceQuery.data.map((record) => (
+              ) : filteredAttendance && filteredAttendance.length > 0 ? (
+                filteredAttendance.map((record) => (
                   <TableRow key={record.id}>
                     <TableCell className="max-w-[150px]">
                       <div className="font-medium break-words">{record.student?.full_name ?? "—"}</div>

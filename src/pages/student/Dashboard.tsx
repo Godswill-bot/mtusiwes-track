@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, CalendarCheck, CalendarRange, Lock, Award, Bell } from "lucide-react";
+import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, Lock, Award, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
@@ -13,7 +13,6 @@ import SupervisorStudentChatDrawer from "@/components/SupervisorStudentChatDrawe
 import { usePortalStatus } from "@/hooks/usePortalStatus";
 import PortalClosed from "./PortalClosed";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { StudentNotifications } from "@/components/student/StudentNotifications";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -64,41 +63,6 @@ const StudentDashboard = () => {
     },
   });
 
-  // Fetch acceptance letter date
-  const { data: acceptanceDate } = useQuery({
-    queryKey: ["system-settings", currentSession?.id, "acceptance_letter_date"],
-    queryFn: async () => {
-      if (!currentSession?.id) return null;
-      const { data, error } = await supabase
-        .from("system_settings")
-        .select("setting_value")
-        .eq("session_id", currentSession.id)
-        .eq("setting_key", "acceptance_letter_date")
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
-    },
-    enabled: !!currentSession?.id,
-  });
-
-  // Fetch period of attachment
-  const { data: attachmentPeriod } = useQuery({
-    queryKey: ["system-settings", currentSession?.id, "attachment_period"],
-    queryFn: async () => {
-      if (!currentSession?.id) return null;
-      const { data, error } = await supabase
-        .from("system_settings")
-        .select("setting_value")
-        .eq("session_id", currentSession.id)
-        .eq("setting_key", "attachment_period")
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      return typeof data?.setting_value === 'undefined' ? null : data?.setting_value;
-    },
-    enabled: !!currentSession?.id,
-  });
 
   useEffect(() => {
     if (userRole && userRole !== "student") {
@@ -469,49 +433,6 @@ const StudentDashboard = () => {
 
               {/* System Information Cards */}
               <div className="grid md:grid-cols-2 gap-4">
-                {acceptanceDate && (
-                  <Card className="shadow-elevated border-2 border-blue-200 bg-blue-50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-blue-800">
-                        <CalendarCheck className="h-5 w-5" />
-                        Acceptance Letter Submission
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-2">Submission Deadline</p>
-                      <p className="text-lg font-bold text-blue-900">
-                        {format(new Date(acceptanceDate), "EEEE, MMMM dd, yyyy")}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {attachmentPeriod && typeof attachmentPeriod === 'object' && attachmentPeriod.from_date && attachmentPeriod.to_date && (
-                  <Card className="shadow-elevated border-2 border-green-200 bg-green-50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-green-800">
-                        <CalendarRange className="h-5 w-5" />
-                        Period of Attachment
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div>
-                          <p className="text-sm text-muted-foreground">From</p>
-                          <p className="font-bold text-green-900">
-                            {format(new Date(attachmentPeriod.from_date), "MMMM dd, yyyy")}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">To</p>
-                          <p className="font-bold text-green-900">
-                            {format(new Date(attachmentPeriod.to_date), "MMMM dd, yyyy")}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
 
               {studentInfo && (

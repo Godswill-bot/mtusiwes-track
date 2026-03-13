@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,7 @@ export const WeeklyControlPanel = () => {
   const [editData, setEditData] = useState<Partial<WeekRecord>>({});
   const [statusNote, setStatusNote] = useState("");
   const [expandedWeekId, setExpandedWeekId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const weeksQuery = useQuery({
     queryKey: ["admin", "weeks"],
@@ -109,12 +111,33 @@ export const WeeklyControlPanel = () => {
     }
   };
 
+  const filteredWeeks = (weeksQuery.data || []).filter((week) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    return (
+      (week.student?.full_name || "").toLowerCase().includes(term) ||
+      (week.student?.matric_no || "").toLowerCase().includes(term) ||
+      String(week.week_number).includes(term) ||
+      (week.status || "").toLowerCase().includes(term) ||
+      (week.comments || "").toLowerCase().includes(term)
+    );
+  });
+
   return (
     <Card className="shadow-card h-full flex flex-col">
       <CardHeader className="pb-4 border-b flex-shrink-0">
         <CardTitle className="text-xl sm:text-2xl">Weekly Reports</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pt-6 overflow-hidden flex flex-col min-h-0">
+        <div className="mb-4">
+          <Input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search student, matric, week, status, comments"
+            className="w-full sm:w-96"
+          />
+        </div>
         <div className="overflow-x-auto overflow-y-auto flex-1 -mx-1 px-1">
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
@@ -127,8 +150,8 @@ export const WeeklyControlPanel = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(weeksQuery.data && weeksQuery.data.length > 0) ? (
-                weeksQuery.data.map((week) => {
+              {filteredWeeks.length > 0 ? (
+                filteredWeeks.map((week) => {
                   const isExpanded = expandedWeekId === week.id;
                   return (
                     <>
@@ -200,7 +223,9 @@ export const WeeklyControlPanel = () => {
                         Loading weekly reports...
                       </div>
                     ) : (
-                      "No weekly reports found"
+                      searchTerm
+                        ? "No weekly report matches your search"
+                        : "No weekly reports found"
                     )}
                   </TableCell>
                 </TableRow>

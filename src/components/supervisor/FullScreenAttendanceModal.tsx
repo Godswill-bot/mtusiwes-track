@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -86,6 +87,7 @@ export const FullScreenAttendanceModal = ({
   onClose,
 }: FullScreenAttendanceModalProps) => {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Get auth token
   const getAuthToken = useCallback(async () => {
@@ -214,6 +216,33 @@ export const FullScreenAttendanceModal = ({
       </Badge>
     );
   };
+
+  const filteredAttendance = (data?.attendance || []).filter((record) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    const formattedDate = format(parseISO(record.date), "MMM d, yyyy").toLowerCase();
+    const day = format(parseISO(record.date), "EEEE").toLowerCase();
+    const checkIn = formatTime(record.check_in_time).toLowerCase();
+    const checkOut = formatTime(record.check_out_time).toLowerCase();
+    const hours = (calculateHours(record.check_in_time, record.check_out_time) || "").toLowerCase();
+    const status = record.check_in_time && record.check_out_time
+      ? "complete"
+      : record.check_in_time
+        ? "checked in"
+        : "no check-in";
+    const verified = record.verified ? "verified" : "unverified";
+
+    return (
+      formattedDate.includes(term) ||
+      day.includes(term) ||
+      checkIn.includes(term) ||
+      checkOut.includes(term) ||
+      hours.includes(term) ||
+      status.includes(term) ||
+      verified.includes(term)
+    );
+  });
 
   return (
     <Dialog open={!!studentId} onOpenChange={() => onClose()}>
@@ -362,6 +391,14 @@ export const FullScreenAttendanceModal = ({
 
               {/* Attendance Table */}
               <ScrollArea className="flex-1 px-6 py-4">
+                <div className="mb-4">
+                  <Input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search by date, time, status, or verification"
+                    className="w-full sm:w-96"
+                  />
+                </div>
                 {data.attendance.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                     <Calendar className="h-16 w-16 mb-4 opacity-30" />
@@ -369,6 +406,11 @@ export const FullScreenAttendanceModal = ({
                     <p className="text-sm">
                       Attendance will appear here once the student checks in
                     </p>
+                  </div>
+                ) : filteredAttendance.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                    <Calendar className="h-16 w-16 mb-4 opacity-30" />
+                    <p className="text-lg">No attendance record matches your search</p>
                   </div>
                 ) : (
                   <Table>
@@ -385,7 +427,7 @@ export const FullScreenAttendanceModal = ({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {data.attendance.map((record, index) => {
+                      {filteredAttendance.map((record, index) => {
                         const hours = calculateHours(
                           record.check_in_time,
                           record.check_out_time
