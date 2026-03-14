@@ -150,6 +150,7 @@ export default function StudentChatPage() {
       content: message,
       attachmentUrl,
       attachmentName,
+      parentId: undefined,
     });
     setMessages(msgs => msgs.map(m => m.id === tempId ? sent : m));
   }

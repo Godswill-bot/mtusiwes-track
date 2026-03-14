@@ -204,6 +204,8 @@ export default function SupervisorStudentChatDrawer({
                   {isEditing ? (
                     <div className="mt-1">
                       <textarea
+                        title="Edit message"
+                        aria-label="Edit message"
                         className="w-full text-sm p-1 border rounded resize-none focus:outline-none focus:ring-1 focus:ring-purple-400"
                         value={editContent}
                         onChange={e => setEditContent(e.target.value)}
@@ -289,7 +291,7 @@ export default function SupervisorStudentChatDrawer({
                 <Reply className="w-3 h-3 flex-shrink-0" />
                 <span className="font-semibold">{replyingTo.sender_role === (isStudent ? 'student' : 'supervisor') ? 'You' : 'Them'}</span>: {replyingTo.content || 'Attached file'}
               </div>
-              <button type="button" onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-gray-700">
+              <button type="button" aria-label="Cancel reply" title="Cancel reply" onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-gray-700">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -307,6 +309,8 @@ export default function SupervisorStudentChatDrawer({
                 )}
                 <button
                   type="button"
+                  aria-label="Remove attachment"
+                  title="Remove attachment"
                   onClick={() => handleAttachment(undefined)}
                   className="absolute -top-2 -right-2 bg-white text-gray-600 rounded-full p-0.5 shadow-md border hover:bg-gray-100"
                 >
