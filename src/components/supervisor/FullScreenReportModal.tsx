@@ -42,6 +42,7 @@ interface WeekData {
   status: string;
   submitted_at: string | null;
   image_urls?: string[] | null;
+  photos?: { id: string; image_url: string; day_of_week?: string; description?: string | null }[];
   score?: number | null;
   school_supervisor_approved_at?: string | null;
   school_supervisor_comments?: string | null;
@@ -100,9 +101,18 @@ export const FullScreenReportModal = ({
         .maybeSingle();
 
       if (error) throw error;
-      
+
+      // Fetch daily evidence photos
+      const { data: photoData } = await supabase
+        .from("photos")
+        .select("id, image_url, day_of_week, description")
+        .eq("week_id", weekId);
+
       if (data) {
-        setWeekData(data as WeekData);
+        setWeekData({
+          ...(data as WeekData),
+          photos: photoData || [],
+        });
         setSchoolComments((data as WeekData).school_supervisor_comments || "");
         setScore((data as WeekData).score || "");
       }
@@ -411,7 +421,8 @@ export const FullScreenReportModal = ({
                   <div className="grid gap-3">
                     {days.map((day, index) => {
                       const activity = weekData[`${day}_activity` as keyof WeekData] as string | null;
-                      
+                      const dailyPhotos = weekData.photos?.filter(p => p.day_of_week?.toLowerCase() === day.toLowerCase()) || [];
+
                       return (
                         <Card key={day}>
                           <CardContent className="p-4">
@@ -424,6 +435,24 @@ export const FullScreenReportModal = ({
                             <p className="text-sm whitespace-pre-wrap">
                               {activity || <span className="text-muted-foreground italic">No activity logged</span>}
                             </p>
+                            
+                            {dailyPhotos.length > 0 && (
+                              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                {dailyPhotos.map((photo) => (
+                                  <div 
+                                    key={photo.id}
+                                    className="group relative overflow-hidden rounded-lg border cursor-pointer"
+                                    onClick={() => setExpandedImage(photo.image_url)}
+                                  >
+                                    <img
+                                      src={photo.image_url}
+                                      alt={`Evidence for ${day}`}
+                                      className="w-full h-24 object-cover hover:scale-105 transition-transform duration-300"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
                       );
