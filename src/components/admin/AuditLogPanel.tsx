@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface AuditLog {
@@ -90,13 +90,16 @@ export const AuditLogPanel = () => {
   return (
     <Card className="shadow-card h-full flex flex-col">
       <CardHeader className="pb-4 border-b flex-shrink-0">
-        <CardTitle className="text-xl sm:text-2xl">Audit Trail</CardTitle>
-        <Input
-          placeholder="Search audit logs"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mt-3 w-full sm:max-w-sm"
-        />
+        <CardTitle className="text-xl sm:text-2xl mb-3">Audit Trail</CardTitle>
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search audit logs"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8"
+          />
+        </div>
       </CardHeader>
       <CardContent className="flex-1 pt-6 overflow-hidden flex flex-col min-h-0">
         <div className="overflow-x-auto overflow-y-auto flex-1 -mx-1 px-1">

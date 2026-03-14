@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, CheckCircle, XCircle, Loader2, Users, Eye, FileDown, AlertCircle } from "lucide-react";
+import { Calendar, Clock, CheckCircle, XCircle, Loader2, Users, Eye, FileDown, AlertCircle, Search } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { apiRequest } from "@/utils/api";
@@ -194,12 +194,15 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
             </CardDescription>
           </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Input
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search student, matric, department, status"
-                className="w-full sm:w-96"
-              />
+              <div className="relative w-full sm:w-96 max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search student, matric, department, status"
+                  className="w-full pl-8"
+                />
+              </div>
               <Badge variant="outline" className="text-base px-3 py-1">
                 <Users className="h-4 w-4 mr-1" />
                 {filteredStudents.length} of {summary?.students.length || 0}

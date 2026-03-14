@@ -420,12 +420,16 @@ export const SupervisorAssignment = () => {
               {selectedSession && selectedSupervisor ? (
                 <>
                   <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Search students..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
+                    <div className="flex gap-2 relative">
+                      <div className="relative w-full">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search students..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
                       <Button variant="outline" onClick={handleSelectAll} size="icon">
                         <Search className="h-4 w-4" />
                       </Button>

@@ -38,6 +38,7 @@ import {
   GraduationCap,
   TrendingUp,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -391,12 +392,13 @@ export const FullScreenAttendanceModal = ({
 
               {/* Attendance Table */}
               <ScrollArea className="flex-1 px-6 py-4">
-                <div className="mb-4">
+                <div className="mb-4 relative w-full sm:w-96 max-w-sm">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Search by date, time, status, or verification"
-                    className="w-full sm:w-96"
+                    className="w-full pl-8"
                   />
                 </div>
                 {data.attendance.length === 0 ? (

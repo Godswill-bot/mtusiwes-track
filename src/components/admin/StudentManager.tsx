@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Download, Loader2, ShieldCheck, ShieldOff, UserPlus } from "lucide-react";
+import { Download, Loader2, ShieldCheck, ShieldOff, UserPlus, Search } from "lucide-react";
 
 type StudentRecord = Database["public"]["Tables"]["students"]["Row"];
 type SupervisorRecord = Database["public"]["Tables"]["supervisors"]["Row"];
@@ -394,12 +394,15 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
         </div>
         {!compact && (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <Input
-              placeholder="Search students"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="flex-1 sm:max-w-xs"
-            />
+            <div className="relative flex-1 sm:max-w-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search students"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full pl-8"
+              />
+            </div>
             <Button
               variant="outline"
               onClick={downloadAsCSV}

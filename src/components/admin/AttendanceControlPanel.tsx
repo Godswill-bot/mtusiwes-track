@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Download, Info, Calendar, AlertCircle } from "lucide-react";
+import { Loader2, Download, Info, Calendar, AlertCircle, Search } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useMemo } from "react";
 
@@ -154,12 +154,15 @@ export const AttendanceControlPanel = () => {
           </AlertDescription>
         </Alert>
 
-        <Input
-          placeholder="Search attendance records"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-4 w-full sm:max-w-sm"
-        />
+        <div className="relative mb-4 w-full sm:max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search attendance records"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8"
+          />
+        </div>
 
         <div className="overflow-x-auto overflow-y-auto flex-1 -mx-1 px-1">
           <Table>

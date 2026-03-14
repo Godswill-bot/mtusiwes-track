@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 
 type WeekRecord = Database["public"]["Tables"]["weeks"]["Row"] & {
   student?: {
@@ -130,12 +130,13 @@ export const WeeklyControlPanel = () => {
         <CardTitle className="text-xl sm:text-2xl">Weekly Reports</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pt-6 overflow-hidden flex flex-col min-h-0">
-        <div className="mb-4">
+        <div className="mb-4 relative w-full sm:w-96 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search student, matric, week, status, comments"
-            className="w-full sm:w-96"
+            className="w-full pl-8"
           />
         </div>
         <div className="overflow-x-auto overflow-y-auto flex-1 -mx-1 px-1">

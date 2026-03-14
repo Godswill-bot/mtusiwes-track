@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Printer, Download } from "lucide-react";
+import { Printer, Download, Search } from "lucide-react";
 
 interface Student {
   id: string;
@@ -237,12 +237,13 @@ export const PrintableStudentsTable = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-4">
+        <div className="mb-4 relative w-full sm:w-96 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search student, matric, department, level, organisation"
-            className="w-full sm:w-96"
+            className="w-full pl-8"
           />
         </div>
         <div ref={printRef}>

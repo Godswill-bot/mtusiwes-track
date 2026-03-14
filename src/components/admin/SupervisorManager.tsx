@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, UserCog } from "lucide-react";
+import { Loader2, UserCog, Search } from "lucide-react";
 
 type SupervisorRecord = Database["public"]["Tables"]["supervisors"]["Row"];
 type StudentRecord = Database["public"]["Tables"]["students"]["Row"];
@@ -287,12 +287,15 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
   if (compact) {
     return (
       <div className="h-full flex flex-col">
-        <Input
-          placeholder="Search supervisors"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-3"
-        />
+        <div className="relative mb-3 w-full">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search supervisors"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8"
+          />
+        </div>
         <Tabs value={activeType} onValueChange={(value) => setActiveType(value as "industry_supervisor" | "school_supervisor")} className="flex-1 flex flex-col min-h-0">
             <TabsList className="mb-4 flex-shrink-0 w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
               <TabsTrigger value="industry_supervisor" className="flex-1">Industry</TabsTrigger>
@@ -433,12 +436,15 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <Input
-          placeholder="Search supervisors"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-4 w-full sm:max-w-sm"
-        />
+        <div className="relative mb-4 w-full sm:max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search supervisors"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8"
+          />
+        </div>
         <Tabs value={activeType} onValueChange={(value) => setActiveType(value as "industry_supervisor" | "school_supervisor")}>
             <TabsList className="mb-4 w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
               <TabsTrigger value="industry_supervisor" className="flex-1">Industry Supervisors</TabsTrigger>
