@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Paperclip, Send, X, Download } from 'lucide-react';
+import { Paperclip, Send, X, Download, Pencil, Reply, Image as ImageIcon } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrCreateConversation, listMessages, sendMessage, markMessagesRead } from '../lib/chatHelpers';
+import { getOrCreateConversation, listMessages, sendMessage, markMessagesRead, editMessage } from '../lib/chatHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -13,9 +13,15 @@ export default function SupervisorStudentChatDrawer({
   const [conversation, setConversation] = useState(null);
   const [message, setMessage] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<{url: string, name: string} | null>(null);
   const [uploadError, setUploadError] = useState('');
   const [chatDisabled, setChatDisabled] = useState(false);
+  
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [replyingTo, setReplyingTo] = useState<any>(null);
+
   const queryClient = useQueryClient();
   const messagesEndRef = useRef(null);
 
@@ -55,45 +61,85 @@ export default function SupervisorStudentChatDrawer({
 
   // Send message
   const mutation = useMutation({
-    mutationFn: async (args: { content: string; attachment: any }) => {
+    mutationFn: async (args: { content: string; attachment: any; parentId?: string }) => {
       let attachmentUrl = null;
       let attachmentName = null;
-          if (attachment) {
+          if (args.attachment) {
         // Validate file
-        if (attachment.size > 5 * 1024 * 1024) {
+        if (args.attachment.size > 5 * 1024 * 1024) {
           setUploadError('File too large (max 5MB)');
-          return;
+          throw new Error('File too large');
         }
         const allowed = ['image/', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        if (!allowed.some(type => attachment.type.startsWith(type))) {
+        if (!allowed.some(type => args.attachment.type.startsWith(type))) {
           setUploadError('Invalid file type');
-          return;
+          throw new Error('Invalid file type');
         }
         // Upload to Supabase Storage
-        const filePath = `chat/${conversation.id}/${Date.now()}_${attachment.name}`;
-        const { data, error } = await supabase.storage.from('chat-attachments').upload(filePath, attachment);
+        const filePath = `chat/${conversation.id}/${Date.now()}_${args.attachment.name}`;
+        const { data, error } = await supabase.storage.from('chat-attachments').upload(filePath, args.attachment);
         if (error) {
           setUploadError('Upload failed');
-          return;
+          throw new Error('Upload failed');
         }
         const { data: publicData } = supabase.storage.from('chat-attachments').getPublicUrl(filePath);
         attachmentUrl = publicData?.publicUrl;
-        attachmentName = attachment.name;
+        attachmentName = args.attachment.name;
       }
       setUploadError('');
       await sendMessage({
         conversationId: conversation.id,
         senderId: isStudent ? student?.id : supervisorId,
         senderRole: isStudent ? 'student' : 'supervisor',
-        content: message,
+        content: args.content,
         attachmentUrl,
         attachmentName,
+        parentId: args.parentId,
       });
+    },
+    onSuccess: () => {
       setMessage('');
       setAttachment(null);
-      queryClient.invalidateQueries({ queryKey: ['chat-messages', conversation.id] });
-    },
+      setImagePreview(null);
+      setReplyingTo(null);
+      queryClient.invalidateQueries({ queryKey: ['chat-messages', conversation?.id] });
+    }
   });
+
+  const editMutation = useMutation({
+    mutationFn: async ({ messageId, newContent }: { messageId: string, newContent: string }) => {
+      await editMessage(messageId, newContent);
+    },
+    onSuccess: () => {
+      setEditingMessageId(null);
+      setEditContent('');
+      queryClient.invalidateQueries({ queryKey: ['chat-messages', conversation?.id] });
+    }
+  });
+
+  const handleAttachment = (file: File | undefined) => {
+    if (!file) {
+      setAttachment(null);
+      setImagePreview(null);
+      return;
+    }
+    setAttachment(file);
+    if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  // Cleanup object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   // Render
   return (
@@ -131,29 +177,68 @@ export default function SupervisorStudentChatDrawer({
             {messages.map(msg => {
               const isMine = msg.sender_role === (isStudent ? 'student' : 'supervisor');
               const theirName = isStudent ? (supervisorInfo?.name || 'Supervisor') : (student?.profile?.full_name || student?.full_name || student?.name || 'Student');
+              const isEditing = editingMessageId === msg.id;
               
               return (
-              <div key={msg.id} className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs rounded-lg p-2 shadow ${isMine ? 'bg-purple-100' : 'bg-white border'}`}>
-                  <div className={`text-xs text-gray-500 mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
-                    {isMine ? 'You' : theirName} • {new Date(msg.created_at).toLocaleString()}
+              <div key={msg.id} className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
+                <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-purple-100' : 'bg-white border'}`}>
+                  {/* Action buttons on hover */}
+                  <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-0 group-hover:opacity-100 transition-opacity flex bg-white border rounded shadow-sm text-gray-500`}>
+                    {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-purple-700 hover:bg-gray-100 rounded" title="Reply"><Reply className="w-3 h-3" /></button>}
+                    {isMine && !isEditing && (
+                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1 hover:text-purple-700 hover:bg-gray-100 rounded" title="Edit"><Pencil className="w-3 h-3" /></button>
+                    )}
                   </div>
-                  {msg.content && <div className="mb-1">{msg.content}</div>}
+
+                  <div className={`text-[10px] text-gray-500 mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
+                    {isMine ? 'You' : theirName} • {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    {msg.is_edited && <span className="ml-1 italic">(edited)</span>}
+                  </div>
+
+                  {msg.parent && (
+                    <div className="mb-2 p-1.5 bg-black/5 rounded text-xs border-l-2 border-purple-400 opacity-80 line-clamp-2">
+                       <span className="font-semibold">{msg.parent.sender_role === (isStudent ? 'student' : 'supervisor') ? 'You' : theirName}</span>: {msg.parent.content || 'Attached file'}
+                    </div>
+                  )}
+
+                  {isEditing ? (
+                    <div className="mt-1">
+                      <textarea
+                        className="w-full text-sm p-1 border rounded resize-none focus:outline-none focus:ring-1 focus:ring-purple-400"
+                        value={editContent}
+                        onChange={e => setEditContent(e.target.value)}
+                        autoFocus
+                        rows={2}
+                      />
+                      <div className="flex justify-end gap-1 mt-1">
+                        <button onClick={() => setEditingMessageId(null)} className="text-[10px] px-2 py-0.5 border rounded hover:bg-gray-50">Cancel</button>
+                        <button 
+                          onClick={() => editMutation.mutate({ messageId: msg.id, newContent: editContent })} 
+                          disabled={editMutation.isPending || editContent.trim() === msg.content}
+                          className="text-[10px] px-2 py-0.5 bg-purple-700 text-white rounded hover:bg-purple-800 disabled:opacity-50"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    msg.content && <div className="mb-1 text-sm whitespace-pre-wrap">{msg.content}</div>
+                  )}
                   {msg.attachment_url && (
                     <div className="mt-2 text-left">
                       {msg.attachment_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                         <div 
-                          className="relative group cursor-pointer inline-block"
+                          className="relative group/img cursor-pointer inline-block"
                           onClick={() => setSelectedImage({ url: msg.attachment_url, name: msg.attachment_name || 'Attached Image' })}
                         >
-                          <img src={msg.attachment_url} alt={msg.attachment_name || 'Attachment'} className="max-w-[200px] max-h-40 object-cover rounded border shadow-sm transition-opacity group-hover:opacity-90" />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center rounded">
-                            <span className="bg-black/60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">Click to view</span>
+                          <img src={msg.attachment_url} alt={msg.attachment_name || 'Attachment'} className="max-w-[200px] max-h-40 object-cover rounded border shadow-sm transition-opacity group-hover/img:opacity-90" />
+                          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center rounded">
+                            <span className="bg-black/60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/img:opacity-100 transition-opacity">Click to view</span>
                           </div>
                         </div>
                       ) : (
                         <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" download className="text-purple-700 underline text-sm break-all flex items-center gap-1">
-                          <Paperclip className="h-3 w-3" /> {msg.attachment_name || 'Download File'}
+                          <Paperclip className="h-3 w-3 flex-shrink-0" /> {msg.attachment_name || 'Download File'}
                         </a>
                       )}
                     </div>
@@ -197,8 +282,44 @@ export default function SupervisorStudentChatDrawer({
         )}
       </div>
       {(!chatDisabled && conversation) && (
-        <div className="flex-none bg-white">
-          <form className="p-4 border-t flex gap-2 items-center" onSubmit={e => { e.preventDefault(); mutation.mutate({ content: message, attachment }); }} aria-label="Send message">
+        <div className="flex-none bg-white border-t">
+          {replyingTo && (
+            <div className="px-4 py-2 bg-gray-50 text-xs flex items-center justify-between border-b">
+              <div className="flex items-center gap-2 text-gray-600 truncate">
+                <Reply className="w-3 h-3 flex-shrink-0" />
+                <span className="font-semibold">{replyingTo.sender_role === (isStudent ? 'student' : 'supervisor') ? 'You' : 'Them'}</span>: {replyingTo.content || 'Attached file'}
+              </div>
+              <button type="button" onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-gray-700">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {attachment && (
+            <div className="px-4 pt-3 flex items-start gap-3">
+              <div className="relative inline-block mt-1">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded border shadow-sm" />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-100 flex items-center justify-center rounded border shadow-sm">
+                    <Paperclip className="w-6 h-6 text-gray-400" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleAttachment(undefined)}
+                  className="absolute -top-2 -right-2 bg-white text-gray-600 rounded-full p-0.5 shadow-md border hover:bg-gray-100"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              <div className="text-xs text-gray-600 truncate pt-1 max-w-[200px]">
+                {attachment.name}
+              </div>
+            </div>
+          )}
+
+          <form className="p-4 flex gap-2 items-center" onSubmit={e => { e.preventDefault(); mutation.mutate({ content: message, attachment, parentId: replyingTo?.id }); }} aria-label="Send message">
             <label htmlFor="chat-upload" className="cursor-pointer flex items-center" title="Attach file">
               <Paperclip className="h-5 w-5 text-purple-700" />
             </label>
@@ -206,7 +327,7 @@ export default function SupervisorStudentChatDrawer({
               id="chat-upload"
               type="file"
               accept="image/*,.pdf,.doc,.docx"
-              onChange={e => setAttachment(e.target.files[0])}
+              onChange={e => handleAttachment(e.target.files?.[0])}
               aria-label="Attach file"
               disabled={chatDisabled}
               className="hidden"

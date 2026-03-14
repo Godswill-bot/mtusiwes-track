@@ -57,13 +57,20 @@ export async function getOrCreateConversation(supervisorId, studentId) {
 export async function listMessages(conversationId) {
   const { data, error } = await (supabase as any)
     .from('messages')
-    .select('*')
+    .select(`
+      *,
+      parent:parent_id (
+        id,
+        content,
+        sender_role
+      )
+    `)
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true });
   return data || [];
 }
 
-export async function sendMessage({ conversationId, senderId, senderRole, content, attachmentUrl, attachmentName }) {
+export async function sendMessage({ conversationId, senderId, senderRole, content, attachmentUrl, attachmentName, parentId }) {
   const result = await (supabase as any)
     .from('messages')
     .insert([
@@ -74,6 +81,7 @@ export async function sendMessage({ conversationId, senderId, senderRole, conten
         content,
         attachment_url: attachmentUrl || null,
         attachment_name: attachmentName || null,
+        parent_id: parentId || null,
       }
     ] as any)
     .select('*')
@@ -85,6 +93,24 @@ export async function sendMessage({ conversationId, senderId, senderRole, conten
     return null;
   }
   return data || null;
+}
+
+export async function editMessage(messageId, newContent) {
+  const { data, error } = await (supabase as any)
+    .from('messages')
+    .update({ 
+      content: newContent,
+      is_edited: true
+    })
+    .eq('id', messageId)
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error editing message:', error);
+    return null;
+  }
+  return data;
 }
 
 export async function markMessagesRead(conversationId, viewerRole) {
