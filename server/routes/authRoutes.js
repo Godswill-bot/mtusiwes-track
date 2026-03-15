@@ -13,6 +13,9 @@ import {
   resetPassword,
 } from '../controllers/authController.js';
 
+import { logUserActivity } from '../lib/activityLogger.js';
+import { createAuditLog } from '../lib/audit.js';
+
 const router = express.Router();
 
 /**
@@ -64,9 +67,6 @@ router.post('/reset-password', resetPassword);
  */
 router.post('/log-activity', async (req, res) => {
   try {
-    const { logUserActivity } = await import('../lib/activityLogger.js');
-    const { createAuditLog } = await import('../lib/audit.js');
-    
     // Log to user_activities table
     const result = await logUserActivity({
       userId: req.body.userId || null,

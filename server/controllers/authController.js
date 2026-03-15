@@ -11,7 +11,7 @@ import {
   markUserAsVerified,
   updateUserPassword,
 } from '../lib/database.js';
-import { sendOTPEmail } from '../lib/email.js';
+import { sendOTPEmail, sendPasswordResetEmail } from '../lib/email.js';
 import {
   logAccountCreation,
   logEmailVerification,
@@ -586,7 +586,6 @@ export const forgotPassword = async (req, res) => {
     const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:8080'}/reset-password?email=${encodeURIComponent(email)}&otp=${otp}`;
 
     // Send password reset email with reset link
-    const { sendPasswordResetEmail } = await import('../lib/email.js');
     const emailResult = await sendPasswordResetEmail(email, resetLink, otp);
     
     if (!emailResult.success) {
