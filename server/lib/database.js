@@ -142,16 +142,30 @@ export const verifyOTP = async (email, otp, type = 'verification') => {
  */
 export const checkEmailExists = async (email) => {
   try {
-    // Check in auth.users via Supabase Admin API
-    const { data: { users }, error } = await supabase.auth.admin.listUsers();
+    // Check in profiles, then supervisors, then students
+    const [profiles, students, supervisors] = await Promise.all([
+      supabase.from('profiles').select('email').eq('email', email).maybeSingle(),
+      supabase.from('students').select('email').eq('email', email).maybeSingle(),
+      supabase.from('supervisors').select('email').eq('email', email).maybeSingle(),
+    ]);
 
-    if (error) throw error;
+    const exists = !!(profiles?.data || students?.data || supervisors?.data);
 
-    const userExists = users.some(user => user.email === email);
+    // If perfectly empty but actually exists in auth, we fallback to safer auth checking
+    if (!exists) {
+      const { data, error } = await supabase.auth.admin.listUsers();
+      if (error) {
+        console.error("Checking email fallback failed:", error);
+        return { success: false, error: error.message };
+      }
+      const usersList = data?.users || [];
+      const userExists = usersList.some(user => user.email === email);
+      return { success: true, exists: userExists };
+    }
 
     return {
       success: true,
-      exists: userExists,
+      exists,
     };
   } catch (error) {
     console.error('Error checking email:', error);
@@ -170,9 +184,10 @@ export const checkEmailExists = async (email) => {
 export const markUserAsVerified = async (email) => {
   try {
     // Get user by email
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { data: listData, error: listError } = await supabase.auth.admin.listUsers();
     
     if (listError) throw listError;
+    const users = listData?.users || [];
 
     const user = users.find(u => u.email === email);
     if (!user) {
@@ -226,9 +241,10 @@ export const markUserAsVerified = async (email) => {
 export const updateUserPassword = async (email, newPassword) => {
   try {
     // Get user by email
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { data: listData, error: listError } = await supabase.auth.admin.listUsers();
     
     if (listError) throw listError;
+    const users = listData?.users || [];
 
     const user = users.find(u => u.email === email);
     if (!user) {

@@ -410,7 +410,8 @@ export const verifyEmail = async (req, res) => {
 
     // Get user info for audit logging
     try {
-      const { data: { users } } = await supabase.auth.admin.listUsers();
+      const { data: listData } = await supabase.auth.admin.listUsers();
+      const users = listData?.users || [];
       const user = users.find(u => u.email === email);
       if (user) {
         const userRole = user.user_metadata?.role || 'student';
@@ -460,8 +461,9 @@ export const login = async (req, res) => {
     }
 
     // Check if user exists and is verified
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { data: listData, error: listError } = await supabase.auth.admin.listUsers();
     if (listError) throw listError;
+    const users = listData?.users || [];
 
     const user = users.find(u => u.email === email);
     if (!user) {
@@ -558,18 +560,6 @@ export const forgotPassword = async (req, res) => {
     const emailCheck = await checkEmailExists(email);
     if (!emailCheck.exists) {
       // Don't reveal if email exists for security
-      return res.json({
-        success: true,
-        message: 'If the email exists, a password reset email has been sent.',
-      });
-    }
-
-    // Get user from Supabase Auth
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-    if (listError) throw listError;
-
-    const user = users.find(u => u.email === email);
-    if (!user) {
       return res.json({
         success: true,
         message: 'If the email exists, a password reset email has been sent.',
@@ -722,8 +712,9 @@ export const resetPassword = async (req, res) => {
 
     // Ensure user's email verification status is maintained
     // Get user to check current verification status
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { data: listData, error: listError } = await supabase.auth.admin.listUsers();
     if (!listError) {
+      const users = listData?.users || [];
       const user = users.find(u => u.email === email);
       if (user) {
         const isVerified = user.user_metadata?.email_verified || false;

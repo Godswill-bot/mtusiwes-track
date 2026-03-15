@@ -78,6 +78,8 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 30, // 30 minutes - unused data is garbage collected after 30 minutes
       retry: 1, // Only retry failed requests once
       refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnMount: false, // Don't refetch on component mount if data exists
+      refetchOnReconnect: false, // Don't refetch on network reconnect
     },
   },
 });
