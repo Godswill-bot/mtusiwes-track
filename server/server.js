@@ -115,7 +115,8 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     // Start server FIRST (Railway needs this to pass health check quickly)
-    app.listen(PORT, '0.0.0.0', () => {
+    if (process.env.VERCEL !== '1') {
+      app.listen(PORT, '0.0.0.0', () => {
       console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║     MTU SIWES Email Server is running!                  ║
@@ -134,6 +135,7 @@ const startServer = async () => {
       console.log('  POST /api/auth/reset-password');
       console.log('  GET  /health');
     });
+    }
 
     // Check email configuration in background (don't block server startup)
     console.log('Checking email configuration in background...');
