@@ -392,7 +392,7 @@ const Logbook = () => {
       // Log activity for submissions (not drafts)
       if (submit && user) {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+          const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://localhost:3001");
           await fetch(`${API_BASE_URL}/api/auth/log-activity`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

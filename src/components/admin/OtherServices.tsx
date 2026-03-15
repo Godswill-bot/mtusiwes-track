@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { Download, FileText, Calendar, CheckSquare, Loader2, ShieldAlert } from "lucide-react";
 import { AnimatedCard } from "@/components/animations/MotionWrappers";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://localhost:3001");
 
 // Fetch academic sessions
 const fetchSessions = async () => {

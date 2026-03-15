@@ -235,7 +235,7 @@ export const FullScreenReportModal = ({
     try {
       toast.info("Generating PDF...");
       
-      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://localhost:3001");
       const { data: { session } } = await supabase.auth.getSession();
       
       const response = await fetch(`${API_BASE_URL}/api/pdf/generate-week-pdf`, {

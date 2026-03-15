@@ -9,7 +9,7 @@ import mtuLogo from "@/assets/mtu-logo.png";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://localhost:3001");
 
 const EmailVerificationOTP = () => {
   const [searchParams] = useSearchParams();

@@ -140,7 +140,7 @@ const StudentSignup = () => {
 
     try {
       // Try backend API first (for OTP email verification)
-      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://localhost:3001");
       let useBackend = false;
       let userId: string | null = null;
 
@@ -320,7 +320,7 @@ const StudentSignup = () => {
       // Log signup activity (registration is already logged by backend)
       if (!useBackend && userId) {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+          const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://localhost:3001");
           await fetch(`${API_BASE_URL}/api/auth/log-activity`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

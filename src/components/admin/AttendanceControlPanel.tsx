@@ -29,7 +29,7 @@ const fetchAttendance = async () => {
   return data as AttendanceRecord[];
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://localhost:3001");
 
 /**
  * Admin Attendance View Panel
