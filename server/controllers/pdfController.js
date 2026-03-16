@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import PDFDocument from 'pdfkit';
 import fs from 'fs';
 
 dotenv.config();
@@ -15,10 +16,9 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Ensure PDFs directory exists
 const pdfsDir = path.join(__dirname, '../pdfs');
@@ -601,9 +601,6 @@ export const generateAttendancePDF = async (req, res) => {
     if (attendanceError) {
       throw attendanceError;
     }
-
-    // Import PDFKit
-    const { default: PDFDocument } = await import('pdfkit');
 
     // Create PDF
     const doc = new PDFDocument({ 
