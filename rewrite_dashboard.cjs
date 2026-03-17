@@ -1,4 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+const fs = require('fs');
+
+const code = `import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCog, CheckCircle, AlertCircle } from "lucide-react";
@@ -153,7 +155,7 @@ export const DashboardOverview = () => {
                       dataKey="value"
                     >
                       {supervisorPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={\`cell-\${index}\`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -187,7 +189,7 @@ export const DashboardOverview = () => {
                       dataKey="value"
                     >
                       {studentPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={\`cell-\${index}\`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -202,3 +204,7 @@ export const DashboardOverview = () => {
     </div>
   );
 };
+`;
+
+fs.writeFileSync('src/components/admin/DashboardOverview.tsx', code);
+console.log("Dashboard rewritten")

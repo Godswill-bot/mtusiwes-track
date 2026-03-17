@@ -1,4 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+const fs = require('fs');
+
+const content = `import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -189,3 +191,7 @@ export const AuditLogPanel = () => {
     </Card>
   );
 };
+`;
+
+fs.writeFileSync('src/components/admin/AuditLogPanel.tsx', content);
+console.log('AuditLogPanel rewritten successfully!');

@@ -314,6 +314,74 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadPreSiwesForm = (student: StudentRecord) => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(22);
+    doc.setTextColor(0, 0, 128); // Blue color for MTU
+    doc.text("Mountain Top University", 105, 20, { align: "center" });
+    
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Pre-SIWES Registration Form", 105, 30, { align: "center" });
+    
+    doc.setFontSize(12);
+    const dateStr = new Date(student.created_at).toLocaleDateString();
+    doc.text(`Registration Date: ${dateStr}`, 14, 45);
+    
+    doc.setFontSize(14);
+    doc.text("1. Student Information", 14, 55);
+    
+    autoTable(doc, {
+      startY: 60,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Full Name", student.full_name || "N/A"],
+        ["Matriculation Number", student.matric_no || "N/A"],
+        ["Email Address", student.email || "N/A"],
+        ["Phone Number", student.phone || "N/A"],
+        ["Department", student.department || "N/A"],
+        ["Faculty", student.faculty || "N/A"],
+      ],
+    });
+
+    const currentYOrg = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.text("2. Placement Organization Details", 14, currentYOrg);
+    
+    autoTable(doc, {
+      startY: currentYOrg + 5,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Organization Name", student.organisation_name || "N/A"],
+        ["Organization Address", student.organisation_address || "N/A"],
+        ["Nature of Business", student.nature_of_business || "N/A"],
+      ],
+    });
+
+    const currentYSup = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.text("3. Industry Supervisor Details", 14, currentYSup);
+    
+    autoTable(doc, {
+      startY: currentYSup + 5,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Sup. Name", student.industry_supervisor_name || "N/A"],
+        ["Sup. Phone", student.industry_supervisor_phone || "N/A"],
+        ["Sup. Email", student.industry_supervisor_email || "N/A"],
+      ],
+    });
+
+    doc.setFontSize(10);
+    doc.text("Official MTU SIWES Unit Documentation", 105, 280, { align: "center" });
+
+    doc.save(`${student.matric_no}_Pre_SIWES_Form.pdf`);
+  };
+
   const schoolSupervisors = useMemo(
     () =>
       (supervisorsQuery.data || []).filter(
@@ -362,12 +430,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                         <div className="text-xs text-muted-foreground">{student.industry_supervisor_phone}</div>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${Math.random() > 0.5 ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                        <span className="text-xs text-muted-foreground">{Math.random() > 0.5 ? 'Online' : 'Offline'}</span>
-                      </div>
-                    </TableCell>
+                    
                     <TableCell>
                       <Badge variant={student.is_active ? "default" : "secondary"} className="whitespace-nowrap text-xs">
                         {student.is_active ? "Active" : "Inactive"}
@@ -722,12 +785,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                         <div className="text-xs text-muted-foreground break-words">{student.organisation_address}</div>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${Math.random() > 0.5 ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                        <span className="text-xs text-muted-foreground">{Math.random() > 0.5 ? 'Online' : 'Offline'}</span>
-                      </div>
-                    </TableCell>
+                    
                     <TableCell>
                       <Badge variant={student.is_active ? "default" : "secondary"} className="whitespace-nowrap text-xs">
                         {student.is_active ? "Active" : "Inactive"}
@@ -748,6 +806,15 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                             className="text-xs w-full sm:w-auto"
                           >
                             Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => downloadPreSiwesForm(student)}
+                            className="text-xs w-full sm:w-auto"
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            Form
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => resetPassword(student)} className="text-xs w-full sm:w-auto">
                             Reset
