@@ -3,32 +3,39 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOrCreateConversation, listMessages, sendMessage } from '@/lib/chatHelpers';
-import { Paperclip, Send, User, ArrowLeft } from 'lucide-react';
+import { Paperclip, Send, User, ArrowLeft, Reply, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Minimal supervisor mini-profile component
-function SupervisorProfile({ supervisor }) {
+function SupervisorProfile({ supervisor }: { supervisor: any }) {
   return (
-    <div className="flex flex-col items-center p-4 border-r h-full">
-      <User className="h-12 w-12 text-purple-700 mb-2" />
-      <div className="font-bold text-lg text-purple-700">{supervisor?.name || 'Supervisor'}</div>
-      <div className="text-xs text-gray-500">{supervisor?.email}</div>
-      {/* Add last active/status if available */}
+    <div className="flex flex-col items-center p-4 border-r h-full bg-white">
+      <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+        <User className="h-8 w-8 text-purple-700" />
+      </div>
+      <div className="font-bold text-lg text-gray-800">{supervisor?.name || 'Supervisor'}</div>
+      <div className="text-sm text-gray-500">{supervisor?.email}</div>
     </div>
   );
 }
 
 export default function StudentChatPage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [conversation, setConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [conversation, setConversation] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [message, setMessage] = useState('');
-  const [attachment, setAttachment] = useState(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState('');
-  const [supervisor, setSupervisor] = useState(null);
-  const [studentId, setStudentId] = useState(null);
+  const [supervisor, setSupervisor] = useState<any>(null);
+  const [studentId, setStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef(null);
+  
+  // New states for reply feature
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<any>(null);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch assigned supervisor and conversation
   useEffect(() => {
@@ -37,76 +44,70 @@ export default function StudentChatPage() {
       let supervisorId = null;
       let supervisorName = null;
       let supervisorEmail = null;
-      let studentId = null;
-      // Try students table first
-      const { data: studentData, error: studentError } = await supabase
+      let stuId = null;
+      
+      const { data: studentData } = await supabase
         .from('students')
         .select('id, supervisor_id, school_supervisor_name, school_supervisor_email')
         .eq('user_id', user?.id)
         .maybeSingle();
+
       if (studentData) {
-        studentId = studentData.id;
+        stuId = studentData.id;
         supervisorId = studentData.supervisor_id;
         supervisorName = studentData.school_supervisor_name;
         supervisorEmail = studentData.school_supervisor_email;
-        console.log('Debug: students table', { studentId, supervisorId, supervisorName, supervisorEmail });
-      } else {
-        console.log('Debug: students table error', studentError);
       }
-      // Always try supervisor_assignments for reliability
-      if (studentId) {
-        const { data: assignment, error: assignmentError } = await supabase
+      
+      if (stuId) {
+        const { data: assignment } = await supabase
           .from('supervisor_assignments')
           .select('supervisor_id, supervisors(name, email)')
-          .eq('student_id', studentId)
+          .eq('student_id', stuId)
           .eq('assignment_type', 'school_supervisor')
           .maybeSingle();
+          
         if (assignment && assignment.supervisor_id) {
           supervisorId = assignment.supervisor_id;
-          supervisorName = assignment.supervisors?.name;
-          supervisorEmail = assignment.supervisors?.email;
-          console.log('Debug: supervisor_assignments table', { supervisorId, supervisorName, supervisorEmail });
-        } else {
-          console.log('Debug: supervisor_assignments error', assignmentError);
+          supervisorName = (assignment.supervisors as any)?.name;
+          supervisorEmail = (assignment.supervisors as any)?.email;
         }
       }
-      if (!supervisorId || !studentId) {
+      
+      if (!supervisorId || !stuId) {
         setLoading(false);
-        console.log('Chat disabled. Please ensure you are assigned to a supervisor and SIWES is active.');
-        console.log('Debug: supervisorId=' + supervisorId + ', studentId=' + studentId);
         return;
       }
-      setSupervisor({
-        id: supervisorId,
-        name: supervisorName,
-        email: supervisorEmail,
-      });
-      // Get or create conversation
-      const conv = await getOrCreateConversation(supervisorId, studentId);
-      console.log('Conversation object:', conv);
-        setConversation(conv);
-      setStudentId(studentId);
-      // Load messages
-      const msgs = await listMessages(conv.id);
-      setMessages(msgs);
+      
+      setSupervisor({ id: supervisorId, name: supervisorName, email: supervisorEmail });
+      
+      const conv = await getOrCreateConversation(supervisorId, stuId);
+      setConversation(conv);
+      setStudentId(stuId);
+      
+      if (conv) {
+        const msgs = await listMessages(conv.id);
+        setMessages(msgs);
+      }
       setLoading(false);
     }
+    
     if (user?.id) fetchChat();
   }, [user?.id]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
-  // Send message handler
-  async function handleSend(e) {
+  async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!message && !attachment) return;
+    
     let attachmentUrl = null;
     let attachmentName = null;
+    
     if (attachment) {
       if (attachment.size > 5 * 1024 * 1024) {
         setUploadError('File too large (max 5MB)');
@@ -117,19 +118,25 @@ export default function StudentChatPage() {
         setUploadError('Invalid file type');
         return;
       }
+      
       const filePath = `chat/${conversation.id}/${Date.now()}_${attachment.name}`;
       const { error } = await supabase.storage.from('chat-attachments').upload(filePath, attachment);
+      
       if (error) {
         setUploadError('Upload failed');
         return;
       }
+      
       const { data: publicData } = supabase.storage.from('chat-attachments').getPublicUrl(filePath);
       attachmentUrl = publicData?.publicUrl;
       attachmentName = attachment.name;
     }
+    
     setUploadError('');
-    // Optimistic UI
+    
     const tempId = `temp-${Date.now()}`;
+    
+    // Add optimistic message
     setMessages(msgs => [...msgs, {
       id: tempId,
       sender_id: studentId,
@@ -138,24 +145,43 @@ export default function StudentChatPage() {
       attachment_url: attachmentUrl,
       attachment_name: attachmentName,
       created_at: new Date().toISOString(),
+      parent_id: replyingTo?.id || null,
+      parent: replyingTo ? {
+        id: replyingTo.id,
+        content: replyingTo.content,
+        sender_role: replyingTo.sender_role
+      } : null,
       optimistic: true,
     }]);
+    
+    const sentMessageContent = message;
+    const parentIdToUse = replyingTo?.id;
+    
     setMessage('');
     setAttachment(null);
-    // Send to backend
+    setReplyingTo(null);
+    setActiveMessageId(null);
+    
     const sent = await sendMessage({
       conversationId: conversation.id,
       senderId: studentId,
       senderRole: 'student',
-      content: message,
+      content: sentMessageContent,
       attachmentUrl,
       attachmentName,
-      parentId: undefined,
+      parentId: parentIdToUse,
     });
-    setMessages(msgs => msgs.map(m => m.id === tempId ? sent : m));
+    
+    if (sent) {
+      // In case the sent message doesn't return the joined parent object, we manually add it for the UI
+      if (parentIdToUse) {
+        sent.parent = messages.find(m => m.id === parentIdToUse);
+      }
+      setMessages(msgs => msgs.map(m => m.id === tempId ? sent : m));
+    }
   }
 
-  // Minimal real-time: poll every 3s (replace with Supabase Realtime if needed)
+  // Poll
   useEffect(() => {
     if (!conversation?.id) return;
     const interval = setInterval(async () => {
@@ -165,89 +191,193 @@ export default function StudentChatPage() {
     return () => clearInterval(interval);
   }, [conversation?.id]);
 
-  // Layout
   if (loading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-300 border-t-transparent"></div></div>;
   if (!supervisor) return <div className="flex items-center justify-center h-screen text-red-500">No supervisor assigned. Chat unavailable.</div>;
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-white">
-      {/* Left: Supervisor profile (desktop) */}
-      <div className="hidden md:block w-1/3 max-w-xs border-r bg-gray-50">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50 border-t" onClick={() => setActiveMessageId(null)}>
+      {/* Left Profile */}
+      <div className="hidden md:block w-1/4 max-w-[280px] shadow-sm z-10">
         <SupervisorProfile supervisor={supervisor} />
       </div>
-      {/* Right: Chat thread */}
-      <div className="flex-1 flex flex-col h-full">
-        {/* Mobile header */}
-        <div className="md:hidden flex items-center p-2 border-b bg-gray-50">
-          <button onClick={() => navigate(-1)} className="mr-2" title="Go back"><ArrowLeft /></button>
-          <span className="font-bold text-purple-700">{supervisor.name}</span>
+
+      {/* Main Chat Thread */}
+      <div className="flex-1 flex flex-col h-full bg-white relative">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center p-3 border-b bg-white shadow-sm z-10">
+          <button onClick={() => navigate(-1)} className="mr-3 text-gray-500 hover:text-purple-700 transition" title="Go back">
+            <ArrowLeft />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="bg-purple-100 p-1 rounded-full">
+              <User className="h-5 w-5 text-purple-700" />
+            </div>
+            <span className="font-bold text-gray-800">{supervisor.name}</span>
+          </div>
         </div>
-        {/* Chat thread */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-purple-50 to-white">
-          
+
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar" style={{ backgroundImage: 'radial-gradient(#f3e8ff 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
           {messages.length === 0 ? (
-            <div className="text-center text-gray-400 mt-10">Start a conversation with your supervisor.</div>
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-70">
+              <Send className="h-12 w-12 mb-4 text-purple-200" />
+              <p>Start a secure conversation with your supervisor.</p>
+            </div>
           ) : (
-            messages.map(msg => (
-              <div key={msg.id} className={`mb-4 flex ${msg.sender_role === 'student' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs rounded-lg p-2 shadow ${msg.sender_role === 'student' ? 'bg-purple-100' : 'bg-white border'}`}>
-                  <div className="text-xs text-gray-500 mb-1 text-right">{msg.sender_role === 'student' ? 'You' : supervisor?.name || 'Supervisor'} � {new Date(msg.created_at).toLocaleString()}</div>
-                  {msg.content && <div className="mb-1">{msg.content}</div>}
-                  {msg.attachment_url && (
-                    <div>
-                      {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                        <img src={msg.attachment_url} alt={msg.attachment_name} className="max-h-32 rounded cursor-pointer" onClick={() => window.open(msg.attachment_url, '_blank')} />
-                      ) : (
-                        <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" download className="text-purple-700 underline">{msg.attachment_name || 'Download'}</a>
-                      )}
+            <div className="space-y-6">
+              {messages.map(msg => {
+                const isMe = msg.sender_role === 'student';
+                const showActions = activeMessageId === msg.id;
+
+                return (
+                  <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div 
+                      className="group relative max-w-[85%] md:max-w-[70%]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMessageId(showActions ? null : msg.id);
+                      }}
+                    >
+                      {/* Message Bubble container */}
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`relative cursor-pointer transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                      >
+                        {/* Option Actions Popover */}
+                        <AnimatePresence>
+                          {showActions && (
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                              animate={{ opacity: 1, scale: 1, y: -5 }}
+                              exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                              className={`absolute -top-10 ${isMe ? 'right-0' : 'left-0'} bg-white border shadow-lg rounded-full px-3 py-1 flex items-center gap-2 z-10`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReplyingTo(msg);
+                                setActiveMessageId(null);
+                              }}
+                            >
+                              <Reply className="h-4 w-4 text-gray-500" />
+                              <span className="text-xs font-medium text-gray-700">Reply</span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Message Bubble */}
+                        <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-purple-600 text-white rounded-tr-sm border-purple-700' : 'bg-white text-gray-800 rounded-tl-sm border-gray-100'}`}>
+                           
+                           {/* Replied to... section */}
+                           {msg.parent && (
+                             <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-purple-500/50 border-purple-500' : 'bg-gray-50 border-gray-200'} flex flex-col opacity-90`}>
+                               <span className={`font-semibold mb-1 ${isMe ? 'text-purple-100' : 'text-purple-700'}`}>
+                                 {msg.parent.sender_role === 'student' ? 'You' : supervisor.name}
+                               </span>
+                               <span className="truncate">{msg.parent.content || 'Attachment'}</span>
+                             </div>
+                           )}
+
+                          {/* Content */}
+                          {msg.content && <div className="text-[15px] leading-relaxed break-words">{msg.content}</div>}
+                          
+                          {/* Attachments */}
+                          {msg.attachment_url && (
+                            <div className="mt-2 text-sm">
+                              {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                <img src={msg.attachment_url} alt={msg.attachment_name} className="max-h-48 rounded-lg mt-1 cursor-pointer hover:opacity-90 transition border border-black/10" onClick={(e) => { e.stopPropagation(); window.open(msg.attachment_url, '_blank'); }} />
+                              ) : (
+                                <div className={`flex items-center gap-2 p-2 rounded-lg border ${isMe ? 'bg-purple-700 border-purple-500' : 'bg-gray-50 border-gray-200'}`}>
+                                  <Paperclip className="h-4 w-4 shrink-0" />
+                                  <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
+                                    {msg.attachment_name || 'Download File'}
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Metadata */}
+                          <div className={`text-[10px] mt-2 flex justify-end items-center gap-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>
+                            {msg.optimistic ? 'sending...' : new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+
+                      </motion.div>
                     </div>
-                  )}
-                  {msg.optimistic && <div className="text-xs text-gray-400 italic">sending…</div>}
-                </div>
-              </div>
-            ))
+                  </div>
+                );
+              })}
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
-        {/* Input area */}
-        <form className="p-4 border-t flex gap-2 items-center" onSubmit={handleSend}>
-          <label htmlFor="chat-upload" className="cursor-pointer flex items-center" title="Attach file">
-            <Paperclip className="h-5 w-5 text-purple-700" />
-          </label>
-          <input
-            placeholder="Type your message..."
-            id="chat-upload"
-            type="file"
-            accept="image/*,.pdf,.doc,.docx"
-            onChange={e => setAttachment(e.target.files[0])}
-            className="hidden"
-          />
-          <input
-            type="text"
-            className="flex-1 border rounded px-2 py-1"
-            placeholder="Type a message…"
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={!message && !attachment}
-            className="bg-purple-700 text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
-            aria-label="Send message"
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        </form>
-        <div className="px-4 pb-2 text-xs text-gray-500">Max file size: 5MB. Allowed: images, PDF, DOC, DOCX.</div>
-        {uploadError && <div className="text-red-500 text-xs px-4 pb-2">{uploadError}</div>}
+
+        {/* Input Area */}
+        <div className="p-4 bg-white border-t z-10 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)]">
+          <AnimatePresence>
+            {replyingTo && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }} 
+                animate={{ opacity: 1, height: 'auto' }} 
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-3 flex items-center justify-between bg-purple-50/50 border border-purple-100 rounded-lg p-2 overflow-hidden"
+              >
+                <div className="flex-1 border-l-2 border-purple-500 pl-3">
+                  <div className="text-xs text-purple-700 font-semibold flex items-center gap-1">
+                    <Reply className="h-3 w-3" />
+                    Replying to {replyingTo.sender_role === 'student' ? 'yourself' : supervisor.name}
+                  </div>
+                  <div className="text-sm text-gray-600 truncate">{replyingTo.content || 'Attachment'}</div>
+                </div>
+                <button type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-purple-100 rounded-full text-gray-400 hover:text-gray-600 transition">
+                  <X className="h-4 w-4" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form className="flex gap-2 items-center" onSubmit={handleSend}>
+            <label htmlFor="chat-upload" className="cursor-pointer p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition" title="Attach file">
+              <Paperclip className="h-5 w-5" />
+            </label>
+            <input
+              id="chat-upload"
+              type="file"
+              accept="image/*,.pdf,.doc,.docx"
+              onChange={e => setAttachment(e.target.files?.[0] || null)}
+              className="hidden"
+            />
+            
+            <div className="flex-1 flex flex-col bg-gray-50 border rounded-2xl ring-purple-100 focus-within:ring-2 focus-within:border-purple-300 transition-all overflow-hidden px-3 py-1">
+              {attachment && (
+                <div className="flex items-center gap-2 text-xs bg-purple-100 text-purple-800 p-1.5 rounded-lg mb-1 mt-1 font-medium w-fit max-w-full">
+                  <Paperclip className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{attachment.name}</span>
+                  <X className="h-3 w-3 cursor-pointer shrink-0 ml-1" onClick={() => setAttachment(null)} />
+                </div>
+              )}
+              <input
+                type="text"
+                className="w-full bg-transparent border-none focus:outline-none py-2 text-[15px]"
+                placeholder="Type your message..."
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={(!message.trim() && !attachment) || loading}
+              className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full disabled:opacity-50 disabled:hover:bg-purple-600 transition flex items-center justify-center shadow-md active:scale-95"
+              aria-label="Send message"
+            >
+              <Send className="h-5 w-5 ml-1" />
+            </button>
+          </form>
+          
+          {uploadError && <div className="text-red-500 text-xs mt-2 pl-12">{uploadError}</div>}
+        </div>
       </div>
     </div>
   );
 }
-
-
-
-
-
-
-
