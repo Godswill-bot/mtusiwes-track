@@ -15,9 +15,16 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Ensure exports directory exists
-const exportsDir = path.join(__dirname, '../exports');
-if (!fs.existsSync(exportsDir)) {
-  fs.mkdirSync(exportsDir, { recursive: true });
+const exportsDir = process.env.VERCEL === '1' 
+  ? path.join('/tmp', 'exports') 
+  : path.join(__dirname, '../exports');
+
+try {
+  if (!fs.existsSync(exportsDir)) {
+    fs.mkdirSync(exportsDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn("Could not create exportsDir:", e.message);
 }
 
 /**

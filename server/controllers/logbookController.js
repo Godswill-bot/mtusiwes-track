@@ -16,9 +16,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Ensure PDFs directory exists
-const pdfsDir = path.join(__dirname, '../pdfs');
-if (!fs.existsSync(pdfsDir)) {
-  fs.mkdirSync(pdfsDir, { recursive: true });
+const pdfsDir = process.env.VERCEL === '1' 
+  ? path.join('/tmp', 'pdfs') 
+  : path.join(__dirname, '../pdfs');
+try {
+  if (!fs.existsSync(pdfsDir)) {
+    fs.mkdirSync(pdfsDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn("Could not create pdfsDir:", e.message);
 }
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';

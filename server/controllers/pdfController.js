@@ -21,9 +21,15 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Ensure PDFs directory exists
-const pdfsDir = path.join(__dirname, '../pdfs');
-if (!fs.existsSync(pdfsDir)) {
-  fs.mkdirSync(pdfsDir, { recursive: true });
+const pdfsDir = process.env.VERCEL === '1' 
+  ? path.join('/tmp', 'pdfs') 
+  : path.join(__dirname, '../pdfs');
+try {
+  if (!fs.existsSync(pdfsDir)) {
+    fs.mkdirSync(pdfsDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn("Could not create pdfsDir:", e.message);
 }
 
 /**
