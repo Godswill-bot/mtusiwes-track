@@ -592,7 +592,7 @@ const SupervisorTable = ({
             <TableHead className="min-w-[120px]">Name</TableHead>
             <TableHead className="min-w-[150px]">Email</TableHead>
             <TableHead className="min-w-[100px]">Phone</TableHead>
-            {isIndustry && <TableHead className="min-w-[150px]">Assigned Students</TableHead>}
+            {isIndustry && (<><TableHead className="min-w-[150px]">Organisation</TableHead><TableHead className="min-w-[150px]">Assigned Students</TableHead></>)}
             <TableHead className="min-w-[80px]">Status</TableHead>
             {!compact && <TableHead className="text-right min-w-[180px]">Actions</TableHead>}
           </TableRow>
@@ -617,7 +617,11 @@ const SupervisorTable = ({
                   <TableCell className="break-all max-w-[150px] text-sm">{sup.email || "—"}</TableCell>
                   <TableCell className="break-words text-sm">{sup.phone ?? "—"}</TableCell>
                   {isIndustry && (
-                    <TableCell className="max-w-[150px]">
+                    <>
+                      <TableCell className="max-w-[150px] text-sm break-words">
+                        {assignedStudents.length > 0 ? ((assignedStudents[0] as any).company_name || (assignedStudents[0] as any).organisation_name || (assignedStudents[0] as any).organization_name || "—") : "—"}
+                      </TableCell>
+                      <TableCell className="max-w-[150px]">
                       {assignedStudents.length > 0 ? (
                         <div className="space-y-0.5">
                           {assignedStudents.slice(0, 3).map(student => (
@@ -634,6 +638,7 @@ const SupervisorTable = ({
                         <span className="text-xs text-muted-foreground">No students</span>
                       )}
                     </TableCell>
+                    </>
                   )}
                   <TableCell>
                     <Badge variant={sup.is_active ? "default" : "secondary"} className="whitespace-nowrap text-xs">
@@ -661,13 +666,13 @@ const SupervisorTable = ({
                         </div>
                       )}
                     </TableCell>
-                  )}
+                    )}
                 </TableRow>
               );
             })
           ) : (
             <TableRow>
-              <TableCell colSpan={isIndustry ? (compact ? 5 : 6) : (compact ? 4 : 5)} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={isIndustry ? (compact ? 6 : 7) : (compact ? 4 : 5)} className="text-center py-8 text-muted-foreground">
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

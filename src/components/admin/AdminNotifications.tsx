@@ -65,6 +65,21 @@ export const AdminNotifications = () => {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "unread">("unread");
 
+  
+  // Query unassigned students dynamically
+  const { data: unassignedStudents } = useQuery({
+    queryKey: ["unassignedStudents"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, full_name, matric_no")
+        .is("supervisor_id", null);
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 300000 // Refetch every 5 minutes
+  });
+
   const { data: notifications = [], isPending, refetch } = useQuery({
     queryKey: ["admin", "notifications"],
     queryFn: fetchNotifications,

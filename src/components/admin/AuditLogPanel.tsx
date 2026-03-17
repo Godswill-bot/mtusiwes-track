@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Search } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -136,11 +139,45 @@ export const AuditLogPanel = () => {
                     <TableCell className="whitespace-nowrap text-sm">
                       {new Date(log.created_at).toLocaleString()}
                     </TableCell>
+
+                    <TableCell>
+                      {(log.old_value || log.new_value) ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Audit Record Details</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              <div>
+                                <h4 className="font-semibold mb-2 text-sm">Previous Values</h4>
+                                <pre className="bg-muted p-2 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
+                                  {log.old_value ? JSON.stringify(log.old_value, null, 2) : "None"}
+                                </pre>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold mb-2 text-sm">New Values</h4>
+                                <pre className="bg-muted p-2 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
+                                  {log.new_value ? JSON.stringify(log.new_value, null, 2) : "None"}
+                                </pre>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     {auditQuery.isPending ? (
                       <div className="flex items-center justify-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -150,7 +187,41 @@ export const AuditLogPanel = () => {
                       "No audit logs found"
                     )}
                   </TableCell>
-                </TableRow>
+
+                    <TableCell>
+                      {(log.old_value || log.new_value) ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Audit Record Details</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              <div>
+                                <h4 className="font-semibold mb-2 text-sm">Previous Values</h4>
+                                <pre className="bg-muted p-2 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
+                                  {log.old_value ? JSON.stringify(log.old_value, null, 2) : "None"}
+                                </pre>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold mb-2 text-sm">New Values</h4>
+                                <pre className="bg-muted p-2 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
+                                  {log.new_value ? JSON.stringify(log.new_value, null, 2) : "None"}
+                                </pre>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+
+                  </TableRow>
               )}
             </TableBody>
           </Table>

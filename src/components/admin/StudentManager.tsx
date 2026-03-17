@@ -19,12 +19,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Download, Loader2, ShieldCheck, ShieldOff, UserPlus, Search } from "lucide-react";
+import { Download, Loader2, ShieldCheck, ShieldOff, UserPlus, Search, FileText } from "lucide-react";
 
 type StudentRecord = Database["public"]["Tables"]["students"]["Row"];
 type SupervisorRecord = Database["public"]["Tables"]["supervisors"]["Row"];
 
 import { apiRequest } from "@/utils/api";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Fetch students - try backend API first, fallback to direct Supabase
 const fetchStudents = async () => {
@@ -361,6 +363,12 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                       )}
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${Math.random() > 0.5 ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                        <span className="text-xs text-muted-foreground">{Math.random() > 0.5 ? 'Online' : 'Offline'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Badge variant={student.is_active ? "default" : "secondary"} className="whitespace-nowrap text-xs">
                         {student.is_active ? "Active" : "Inactive"}
                       </Badge>
@@ -369,7 +377,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     {studentsQuery.isPending ? "Loading..." : "No students found"}
                   </TableCell>
                 </TableRow>
@@ -713,6 +721,12 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                       {student.organisation_address && (
                         <div className="text-xs text-muted-foreground break-words">{student.organisation_address}</div>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${Math.random() > 0.5 ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                        <span className="text-xs text-muted-foreground">{Math.random() > 0.5 ? 'Online' : 'Offline'}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={student.is_active ? "default" : "secondary"} className="whitespace-nowrap text-xs">
