@@ -10,6 +10,7 @@ import mtuLogo from "@/assets/mtu-logo.png";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AuthSlideshow } from "@/components/auth/AuthSlideshow";
 
 const StudentLogin = () => {
   const [email, setEmail] = useState("");
@@ -102,39 +103,94 @@ const StudentLogin = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white">
-      <Card className="w-full max-w-md shadow-lg border">
-        <CardHeader className="text-center space-y-4 relative">
-          <Button variant="ghost" onClick={() => navigate("/")} className="absolute top-4 left-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />Back
-          </Button>
-          <div className="flex justify-center pt-6">
-            <img src={mtuLogo} alt="MTU Logo" className="h-24 w-auto object-contain" />
-          </div>
-          <div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Student Login</CardTitle>
-            <CardDescription>MTU SIWES Logbook</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {error && (<Alert variant="destructive" className="mb-4"><AlertCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>)}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="student@mtu.edu.ng" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+    <div className="min-h-screen flex w-full bg-white">
+      {/* Slideshow Pane */}
+      <AuthSlideshow />
+
+      {/* Form Pane */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8 overflow-y-auto">
+        <div className="w-full max-w-md">
+          <div className="mb-8 relative">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="absolute -top-2 -left-4 lg:hidden"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <div className="flex justify-center mb-6">
+              <img src={mtuLogo} alt="MTU Logo" className="h-24 w-auto object-contain" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900">Student Login</h1>
+              <p className="text-gray-500 mt-2">Access your MTU SIWES dashboard</p>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</Button>
-          </form>
-          <div className="mt-4 text-center space-y-2">
-            <p className="text-sm text-muted-foreground">Don't have an account?{" "}<Button variant="link" className="p-0 h-auto" onClick={() => navigate("/student/signup")}>Sign up here</Button></p>
-            <p className="text-sm text-muted-foreground"><Button variant="link" className="p-0 h-auto" onClick={() => navigate("/forgot-password")}>Forgot Password?</Button></p>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="bg-white/50 backdrop-blur-sm">
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="student@mtu.edu.ng"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="password">Password</Label>
+                   <Button variant="link" className="p-0 h-auto text-sm text-primary" onClick={(e) => { e.preventDefault(); navigate("/forgot-password"); }}>
+                    Forgot Password?
+                   </Button>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="h-12"
+                />
+              </div>
+              <Button type="submit" className="w-full h-12 text-lg font-medium mt-6" disabled={loading}>
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+            <div className="mt-8 text-center pb-8 border-t pt-6">
+              <p className="text-gray-600">
+                Don't have an account?{" "}
+                <Button variant="link" className="p-0 h-auto font-semibold text-primary hover:text-primary/80" onClick={() => navigate("/student/signup")}>
+                  Sign up here
+                </Button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Desktop Back Button Overlay on Image Side */}
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/")}
+        className="hidden lg:flex absolute top-6 left-6 z-30 text-white bg-black/20 hover:bg-black/40 hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back Home
+      </Button>
     </div>
   );
 };

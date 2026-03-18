@@ -12,6 +12,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+import { AuthSlideshow } from "@/components/auth/AuthSlideshow";
+
 const CBAS_DEPARTMENTS = [
   "Computer Science",
   "Software Engineering",
@@ -384,33 +386,39 @@ const StudentSignup = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white">
-      <Card className="w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto border">
-        <CardHeader className="text-center space-y-4 relative">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="absolute top-4 left-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div className="flex justify-center pt-6">
-            <img src={mtuLogo} alt="MTU Logo" className="h-24 w-auto object-contain" />
+    <div className="min-h-screen flex w-full bg-white">
+      {/* Slideshow Pane */}
+      <AuthSlideshow />
+
+      {/* Form Pane */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8 overflow-y-auto">
+        <div className="w-full max-w-xl">
+          <div className="mb-8 relative">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="absolute -top-2 -left-4 lg:hidden"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <div className="flex justify-center mb-6">
+              <img src={mtuLogo} alt="MTU Logo" className="h-20 w-auto object-contain" />
+            </div>
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900">Student Sign Up</h1>
+              <p className="text-gray-500 mt-2">Create your MTU SIWES account</p>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Student Sign Up</CardTitle>
-            <CardDescription>Create your MTU SIWES account</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
+
+          <div className="bg-white/50 backdrop-blur-sm">
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name *</Label>
               <Input
@@ -421,6 +429,7 @@ const StudentSignup = () => {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={loading}
+                className="h-12"
               />
             </div>
 
@@ -429,18 +438,19 @@ const StudentSignup = () => {
               <Input
                 id="email"
                 type="email"
-                    placeholder="firstnamelastname@mtu.edu.ng"
+                placeholder="firstnamelastname@mtu.edu.ng"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
                 disabled={loading}
+                className="h-12"
               />
               <p className="text-xs text-muted-foreground">
-                Only MTU email addresses are accepted (format: firstnamelastname@mtu.edu.ng)
+                Only MTU email addresses are accepted
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <Label htmlFor="matricNo">Matric Number *</Label>
                 <Input
@@ -452,8 +462,8 @@ const StudentSignup = () => {
                   required
                   maxLength={11}
                   disabled={loading}
+                  className="h-12"
                 />
-                <p className="text-xs text-muted-foreground">11 digits only</p>
               </div>
 
               <div className="space-y-2">
@@ -466,15 +476,16 @@ const StudentSignup = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   disabled={loading}
+                  className="h-12"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <Label htmlFor="faculty">Faculty *</Label>
                 <Select value={faculty} onValueChange={(v) => { setFaculty(v as "CBAS" | "CHMS"); setDepartment(""); }} required disabled={loading}>
-                  <SelectTrigger id="faculty">
+                  <SelectTrigger id="faculty" className="h-12">
                     <SelectValue placeholder="Select Faculty" />
                   </SelectTrigger>
                   <SelectContent>
@@ -487,7 +498,7 @@ const StudentSignup = () => {
               <div className="space-y-2">
                 <Label htmlFor="department">Department *</Label>
                 <Select value={department} onValueChange={setDepartment} required disabled={loading || !faculty}>
-                  <SelectTrigger id="department">
+                  <SelectTrigger id="department" className="h-12">
                     <SelectValue placeholder="Select Department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -499,52 +510,63 @@ const StudentSignup = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                disabled={loading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Must be at least 6 characters
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  disabled={loading}
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="h-12"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password *</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-12 text-lg font-medium mt-6" disabled={loading}>
               {loading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-8 text-center pb-8 border-t pt-6">
+            <p className="text-gray-600">
               Already have an account?{" "}
               <Button
                 variant="link"
-                className="p-0 h-auto"
+                className="p-0 h-auto font-semibold text-primary hover:text-primary/80"
                 onClick={() => navigate("/student/login")}
               >
                 Sign in here
               </Button>
             </p>
           </div>
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </div>
+{/* Desktop Back Button Overlay on Image Side */}
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/")}
+        className="hidden lg:flex absolute top-6 left-6 z-30 text-white bg-black/20 hover:bg-black/40 hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back Home
+      </Button>
     </div>
   );
 };
