@@ -1,6 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+const fs = require('fs');
+
+const content = `import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCog, CheckCircle, AlertCircle, Building2, GraduationCap } from "lucide-react";
 import { PortalToggle } from "@/components/admin/PortalToggle";
 import { ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -47,8 +49,8 @@ export const DashboardOverview = () => {
   const schoolSupervisors = supervisors.filter(s => s.supervisor_type === "school_supervisor").length;
   const industrySupervisors = supervisors.filter(s => s.supervisor_type === "industry_supervisor").length;
   
-  const assignedStudents = students.filter(s => s.supervisor_id !== null).length;
-  const unassignedStudents = students.filter(s => s.supervisor_id === null).length;
+  const assignedStudents = students.filter(s => s.school_supervisor_id !== null).length;
+  const unassignedStudents = students.filter(s => s.school_supervisor_id === null).length;
 
   const supervisorPieData = [
     { name: "School", value: schoolSupervisors, color: "#9b87f5" },
@@ -186,7 +188,7 @@ export const DashboardOverview = () => {
                       stroke="none"
                     >
                       {studentPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={\`cell-\${index}\`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -223,7 +225,7 @@ export const DashboardOverview = () => {
                       stroke="none"
                     >
                       {supervisorPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={\`cell-\${index}\`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -260,7 +262,7 @@ export const DashboardOverview = () => {
                       stroke="none"
                     >
                       {facultyPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={\`cell-\${index}\`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -310,7 +312,7 @@ export const DashboardOverview = () => {
                   />
                   <Bar dataKey="Students" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50}>
                     {departmentBarData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={facultyColors[index % facultyColors.length]} />
+                      <Cell key={\`cell-\${index}\`} fill={facultyColors[index % facultyColors.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -325,3 +327,7 @@ export const DashboardOverview = () => {
     </div>
   );
 };
+`;
+
+fs.writeFileSync('src/components/admin/DashboardOverview.tsx', content);
+console.log('Dashboard UI Enhanced!');

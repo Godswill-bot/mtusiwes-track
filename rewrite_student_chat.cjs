@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -119,7 +121,7 @@ export default function StudentChatPage() {
         return;
       }
       
-      const filePath = `chat/${conversation.id}/${Date.now()}_${attachment.name}`;
+      const filePath = \`chat/\${conversation.id}/\${Date.now()}_\${attachment.name}\`;
       const { error } = await supabase.storage.from('chat-attachments').upload(filePath, attachment);
       
       if (error) {
@@ -134,7 +136,7 @@ export default function StudentChatPage() {
     
     setUploadError('');
     
-    const tempId = `temp-${Date.now()}`;
+    const tempId = \`temp-\${Date.now()}\`;
     
     // Add optimistic message
     setMessages(msgs => [...msgs, {
@@ -217,7 +219,7 @@ export default function StudentChatPage() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar bg-[radial-gradient(#f3e8ff_1px,transparent_1px)] bg-[size:24px_24px]">
+        <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar" style={{ backgroundImage: 'radial-gradient(#f3e8ff 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-70">
               <Send className="h-12 w-12 mb-4 text-purple-200" />
@@ -230,7 +232,7 @@ export default function StudentChatPage() {
                 const showActions = activeMessageId === msg.id;
 
                 return (
-                  <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  <div key={msg.id} className={\`flex w-full \${isMe ? 'justify-end' : 'justify-start'}\`}>
                     <div 
                       className="group relative max-w-[85%] md:max-w-[70%]"
                       onClick={(e) => {
@@ -242,7 +244,7 @@ export default function StudentChatPage() {
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`relative cursor-pointer transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                        className={\`relative cursor-pointer transition select-none flex flex-col \${isMe ? 'items-end' : 'items-start'}\`}
                       >
                         {/* Option Actions Popover */}
                         <AnimatePresence>
@@ -251,7 +253,7 @@ export default function StudentChatPage() {
                               initial={{ opacity: 0, scale: 0.9, y: 5 }}
                               animate={{ opacity: 1, scale: 1, y: -5 }}
                               exit={{ opacity: 0, scale: 0.9, y: 5 }}
-                              className={`absolute -top-10 ${isMe ? 'right-0' : 'left-0'} bg-white border shadow-lg rounded-full px-3 py-1 flex items-center gap-2 z-10`}
+                              className={\`absolute -top-10 \${isMe ? 'right-0' : 'left-0'} bg-white border shadow-lg rounded-full px-3 py-1 flex items-center gap-2 z-10\`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setReplyingTo(msg);
@@ -265,12 +267,12 @@ export default function StudentChatPage() {
                         </AnimatePresence>
 
                         {/* Message Bubble */}
-                        <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-purple-600 text-white rounded-tr-sm border-purple-700' : 'bg-white text-gray-800 rounded-tl-sm border-gray-100'}`}>
+                        <div className={\`p-3.5 rounded-2xl shadow-sm border \${isMe ? 'bg-purple-600 text-white rounded-tr-sm border-purple-700' : 'bg-white text-gray-800 rounded-tl-sm border-gray-100'}\`}>
                            
                            {/* Replied to... section */}
                            {msg.parent && (
-                             <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-purple-500/50 border-purple-500' : 'bg-gray-50 border-gray-200'} flex flex-col opacity-90`}>
-                               <span className={`font-semibold mb-1 ${isMe ? 'text-purple-100' : 'text-purple-700'}`}>
+                             <div className={\`mb-2 p-2 rounded-lg text-xs border \${isMe ? 'bg-purple-500/50 border-purple-500' : 'bg-gray-50 border-gray-200'} flex flex-col opacity-90\`}>
+                               <span className={\`font-semibold mb-1 \${isMe ? 'text-purple-100' : 'text-purple-700'}\`}>
                                  {msg.parent.sender_role === 'student' ? 'You' : supervisor.name}
                                </span>
                                <span className="truncate">{msg.parent.content || 'Attachment'}</span>
@@ -283,10 +285,10 @@ export default function StudentChatPage() {
                           {/* Attachments */}
                           {msg.attachment_url && (
                             <div className="mt-2 text-sm">
-                              {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                              {msg.attachment_url.match(/\\.(jpg|jpeg|png|gif)$/i) ? (
                                 <img src={msg.attachment_url} alt={msg.attachment_name} className="max-h-48 rounded-lg mt-1 cursor-pointer hover:opacity-90 transition border border-black/10" onClick={(e) => { e.stopPropagation(); window.open(msg.attachment_url, '_blank'); }} />
                               ) : (
-                                <div className={`flex items-center gap-2 p-2 rounded-lg border ${isMe ? 'bg-purple-700 border-purple-500' : 'bg-gray-50 border-gray-200'}`}>
+                                <div className={\`flex items-center gap-2 p-2 rounded-lg border \${isMe ? 'bg-purple-700 border-purple-500' : 'bg-gray-50 border-gray-200'}\`}>
                                   <Paperclip className="h-4 w-4 shrink-0" />
                                   <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
                                     {msg.attachment_name || 'Download File'}
@@ -297,7 +299,7 @@ export default function StudentChatPage() {
                           )}
 
                           {/* Metadata */}
-                          <div className={`text-[10px] mt-2 flex justify-end items-center gap-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>
+                          <div className={\`text-[10px] mt-2 flex justify-end items-center gap-1 \${isMe ? 'text-purple-200' : 'text-gray-400'}\`}>
                             {msg.optimistic ? 'sending...' : new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
@@ -329,7 +331,7 @@ export default function StudentChatPage() {
                   </div>
                   <div className="text-sm text-gray-600 truncate">{replyingTo.content || 'Attachment'}</div>
                 </div>
-                <button aria-label="Cancel reply" title="Cancel reply" type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-purple-100 rounded-full text-gray-400 hover:text-gray-600 transition">
+                <button type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-purple-100 rounded-full text-gray-400 hover:text-gray-600 transition">
                   <X className="h-4 w-4" />
                 </button>
               </motion.div>
@@ -346,8 +348,6 @@ export default function StudentChatPage() {
               accept="image/*,.pdf,.doc,.docx"
               onChange={e => setAttachment(e.target.files?.[0] || null)}
               className="hidden"
-              title="Attach file"
-              aria-label="Attach file"
             />
             
             <div className="flex-1 flex flex-col bg-gray-50 border rounded-2xl ring-purple-100 focus-within:ring-2 focus-within:border-purple-300 transition-all overflow-hidden px-3 py-1">
@@ -359,10 +359,6 @@ export default function StudentChatPage() {
                 </div>
               )}
               <input
-                id="message-input"
-                name="message"
-                title="Message input"
-                aria-label="Message input"
                 type="text"
                 className="w-full bg-transparent border-none focus:outline-none py-2 text-[15px]"
                 placeholder="Type your message..."
@@ -376,7 +372,6 @@ export default function StudentChatPage() {
               disabled={(!message.trim() && !attachment) || loading}
               className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full disabled:opacity-50 disabled:hover:bg-purple-600 transition flex items-center justify-center shadow-md active:scale-95"
               aria-label="Send message"
-              title="Send message"
             >
               <Send className="h-5 w-5 ml-1" />
             </button>
@@ -388,3 +383,7 @@ export default function StudentChatPage() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/pages/chat/StudentChatPage.tsx', code);
+console.log('StudentChatPage rewritten with smooth replies');

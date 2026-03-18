@@ -1,13 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Eye, Loader2, Search } from "lucide-react";
+import { Eye, Loader2, Search, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AuditLog {
   id: string;
@@ -81,6 +82,10 @@ const renderRecord = (record: Record<string, unknown> | null, otherRecord: Recor
 
 export const AuditLogPanel = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+
   const auditQuery = useQuery({
     queryKey: ["admin", "audit"],
     queryFn: fetchAuditLogs,
@@ -112,11 +117,62 @@ export const AuditLogPanel = () => {
     );
   }, [auditQuery.data, searchTerm]);
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("audit_logs").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "audit"] });
+      toast({ title: "Success", description: "Audit log deleted successfully" });
+    },
+    onError: (err) => {
+      console.error("Failed to delete log:", err);
+      toast({ title: "Error", description: "Failed to delete log", variant: "destructive" });
+    }
+  });
+
+  const clearAllMutation = useMutation({
+    mutationFn: async () => {
+      setIsDeletingAll(true);
+      // Suppabase doesn't support TRUNCATE directly from client generally, so we use delete on all.
+      // A safe way without pulling all IDs is deleting where id is not null.
+      const { error } = await supabase.from("audit_logs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "audit"] });
+      toast({ title: "Success", description: "All audit logs cleared successfully" });
+      setIsDeletingAll(false);
+    },
+    onError: (err) => {
+      console.error("Failed to clear logs:", err);
+      toast({ title: "Error", description: "Failed to clear logs", variant: "destructive" });
+      setIsDeletingAll(false);
+    }
+  });
+
   return (
     <Card className="shadow-card h-full flex flex-col">
       <CardHeader className="pb-4 border-b flex-shrink-0">
-        <CardTitle className="text-xl sm:text-2xl mb-3">Audit Trail</CardTitle>
-        <div className="relative w-full sm:max-w-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <CardTitle className="text-xl sm:text-2xl">Audit Trail</CardTitle>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => {
+              if (window.confirm("Are you sure you want to permanently delete all audit logs? This action cannot be undone.")) {
+                clearAllMutation.mutate();
+              }
+            }}
+            disabled={isDeletingAll || (auditQuery.data && auditQuery.data.length === 0)}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            {isDeletingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            Clear All Logs
+          </Button>
+        </div>
+        <div className="relative w-full sm:max-w-sm mt-4">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search audit logs"
@@ -163,32 +219,48 @@ export const AuditLogPanel = () => {
                       {new Date(log.created_at).toLocaleString()}
                     </TableCell>
                     <TableCell>
-                      {log.old_value || log.new_value ? (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>Audit Record Details</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                              <div>
-                                <h4 className="font-semibold mb-2 text-sm">Previous Values</h4>
-                                {renderRecord(log.old_value, log.new_value)}
+                      <div className="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
+                        {log.old_value || log.new_value ? (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="View Details">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>Audit Record Details</DialogTitle>
+                              </DialogHeader>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                  <h4 className="font-semibold mb-2 text-sm">Previous Values</h4>
+                                  {renderRecord(log.old_value, log.new_value)}
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold mb-2 text-sm">New Values</h4>
+                                  {renderRecord(log.new_value, log.old_value)}
+                                </div>
                               </div>
-                              <div>
-                                <h4 className="font-semibold mb-2 text-sm">New Values</h4>
-                                {renderRecord(log.new_value, log.old_value)}
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
+                            </DialogContent>
+                          </Dialog>
+                        ) : (
+                          <div className="w-8 flex justify-center text-xs text-muted-foreground">—</div>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          title="Delete Log"
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this log?")) {
+                              deleteMutation.mutate(log.id);
+                            }
+                          }}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

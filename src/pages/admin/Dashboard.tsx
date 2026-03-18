@@ -10,7 +10,7 @@ import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
 import { PortalToggle } from "@/components/admin/PortalToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { OtherServices } from "@/components/admin/OtherServices";
-import { DashboardOverview } from "@/components/admin/DashboardOverview";
+import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOverview";
 // SupervisorAssignment removed - assignments are now automatic
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
       case "other-services":
         return <OtherServices />;
       default:
-        return <DashboardOverview />;
+        return <AdminDashboardOverview onViewAllActivity={() => setActiveTab("audit")} />;
     }
   };
 
