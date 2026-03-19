@@ -231,38 +231,27 @@ export default function StudentChatPage() {
 
                 return (
                   <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div 
+                    <div
                       className="group relative max-w-[85%] md:max-w-[70%]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMessageId(showActions ? null : msg.id);
-                      }}
                     >
                       {/* Message Bubble container */}
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`relative cursor-pointer transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                        className={`relative transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
-                        {/* Option Actions Popover */}
-                        <AnimatePresence>
-                          {showActions && (
-                            <motion.div 
-                              initial={{ opacity: 0, scale: 0.9, y: 5 }}
-                              animate={{ opacity: 1, scale: 1, y: -5 }}
-                              exit={{ opacity: 0, scale: 0.9, y: 5 }}
-                              className={`absolute -top-10 ${isMe ? 'right-0' : 'left-0'} bg-white border shadow-lg rounded-full px-3 py-1 flex items-center gap-2 z-10`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setReplyingTo(msg);
-                                setActiveMessageId(null);
-                              }}
-                            >
-                              <Reply className="h-4 w-4 text-gray-500" />
-                              <span className="text-xs font-medium text-gray-700">Reply</span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                        {/* Option Actions Sidebar - Always visible on mobile, hover on desktop */}
+                        <div
+                          className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'} 
+                          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-white border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReplyingTo(msg);
+                          }}
+                          title="Reply"
+                        >
+                          <Reply className="h-4 w-4 text-purple-600 hover:text-purple-800" />
+                        </div>
 
                         {/* Message Bubble */}
                         <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-purple-600 text-white rounded-tr-sm border-purple-700' : 'bg-white text-gray-800 rounded-tl-sm border-gray-100'}`}>

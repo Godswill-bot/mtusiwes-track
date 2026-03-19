@@ -71,7 +71,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
     setLoading(true);
     
     await supabase
-      .from("messages")
+      .from("messages" as any)
       .insert({
         conversation_id: conversationId,
         sender_id: user?.id,
@@ -89,7 +89,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
   const handleFileUpload = async (url: string, type: string) => {
     setLoading(true);
     await supabase
-      .from("messages")
+      .from("messages" as any)
       .insert({
         conversation_id: conversationId,
         sender_id: user?.id,
@@ -113,7 +113,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-50" style={{ backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-50 relative bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] bg-[size:24px_24px]">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground mt-10">Starting conversation...</div>
           ) : (
@@ -126,35 +126,24 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                   <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                     <div 
                       className="group relative max-w-[85%] md:max-w-[70%]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMessageId(showActions ? null : msg.id);
-                      }}
                     >
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`relative cursor-pointer transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                        className={`relative transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
-                        {/* Option Actions Popover */}
-                        <AnimatePresence>
-                          {showActions && (
-                            <motion.div 
-                              initial={{ opacity: 0, scale: 0.9, y: 5 }}
-                              animate={{ opacity: 1, scale: 1, y: -5 }}
-                              exit={{ opacity: 0, scale: 0.9, y: 5 }}
-                              className={`absolute -top-10 ${isMe ? 'right-0' : 'left-0'} bg-white border shadow-lg rounded-full px-3 py-1 flex items-center gap-2 z-10`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setReplyingTo(msg);
-                                setActiveMessageId(null);
-                              }}
-                            >
-                              <Reply className="h-4 w-4 text-gray-500" />
-                              <span className="text-xs font-medium text-gray-700">Reply</span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                        {/* Option Actions Sidebar - Always visible on mobile, hover on desktop */}
+                        <div 
+                          className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'} 
+                          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-white border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReplyingTo(msg);
+                          }}
+                          title="Reply"
+                        >
+                          <Reply className="h-4 w-4 text-purple-600 hover:text-purple-800" />
+                        </div>
 
                         {/* Message Bubble */}
                         <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm border-primary' : 'bg-white text-gray-800 rounded-bl-sm border-gray-100'}`}>
@@ -216,7 +205,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                   </div>
                   <div className="text-sm text-gray-600 truncate">{replyingTo.content || 'Attachment'}</div>
                 </div>
-                <button type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-primary/10 rounded-full text-gray-500 transition">
+                <button title="Cancel reply" type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-primary/10 rounded-full text-gray-500 transition">
                   <X className="h-4 w-4" />
                 </button>
               </motion.div>
@@ -232,7 +221,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
               className="flex-1 shadow-sm rounded-full py-5 px-4"
             />
             <Button onClick={handleSendMessage} disabled={loading || !input.trim()} size="icon" className="rounded-full shrink-0 h-10 w-10">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
             </Button>
             <ChatFileUpload conversationId={conversationId} onUpload={handleFileUpload} />
           </div>

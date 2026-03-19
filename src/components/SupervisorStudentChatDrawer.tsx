@@ -183,7 +183,7 @@ export default function SupervisorStudentChatDrawer({
               <div key={msg.id} className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
                 <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-purple-100' : 'bg-white border'}`}>
                   {/* Action buttons on hover */}
-                  <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-0 group-hover:opacity-100 transition-opacity flex bg-white border rounded shadow-sm text-gray-500`}>
+                  <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-white border rounded shadow-sm text-gray-500`}>
                     {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-purple-700 hover:bg-gray-100 rounded" title="Reply"><Reply className="w-3 h-3" /></button>}
                     {isMine && !isEditing && (
                       <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1 hover:text-purple-700 hover:bg-gray-100 rounded" title="Edit"><Pencil className="w-3 h-3" /></button>
@@ -368,4 +368,6 @@ export default function SupervisorStudentChatDrawer({
 // - Messages appear in real time or polling
 // - Attachments upload and render correctly
 // - Unauthorized access is blocked by RLS
+
+
 

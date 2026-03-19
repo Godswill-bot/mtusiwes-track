@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -386,23 +386,24 @@ const StudentSignup = () => {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-white">
-      {/* Slideshow Pane */}
-      <AuthSlideshow />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 lg:p-8">
+      <div className="flex w-full max-w-[1200px] h-[90vh] bg-white rounded-2xl shadow-xl overflow-hidden min-h-[600px] border border-gray-100 relative">
+        {/* Slideshow Pane */}
+        <AuthSlideshow />
 
-      {/* Form Pane */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8 overflow-y-auto">
-        <div className="w-full max-w-xl">
-          <div className="mb-8 relative">
+        {/* Form Pane */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-8 overflow-y-auto">
+          <div className="w-full max-w-xl">
+          <div className="mb-4 relative">
             <Button
               variant="ghost"
               onClick={() => navigate("/")}
-              className="absolute -top-2 -left-4 lg:hidden"
+              className="absolute -top-2 -left-4 text-gray-500 hover:text-gray-900"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-3">
               <img src={mtuLogo} alt="MTU Logo" className="h-20 w-auto object-contain" />
             </div>
             <div className="text-center">
@@ -418,7 +419,7 @@ const StudentSignup = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name *</Label>
               <Input
@@ -429,7 +430,7 @@ const StudentSignup = () => {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={loading}
-                className="h-12"
+                className="h-10"
               />
             </div>
 
@@ -443,14 +444,14 @@ const StudentSignup = () => {
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
                 disabled={loading}
-                className="h-12"
+                className="h-10"
               />
               <p className="text-xs text-muted-foreground">
                 Only MTU email addresses are accepted
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="matricNo">Matric Number *</Label>
                 <Input
@@ -462,7 +463,7 @@ const StudentSignup = () => {
                   required
                   maxLength={11}
                   disabled={loading}
-                  className="h-12"
+                  className="h-10"
                 />
               </div>
 
@@ -476,16 +477,16 @@ const StudentSignup = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-12"
+                  className="h-10"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="faculty">Faculty *</Label>
                 <Select value={faculty} onValueChange={(v) => { setFaculty(v as "CBAS" | "CHMS"); setDepartment(""); }} required disabled={loading}>
-                  <SelectTrigger id="faculty" className="h-12">
+                  <SelectTrigger id="faculty" className="h-10">
                     <SelectValue placeholder="Select Faculty" />
                   </SelectTrigger>
                   <SelectContent>
@@ -498,7 +499,7 @@ const StudentSignup = () => {
               <div className="space-y-2">
                 <Label htmlFor="department">Department *</Label>
                 <Select value={department} onValueChange={setDepartment} required disabled={loading || !faculty}>
-                  <SelectTrigger id="department" className="h-12">
+                  <SelectTrigger id="department" className="h-10">
                     <SelectValue placeholder="Select Department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -510,7 +511,7 @@ const StudentSignup = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="password">Password *</Label>
                 <Input
@@ -521,7 +522,7 @@ const StudentSignup = () => {
                   required
                   minLength={6}
                   disabled={loading}
-                  className="h-12"
+                  className="h-10"
                 />
               </div>
 
@@ -534,7 +535,7 @@ const StudentSignup = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-12"
+                  className="h-10"
                 />
               </div>
             </div>
@@ -558,17 +559,10 @@ const StudentSignup = () => {
           </div>
         </div>
       </div>
-{/* Desktop Back Button Overlay on Image Side */}
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/")}
-        className="hidden lg:flex absolute top-6 left-6 z-30 text-white bg-black/20 hover:bg-black/40 hover:text-white"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back Home
-      </Button>
+    </div>
     </div>
   );
 };
 
 export default StudentSignup;
+

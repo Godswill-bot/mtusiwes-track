@@ -92,10 +92,11 @@ const Index = () => {
       {/* Slideshow Background */}
       <div className="absolute inset-0">
         {slideshowImages.map((image, index) => (
-          <div
+          <img
             key={index}
-            className={`slideshow-bg ${index === currentSlide ? "active" : "inactive"}`}
-            style={{ backgroundImage: `url(${image})` }}
+            src={image}
+            alt={`Slideshow ${index + 1}`}
+            className={`slideshow-bg object-cover w-full h-full absolute inset-0 ${index === currentSlide ? "active" : "inactive"}`}
           />
         ))}
       </div>

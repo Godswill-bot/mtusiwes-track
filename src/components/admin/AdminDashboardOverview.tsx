@@ -176,9 +176,11 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
             <CardTitle className="text-4xl text-gray-800">{assignedStudents}</CardTitle>
           </CardHeader>
           <CardContent>
-             <div className="w-full bg-gray-100 rounded-full h-2 mt-4">
-               <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${(assignedStudents / Math.max(students.length, 1)) * 100}%` }}></div>
-             </div>
+             <progress 
+               className="w-full appearance-none h-2 mt-4 rounded-full bg-gray-100 [&::-webkit-progress-bar]:bg-gray-100 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:bg-emerald-500 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:bg-emerald-500 [&::-moz-progress-bar]:rounded-full" 
+               value={assignedStudents} 
+               max={Math.max(students.length, 1)} 
+             />
              <p className="text-xs text-gray-500 mt-2">Placement completion rate</p>
           </CardContent>
         </Card>

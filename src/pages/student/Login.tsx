@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -103,18 +103,19 @@ const StudentLogin = () => {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-white">
-      {/* Slideshow Pane */}
-      <AuthSlideshow />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 lg:p-8">
+      <div className="flex w-full max-w-[1200px] h-[85vh] bg-white rounded-2xl shadow-xl overflow-hidden min-h-[650px] border border-gray-100">
+        {/* Slideshow Pane */}
+        <AuthSlideshow />
 
-      {/* Form Pane */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8 overflow-y-auto">
-        <div className="w-full max-w-md">
+        {/* Form Pane */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-10">
+          <div className="w-full max-w-md">
           <div className="mb-8 relative">
             <Button
               variant="ghost"
               onClick={() => navigate("/")}
-              className="absolute -top-2 -left-4 lg:hidden"
+              className="absolute -top-2 -left-4 text-gray-500 hover:text-gray-900"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -135,7 +136,7 @@ const StudentLogin = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -146,7 +147,7 @@ const StudentLogin = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-12"
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
@@ -163,7 +164,7 @@ const StudentLogin = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-12"
+                  className="h-11"
                 />
               </div>
               <Button type="submit" className="w-full h-12 text-lg font-medium mt-6" disabled={loading}>
@@ -181,18 +182,10 @@ const StudentLogin = () => {
           </div>
         </div>
       </div>
-      
-      {/* Desktop Back Button Overlay on Image Side */}
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/")}
-        className="hidden lg:flex absolute top-6 left-6 z-30 text-white bg-black/20 hover:bg-black/40 hover:text-white"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back Home
-      </Button>
+    </div>
     </div>
   );
 };
 
 export default StudentLogin;
+
