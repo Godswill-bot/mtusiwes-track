@@ -48,6 +48,7 @@ supabase.exe/
 *.jpg
 *.jpeg
 !src/assets/*.png
+!src/assets/*.jpeg
 !src/assets/*.jpg
 !public/*.png
 !public/*.ico
