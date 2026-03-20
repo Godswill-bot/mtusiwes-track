@@ -75,7 +75,7 @@ const SchoolSupervisorLogin = () => {
 
   if (!portalActive) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-white">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5">
         <Card className="w-full max-w-md shadow-lg border">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
@@ -93,7 +93,7 @@ const SchoolSupervisorLogin = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 lg:bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5 lg:p-8">
       <div className="flex w-full max-w-[1200px] h-[85vh] bg-white rounded-2xl shadow-xl overflow-hidden min-h-[650px] border border-gray-100">
         
         {/* Left Side - Image */}

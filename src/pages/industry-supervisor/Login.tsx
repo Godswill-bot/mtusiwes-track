@@ -79,7 +79,7 @@ const IndustrySupervisorLogin = () => {
 
   if (!portalActive) {
     return (
-      <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-primary/10 to-success/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-elevated">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
@@ -101,7 +101,7 @@ const IndustrySupervisorLogin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-primary/10 to-success/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-elevated">
         <CardHeader className="text-center space-y-4 relative">
           <Button

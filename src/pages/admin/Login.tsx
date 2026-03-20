@@ -52,7 +52,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5">
       <Card className="w-full max-w-md shadow-lg border">
         <CardHeader className="text-center space-y-4 relative">
           <Button variant="ghost" onClick={() => navigate("/")} className="absolute top-4 left-4">
