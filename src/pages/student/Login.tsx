@@ -104,23 +104,23 @@ const StudentLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5">
-      <div className="flex w-full max-w-[1200px] h-[85vh] bg-white rounded-2xl shadow-xl overflow-hidden min-h-[650px] border border-gray-100">
+      <div className="flex w-full max-w-[1200px] lg:h-[85vh] flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden sm:min-h-[650px] border border-gray-100 relative">
         {/* Slideshow Pane */}
         <AuthSlideshow />
 
         {/* Form Pane */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-10">
-          <div className="w-full max-w-md">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-y-auto">
+          <div className="w-full max-w-md my-auto py-8">
           <div className="mb-8 relative">
             <Button
               variant="ghost"
               onClick={() => navigate("/")}
-              className="absolute -top-2 -left-4 text-gray-500 hover:text-gray-900"
+              className="absolute -top-4 -left-2 text-gray-500 hover:text-gray-900 z-10"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-6 mt-4">
               <img src={mtuLogo} alt="MTU Logo" className="h-24 w-auto object-contain" />
             </div>
             <div className="text-center">

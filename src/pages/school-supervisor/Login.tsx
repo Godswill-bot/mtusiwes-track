@@ -94,7 +94,7 @@ const SchoolSupervisorLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5 lg:p-8">
-      <div className="flex w-full max-w-[1200px] h-[85vh] bg-white rounded-2xl shadow-xl overflow-hidden min-h-[650px] border border-gray-100">
+      <div className="flex w-full max-w-[1200px] lg:h-[85vh] flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden sm:min-h-[650px] border border-gray-100">
         
         {/* Left Side - Image */}
         <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-zinc-900 p-10 text-white lg:flex">
@@ -135,13 +135,13 @@ const SchoolSupervisorLogin = () => {
           <Button 
             variant="ghost" 
             onClick={() => navigate("/")} 
-            className="absolute right-4 top-4 md:right-8 md:top-8"
+            className="absolute left-4 top-4 md:left-8 md:top-8 z-10"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
 
-          <div className="flex h-full flex-col justify-center px-8 sm:px-12 md:px-16 lg:px-24 py-12">
+          <div className="flex min-h-full flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 py-16 m-auto w-full">
             <div className="mx-auto flex w-full flex-col justify-center space-y-6 max-w-[400px]">
               <div className="flex flex-col space-y-2 text-center">
                 <div className="flex justify-center mb-4">

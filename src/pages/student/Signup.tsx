@@ -387,23 +387,23 @@ const StudentSignup = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5">
-      <div className="flex w-full max-w-[1200px] h-[90vh] bg-white rounded-2xl shadow-xl overflow-hidden min-h-[600px] border border-gray-100 relative">
+      <div className="flex w-full max-w-[1200px] lg:h-[90vh] flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden sm:min-h-[600px] border border-gray-100 relative">
         {/* Slideshow Pane */}
         <AuthSlideshow />
 
         {/* Form Pane */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-8 overflow-y-auto">
-          <div className="w-full max-w-xl">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto min-h-[80vh] lg:min-h-0">
+          <div className="w-full max-w-xl my-auto py-8">
           <div className="mb-4 relative">
             <Button
               variant="ghost"
               onClick={() => navigate("/")}
-              className="absolute -top-2 -left-4 text-gray-500 hover:text-gray-900"
+              className="absolute -top-6 -left-2 text-gray-500 hover:text-gray-900 z-10"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <div className="flex justify-center mb-3">
+            <div className="flex justify-center mb-3 mt-6">
               <img src={mtuLogo} alt="MTU Logo" className="h-20 w-auto object-contain" />
             </div>
             <div className="text-center">
