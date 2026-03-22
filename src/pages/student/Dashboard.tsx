@@ -258,7 +258,7 @@ const StudentDashboard = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-light">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
@@ -316,9 +316,9 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
           ) : isRejected ? (
-            <Card className="shadow-card border-2 border-red-200 bg-red-50">
+            <Card className="shadow-card border-2 border-destructive/20 bg-destructive/10">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-red-800">
+                <CardTitle className="flex items-center space-x-2 text-destructive">
                   <XCircle className="h-6 w-6" />
                   <span>Pre-Registration Rejected</span>
                 </CardTitle>
@@ -328,9 +328,9 @@ const StudentDashboard = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {rejectionReason && (
-                  <div className="p-3 bg-red-100 border border-red-300 rounded-md">
-                    <p className="text-sm font-medium text-red-800 mb-1">Rejection Reason:</p>
-                    <p className="text-sm text-red-700">{rejectionReason}</p>
+                  <div className="p-3 bg-destructive/20 border border-destructive/30 rounded-md">
+                    <p className="text-sm font-medium text-destructive mb-1">Rejection Reason:</p>
+                    <p className="text-sm text-destructive">{rejectionReason}</p>
                   </div>
                 )}
                 <p className="text-sm text-muted-foreground">
@@ -342,9 +342,9 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
           ) : !isApproved ? (
-            <Card className="shadow-card border-2 border-yellow-200 bg-yellow-50">
+            <Card className="shadow-card border-2 border-accent/20 bg-accent/10">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-yellow-800">
+                <CardTitle className="flex items-center space-x-2 text-muted-foreground">
                   <Clock className="h-6 w-6" />
                   <span>Pre-Registration Pending Approval</span>
                 </CardTitle>
@@ -363,13 +363,13 @@ const StudentDashboard = () => {
             <>
               {/* SIWES Locked Banner */}
               {siwesLocked && (
-                <Card className="shadow-elevated border-2 border-purple-200 bg-purple-50">
+                <Card className="shadow-elevated border-2 border-primary/20 bg-primary/5">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-purple-800">
+                    <CardTitle className="flex items-center gap-2 text-primary">
                       <Lock className="h-6 w-6" />
                       SIWES Completed - Account Locked
                     </CardTitle>
-                    <CardDescription className="text-purple-700">
+                    <CardDescription className="text-primary">
                       Your SIWES has been completed and graded. Your account is now in read-only mode.
                       No further edits to weekly reports or attendance are allowed.
                     </CardDescription>
@@ -379,15 +379,15 @@ const StudentDashboard = () => {
                       <div className="bg-card rounded-lg p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-lg flex items-center gap-2">
-                            <Award className="h-5 w-5 text-purple-600" />
+                            <Award className="h-5 w-5 text-primary" />
                             Final Grade
                           </h3>
                           <Badge className={`text-lg px-3 py-1 ${
-                            gradeInfo.grade === 'A' ? 'bg-green-500' :
+                            gradeInfo.grade === 'A' ? 'bg-success' :
                             gradeInfo.grade === 'B' ? 'bg-primary/100' :
-                            gradeInfo.grade === 'C' ? 'bg-yellow-500' :
-                            gradeInfo.grade === 'D' ? 'bg-orange-500' :
-                            'bg-red-500'
+                            gradeInfo.grade === 'C' ? 'bg-accent/100' :
+                            gradeInfo.grade === 'D' ? 'bg-orange-600' :
+                            'bg-destructive/100'
                           }`}>
                             {gradeInfo.grade}
                           </Badge>
@@ -395,15 +395,15 @@ const StudentDashboard = () => {
                         
                         <div className="grid grid-cols-4 gap-4 text-center">
                           <div className="p-2 bg-primary/10 rounded">
-                            <div className="text-2xl font-bold text-blue-600">{gradeInfo.attendanceScore.toFixed(1)}</div>
+                            <div className="text-2xl font-bold text-primary/80">{gradeInfo.attendanceScore.toFixed(1)}</div>
                             <div className="text-xs text-muted-foreground">Attendance /10</div>
                           </div>
                           <div className="p-2 bg-green-50 rounded">
-                            <div className="text-2xl font-bold text-green-600">{gradeInfo.weeklyReportsScore.toFixed(1)}</div>
+                            <div className="text-2xl font-bold text-success">{gradeInfo.weeklyReportsScore.toFixed(1)}</div>
                             <div className="text-xs text-muted-foreground">Reports /15</div>
                           </div>
-                          <div className="p-2 bg-purple-50 rounded">
-                            <div className="text-2xl font-bold text-purple-600">{gradeInfo.supervisorApprovalScore.toFixed(1)}</div>
+                          <div className="p-2 bg-primary/5 rounded">
+                            <div className="text-2xl font-bold text-primary">{gradeInfo.supervisorApprovalScore.toFixed(1)}</div>
                             <div className="text-xs text-muted-foreground">Approval /5</div>
                           </div>
                           <div className="p-2 bg-muted rounded">
@@ -460,7 +460,7 @@ const StudentDashboard = () => {
                       )}
                       <div className="mt-2">
                         {studentInfo.industry_supervisor_signature_url ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          <Badge variant="outline" className="bg-green-50 text-success border-green-200">
                             <CheckCircle className="w-3 h-3 mr-1" /> Signature Added
                           </Badge>
                         ) : (
@@ -506,10 +506,10 @@ const StudentDashboard = () => {
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-2xl font-bold text-blue-600">{stats.submitted}</p>
-                            <p className="text-sm text-blue-600 mt-1">Submitted</p>
+                            <p className="text-2xl font-bold text-primary/80">{stats.submitted}</p>
+                            <p className="text-sm text-primary/80 mt-1">Submitted</p>
                           </div>
-                          <Clock className="h-8 w-8 text-blue-400" />
+                          <Clock className="h-8 w-8 text-primary/80" />
                         </div>
                       </CardContent>
                     </Card>
@@ -518,22 +518,22 @@ const StudentDashboard = () => {
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
-                            <p className="text-sm text-green-600 mt-1">Approved</p>
+                            <p className="text-2xl font-bold text-success">{stats.approved}</p>
+                            <p className="text-sm text-success mt-1">Approved</p>
                           </div>
-                          <CheckCircle className="h-8 w-8 text-green-400" />
+                          <CheckCircle className="h-8 w-8 text-success" />
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="border-2 border-red-200 bg-red-50">
+                    <Card className="border-2 border-destructive/20 bg-destructive/10">
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-                            <p className="text-sm text-red-600 mt-1">Rejected</p>
+                            <p className="text-2xl font-bold text-destructive">{stats.rejected}</p>
+                            <p className="text-sm text-destructive mt-1">Rejected</p>
                           </div>
-                          <XCircle className="h-8 w-8 text-red-400" />
+                          <XCircle className="h-8 w-8 text-destructive" />
                         </div>
                       </CardContent>
                     </Card>
@@ -556,7 +556,7 @@ const StudentDashboard = () => {
               {allWeeksCompleted && studentInfo && (
                 <Card className="shadow-elevated border-2 border-green-200 bg-green-50">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-800">
+                    <CardTitle className="flex items-center gap-2 text-success">
                       <CheckCircle className="h-6 w-6" />
                       All 24 Weeks Completed!
                     </CardTitle>
