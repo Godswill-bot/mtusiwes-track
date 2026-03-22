@@ -352,7 +352,7 @@ export default function StudentChatPage() {
               aria-label="Attach file"
             />
             
-            <div className="flex-1 flex flex-col bg-background border rounded-2xl ring-primary/20 focus-within:ring-2 focus-within:border-primary/40 transition-all overflow-hidden px-3 py-1">
+            <div className="flex-1 flex flex-col bg-transparent dark:bg-muted/10 border rounded-2xl ring-primary/20 focus-within:ring-2 focus-within:border-primary/40 transition-all overflow-hidden px-3 py-1">
               {attachment && (
                 <div className="flex items-center gap-2 text-xs bg-primary/20 text-primary p-1.5 rounded-lg mb-1 mt-1 font-medium w-fit max-w-full">
                   <Paperclip className="h-3 w-3 shrink-0" />

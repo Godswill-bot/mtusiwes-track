@@ -351,7 +351,7 @@ export default function SupervisorStudentChatDrawer({
             />
             <input
               type="text"
-              className="flex-1 border rounded px-2 py-1"
+              className="flex-1 border bg-transparent dark:bg-muted/10 text-foreground rounded px-2 py-1"
               placeholder="Type a message..."
               value={message}
               onChange={e => setMessage(e.target.value)}

@@ -232,7 +232,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
               onChange={e => setInput(e.target.value)}
               placeholder="Type your message..."
               onKeyDown={e => { if (e.key === "Enter") handleSendMessage(); }}
-              className="flex-1 shadow-sm rounded-full py-5 px-4"
+              className="flex-1 shadow-sm rounded-full py-5 px-4 bg-transparent dark:bg-muted/10"
             />
             <Button onClick={handleSendMessage} disabled={loading || !input.trim()} size="icon" className="rounded-full shrink-0 h-10 w-10">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
