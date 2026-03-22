@@ -352,7 +352,7 @@ export default function StudentChatPage() {
               aria-label="Attach file"
             />
             
-            <div className="flex-1 flex flex-col bg-muted border rounded-2xl ring-primary/20 focus-within:ring-2 focus-within:border-primary/40 transition-all overflow-hidden px-3 py-1">
+            <div className="flex-1 flex flex-col bg-background border rounded-2xl ring-primary/20 focus-within:ring-2 focus-within:border-primary/40 transition-all overflow-hidden px-3 py-1">
               {attachment && (
                 <div className="flex items-center gap-2 text-xs bg-primary/20 text-primary p-1.5 rounded-lg mb-1 mt-1 font-medium w-fit max-w-full">
                   <Paperclip className="h-3 w-3 shrink-0" />
@@ -366,7 +366,7 @@ export default function StudentChatPage() {
                 title="Message input"
                 aria-label="Message input"
                 type="text"
-                className="w-full bg-transparent border-none focus:outline-none py-2 text-[15px]"
+                className="w-full bg-transparent border-none focus:outline-none py-2 text-[15px] text-foreground placeholder:text-muted-foreground"
                 placeholder="Type your message..."
                 value={message}
                 onChange={e => setMessage(e.target.value)}

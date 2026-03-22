@@ -218,7 +218,7 @@ export default function SupervisorStudentChatDrawer({
                       <textarea
                         title="Edit message"
                         aria-label="Edit message"
-                        className="w-full text-sm p-1 border rounded resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
+                        className="w-full text-sm p-1 border rounded resize-none focus:outline-none focus:ring-1 bg-background text-foreground focus:ring-primary/50"
                         value={editContent}
                         onChange={e => setEditContent(e.target.value)}
                         autoFocus
