@@ -8,7 +8,7 @@ import mtuLogo from "@/assets/mtu-logo.png";
 function ChatInfo() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-purple-100 to-white flex flex-col items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-background from-primary/10 via-primary/5 to-background flex flex-col items-center justify-center py-8 px-4">
       <div className="w-full max-w-xl mb-4 flex items-center">
         <Button variant="ghost" size="icon" onClick={() => navigate("/")}
           className="rounded-full mr-2 text-primary hover:bg-primary/10">

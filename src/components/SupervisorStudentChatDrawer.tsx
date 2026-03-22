@@ -149,22 +149,22 @@ export default function SupervisorStudentChatDrawer({
           
           {isStudent ? (
             <>
-              <div className="font-bold text-purple-700">{supervisorInfo?.name || 'Supervisor'}</div>
+              <div className="font-bold text-primary">{supervisorInfo?.name || 'Supervisor'}</div>
               <div className="text-xs text-muted-foreground">Your Supervisor</div>
             </>
           ) : (
             <>
-              <div className="font-bold text-purple-700">{student?.profile?.full_name || student?.full_name || student?.name || 'Student'}</div>
+              <div className="font-bold text-primary">{student?.profile?.full_name || student?.full_name || student?.name || 'Student'}</div>
               <div className="text-xs text-muted-foreground">Matric: {student?.matric_no || student?.matric_number || 'Unknown Matric'}</div>
             </>
           )}
 
         </div>
-        <button onClick={onClose} className="text-muted-foreground/70 hover:text-purple-700" aria-label="Close chat">✕</button>
+        <button onClick={onClose} className="text-muted-foreground/70 hover:text-primary" aria-label="Close chat">✕</button>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-4 border-purple-300 border-t-transparent"></div></div>
+          <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-4 border-primary/40 border-t-transparent"></div></div>
         ) : chatDisabled ? (
           <div className="text-center text-red-500">
             Chat is disabled. Please ensure you are assigned to a supervisor and SIWES is active.<br/>
@@ -193,12 +193,12 @@ export default function SupervisorStudentChatDrawer({
                   </div>
                 )}
               <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
-                <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-purple-100' : 'bg-card border'}`}>
+                <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-primary/20' : 'bg-card border'}`}>
                   {/* Action buttons on hover */}
                   <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border rounded shadow-sm text-muted-foreground`}>
-                    {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-purple-700 hover:bg-muted rounded" title="Reply"><Reply className="w-3 h-3" /></button>}
+                    {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-primary hover:bg-muted rounded" title="Reply"><Reply className="w-3 h-3" /></button>}
                     {isMine && !isEditing && (
-                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1 hover:text-purple-700 hover:bg-muted rounded" title="Edit"><Pencil className="w-3 h-3" /></button>
+                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1 hover:text-primary hover:bg-muted rounded" title="Edit"><Pencil className="w-3 h-3" /></button>
                     )}
                   </div>
 
@@ -208,7 +208,7 @@ export default function SupervisorStudentChatDrawer({
                   </div>
 
                   {msg.parent && (
-                    <div className="mb-2 p-1.5 bg-black/5 rounded text-xs border-l-2 border-purple-400 opacity-80 line-clamp-2">
+                    <div className="mb-2 p-1.5 bg-muted rounded text-xs border-l-2 border-primary/50 opacity-80 line-clamp-2">
                        <span className="font-semibold">{msg.parent.sender_role === (isStudent ? 'student' : 'supervisor') ? 'You' : theirName}</span>: {msg.parent.content || 'Attached file'}
                     </div>
                   )}
@@ -218,7 +218,7 @@ export default function SupervisorStudentChatDrawer({
                       <textarea
                         title="Edit message"
                         aria-label="Edit message"
-                        className="w-full text-sm p-1 border rounded resize-none focus:outline-none focus:ring-1 focus:ring-purple-400"
+                        className="w-full text-sm p-1 border rounded resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
                         value={editContent}
                         onChange={e => setEditContent(e.target.value)}
                         autoFocus
@@ -229,7 +229,7 @@ export default function SupervisorStudentChatDrawer({
                         <button 
                           onClick={() => editMutation.mutate({ messageId: msg.id, newContent: editContent })} 
                           disabled={editMutation.isPending || editContent.trim() === msg.content}
-                          className="text-[10px] px-2 py-0.5 bg-purple-700 text-white rounded hover:bg-purple-800 disabled:opacity-50"
+                          className="text-[10px] px-2 py-0.5 bg-primary text-white rounded hover:bg-primary/90 disabled:opacity-50"
                         >
                           Save
                         </button>
@@ -251,7 +251,7 @@ export default function SupervisorStudentChatDrawer({
                           </div>
                         </div>
                       ) : (
-                        <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" download className="text-purple-700 underline text-sm break-all flex items-center gap-1">
+                        <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" download className="text-primary underline text-sm break-all flex items-center gap-1">
                           <Paperclip className="h-3 w-3 flex-shrink-0" /> {msg.attachment_name || 'Download File'}
                         </a>
                       )}
@@ -338,7 +338,7 @@ export default function SupervisorStudentChatDrawer({
 
           <form className="p-4 flex gap-2 items-center" onSubmit={e => { e.preventDefault(); mutation.mutate({ content: message, attachment, parentId: replyingTo?.id }); }} aria-label="Send message">
             <label htmlFor="chat-upload" className="cursor-pointer flex items-center" title="Attach file">
-              <Paperclip className="h-5 w-5 text-purple-700" />
+              <Paperclip className="h-5 w-5 text-primary" />
             </label>
             <input
               id="chat-upload"
@@ -361,7 +361,7 @@ export default function SupervisorStudentChatDrawer({
             <button
               type="submit"
               disabled={chatDisabled || (!message && !attachment) || mutation.isPending}
-              className="bg-purple-700 text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
+              className="bg-primary text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
               aria-label="Send message"
             >
               <Send className="h-5 w-5" />

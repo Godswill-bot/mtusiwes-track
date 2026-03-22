@@ -114,7 +114,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-50 relative bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] bg-[size:24px_24px]">
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-background relative  ">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground mt-10">Starting conversation...</div>
           ) : (
@@ -155,7 +155,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                           }}
                           title="Reply"
                         >
-                          <Reply className="h-4 w-4 text-purple-600 hover:text-purple-800" />
+                          <Reply className="h-4 w-4 text-primary hover:text-primary" />
                         </div>
 
                         {/* Message Bubble */}
