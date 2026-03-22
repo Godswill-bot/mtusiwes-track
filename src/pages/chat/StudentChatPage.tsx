@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { getOrCreateConversation, listMessages, sendMessage } from '@/lib/chatHelpers';
+import { getOrCreateConversation, listMessages, sendMessage, formatDateGroup } from '@/lib/chatHelpers';
 import { Paperclip, Send, User, ArrowLeft, Reply, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -225,12 +225,24 @@ export default function StudentChatPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {messages.map(msg => {
-                const isMe = msg.sender_role === 'student';
-                const showActions = activeMessageId === msg.id;
+                {messages.map((msg, index) => {
+                  const isMe = msg.sender_role === 'student';
+                  const showActions = activeMessageId === msg.id;
 
-                return (
-                  <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  const currentDateGroup = formatDateGroup(msg.created_at);
+                  const prevDateGroup = index > 0 ? formatDateGroup(messages[index - 1].created_at) : null;
+                  const showDateGroup = currentDateGroup !== prevDateGroup;
+
+                  return (
+                  <React.Fragment key={msg.id}>
+                    {showDateGroup && (
+                      <div className="flex justify-center my-4 sticky top-0 z-10">
+                        <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full shadow-sm font-medium">
+                          {currentDateGroup}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <div
                       className="group relative max-w-[85%] md:max-w-[70%]"
                     >
@@ -294,6 +306,7 @@ export default function StudentChatPage() {
                       </motion.div>
                     </div>
                   </div>
+                  </React.Fragment>
                 );
               })}
             </div>

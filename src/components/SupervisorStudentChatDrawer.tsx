@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Paperclip, Send, X, Download, Pencil, Reply, Image as ImageIcon } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrCreateConversation, listMessages, sendMessage, markMessagesRead, editMessage } from '../lib/chatHelpers';
+import { getOrCreateConversation, listMessages, sendMessage, markMessagesRead, editMessage, formatDateGroup } from '../lib/chatHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -174,13 +174,25 @@ export default function SupervisorStudentChatDrawer({
           <div className="text-center text-gray-400">No messages yet</div>
         ) : (
           <div>
-            {messages.map(msg => {
+            {messages.map((msg, index) => {
               const isMine = msg.sender_role === (isStudent ? 'student' : 'supervisor');
               const theirName = isStudent ? (supervisorInfo?.name || 'Supervisor') : (student?.profile?.full_name || student?.full_name || student?.name || 'Student');
               const isEditing = editingMessageId === msg.id;
               
+              const currentDateGroup = formatDateGroup(msg.created_at);
+              const prevDateGroup = index > 0 ? formatDateGroup(messages[index - 1].created_at) : null;
+              const showDateGroup = currentDateGroup !== prevDateGroup;
+
               return (
-              <div key={msg.id} className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
+              <React.Fragment key={msg.id}>
+                {showDateGroup && (
+                  <div className="flex justify-center my-4">
+                    <span className="bg-gray-200 text-gray-600 text-[10px] px-3 py-1 rounded-full font-medium">
+                      {currentDateGroup}
+                    </span>
+                  </div>
+                )}
+              <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
                 <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-purple-100' : 'bg-white border'}`}>
                   {/* Action buttons on hover */}
                   <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-white border rounded shadow-sm text-gray-500`}>
@@ -277,6 +289,7 @@ export default function SupervisorStudentChatDrawer({
         </div>
       )}
     </div>
+    </React.Fragment>
   );
 })}
             <div ref={messagesEndRef} />

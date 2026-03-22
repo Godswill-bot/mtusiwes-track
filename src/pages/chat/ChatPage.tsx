@@ -8,7 +8,8 @@ import { format } from "date-fns";
 import { ChatFileUpload } from "@/components/chat/ChatFileUpload";
 import { Reply, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { listMessages } from "@/lib/chatHelpers";
+import { listMessages, formatDateGroup } from "@/lib/chatHelpers";
+import React from 'react';
 
 interface Message {
   id: string;
@@ -118,12 +119,24 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
             <div className="text-center text-muted-foreground mt-10">Starting conversation...</div>
           ) : (
             <div className="space-y-6">
-              {messages.map((msg) => {
-                const isMe = msg.sender_id === user?.id;
-                const showActions = activeMessageId === msg.id;
+                {messages.map((msg, index) => {
+                  const isMe = msg.sender_id === user?.id;
+                  const showActions = activeMessageId === msg.id;
 
-                return (
-                  <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  const currentDateGroup = formatDateGroup(msg.created_at);
+                  const prevDateGroup = index > 0 ? formatDateGroup(messages[index - 1].created_at) : null;
+                  const showDateGroup = currentDateGroup !== prevDateGroup;
+
+                  return (
+                  <React.Fragment key={msg.id}>
+                    {showDateGroup && (
+                      <div className="flex justify-center my-4 sticky top-0 z-10">
+                        <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full shadow-sm font-medium">
+                          {currentDateGroup}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                     <div 
                       className="group relative max-w-[85%] md:max-w-[70%]"
                     >
@@ -181,6 +194,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                       </motion.div>
                     </div>
                   </div>
+                  </React.Fragment>
                 );
               })}
             </div>

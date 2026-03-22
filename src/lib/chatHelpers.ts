@@ -129,3 +129,20 @@ export async function markMessagesRead(conversationId, viewerRole) {
   }
   return data || [];
 }
+
+export function formatDateGroup(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  
+  const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
+  
+  if (isToday) return 'Today';
+  if (isYesterday) return 'Yesterday';
+  
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
