@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import mtuLogo from "@/assets/mtu-logo.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +56,7 @@ export const Navbar = () => {
   const profileImageUrl = studentData?.profile_image_url;
 
   return (
-    <nav className="bg-white border-b border-border shadow-sm">
+    <nav className="bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-3">
@@ -66,9 +67,11 @@ export const Navbar = () => {
             </div>
           </div>
 
-          {user && (
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {profile && (
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <ThemeToggle />
+            {user && (
+              <>
+                {profile && (
                 <div className="flex items-center space-x-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-primary/10 rounded-full">
                   {profileImageUrl ? (
                     <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-primary/20">
@@ -110,8 +113,9 @@ export const Navbar = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>
