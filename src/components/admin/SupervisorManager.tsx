@@ -603,7 +603,7 @@ const SupervisorTable = ({
               const assignedStudents = getAssignedStudents(sup);
               const isVirtual = (sup as { _isVirtual?: boolean })._isVirtual;
               return (
-                <TableRow key={sup.id} className={isVirtual ? "bg-blue-50/50" : ""}>
+                <TableRow key={sup.id} className={isVirtual ? "bg-primary/10/50" : ""}>
                   <TableCell className="font-medium break-words max-w-[120px]">
                     <div className="flex items-center gap-2">
                       {sup.name}

@@ -91,7 +91,7 @@ const StudentLogin = () => {
             <div className="flex justify-center">
               <img src={mtuLogo} alt="MTU Logo" className="h-24 w-auto object-contain" />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">SIWES Portal Closed</CardTitle>
+            <CardTitle className="text-2xl font-bold text-card-foreground">SIWES Portal Closed</CardTitle>
             <CardDescription>The SIWES Portal is currently closed. Please contact the administrator for assistance.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -104,7 +104,7 @@ const StudentLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5">
-      <div className="flex w-full max-w-[1200px] lg:h-[85vh] flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden sm:min-h-[650px] border border-gray-100 relative">
+      <div className="flex w-full max-w-[1200px] lg:h-[85vh] flex-col lg:flex-row bg-card rounded-2xl shadow-xl overflow-hidden sm:min-h-[650px] border border-border relative">
         {/* Slideshow Pane */}
         <AuthSlideshow />
 
@@ -115,7 +115,7 @@ const StudentLogin = () => {
             <Button
               variant="ghost"
               onClick={() => navigate("/")}
-              className="absolute -top-4 -left-2 text-gray-500 hover:text-gray-900 z-10"
+              className="absolute -top-4 -left-2 text-muted-foreground hover:text-card-foreground z-10"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -124,12 +124,12 @@ const StudentLogin = () => {
               <img src={mtuLogo} alt="MTU Logo" className="h-24 w-auto object-contain" />
             </div>
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900">Student Login</h1>
-              <p className="text-gray-500 mt-2">Access your MTU SIWES dashboard</p>
+              <h1 className="text-3xl font-bold text-card-foreground">Student Login</h1>
+              <p className="text-muted-foreground mt-2">Access your MTU SIWES dashboard</p>
             </div>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-sm">
+          <div className="bg-card/50 backdrop-blur-sm">
             {error && (
               <Alert variant="destructive" className="mb-6">
                 <AlertCircle className="h-4 w-4" />
@@ -172,7 +172,7 @@ const StudentLogin = () => {
               </Button>
             </form>
             <div className="mt-8 text-center pb-8 border-t pt-6">
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Don't have an account?{" "}
                 <Button variant="link" className="p-0 h-auto font-semibold text-primary hover:text-primary/80" onClick={() => navigate("/student/signup")}>
                   Sign up here

@@ -250,7 +250,7 @@ const SchoolSupervisorSignup = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-primary/10 to-success/5 lg:p-8">
-      <div className="flex w-full max-w-[1200px] lg:h-[85vh] flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden sm:min-h-[650px] border border-gray-100">
+      <div className="flex w-full max-w-[1200px] lg:h-[85vh] flex-col lg:flex-row bg-card rounded-2xl shadow-xl overflow-hidden sm:min-h-[650px] border border-border">
         
         {/* Left Side - Image */}
         <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-zinc-900 p-10 text-white lg:flex">
@@ -287,7 +287,7 @@ const SchoolSupervisorSignup = () => {
         </div>
         
         {/* Right Side - Form */}
-        <div className="relative flex w-full flex-col lg:w-1/2 overflow-y-auto bg-white">
+        <div className="relative flex w-full flex-col lg:w-1/2 overflow-y-auto bg-card">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/")} 
@@ -303,7 +303,7 @@ const SchoolSupervisorSignup = () => {
                 <div className="flex justify-center mb-4">
                   <img src={mtuLogo} alt="MTU Logo" className="h-16 w-auto object-contain" />
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
                   School Supervisor Sign Up
                 </h1>
                 <p className="text-sm text-muted-foreground">

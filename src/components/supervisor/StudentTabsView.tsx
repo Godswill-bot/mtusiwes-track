@@ -121,7 +121,7 @@ export const StudentTabsView = ({
   const renderWeekCard = (week: WeekInfo, student: StudentWithWeeks, colorClass: string) => (
     <div
       key={week.id}
-      className={`flex items-center justify-between p-3 bg-white rounded-md border ${colorClass} cursor-pointer hover:shadow-md transition-shadow`}
+      className={`flex items-center justify-between p-3 bg-card rounded-md border ${colorClass} cursor-pointer hover:shadow-md transition-shadow`}
       onClick={() => handleOpenReport(week.id, student)}
     >
       <div className="flex-1">

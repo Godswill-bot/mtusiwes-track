@@ -109,7 +109,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
 
   return (
     <Card className="max-w-3xl mx-auto mt-8 shadow-card flex flex-col h-[80vh]" onClick={() => setActiveMessageId(null)}>
-      <CardHeader className="border-b bg-gray-50/50 pb-4">
+      <CardHeader className="border-b bg-muted/50 pb-4">
         <CardTitle className="text-xl text-primary">Chat Console</CardTitle>
       </CardHeader>
       
@@ -131,7 +131,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                   <React.Fragment key={msg.id}>
                     {showDateGroup && (
                       <div className="flex justify-center my-4 sticky top-0 z-10">
-                        <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full shadow-sm font-medium">
+                        <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full shadow-sm font-medium">
                           {currentDateGroup}
                         </span>
                       </div>
@@ -148,7 +148,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                         {/* Option Actions Sidebar - Always visible on mobile, hover on desktop */}
                         <div 
                           className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'} 
-                          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-white border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
+                          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
                           onClick={(e) => {
                             e.stopPropagation();
                             setReplyingTo(msg);
@@ -159,11 +159,11 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                         </div>
 
                         {/* Message Bubble */}
-                        <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm border-primary' : 'bg-white text-gray-800 rounded-bl-sm border-gray-100'}`}>
+                        <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm border-primary' : 'bg-card text-foreground rounded-bl-sm border-border'}`}>
                           
                           {/* Replied to section */}
                           {msg.parent && (
-                            <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-primary-foreground/20 border-primary-foreground/30' : 'bg-gray-50 border-gray-200'} flex flex-col opacity-90`}>
+                            <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-primary-foreground/20 border-primary-foreground/30' : 'bg-muted border-border'} flex flex-col opacity-90`}>
                               <span className="font-semibold mb-1 opacity-80">
                                 Replying to {msg.parent.sender_role === msg.sender_role ? 'themselves' : (msg.parent.sender_role === 'student' ? 'Student' : 'Supervisor')}
                               </span>
@@ -187,7 +187,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                             </div>
                           )}
 
-                          <div className={`text-[10px] mt-2 flex justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-gray-400'}`}>
+                          <div className={`text-[10px] mt-2 flex justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>
                             {format(new Date(msg.created_at), "p")}
                           </div>
                         </div>
@@ -203,7 +203,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white border-t relative z-20 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)]">
+        <div className="p-4 bg-card border-t relative z-20 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)]">
           <AnimatePresence>
             {replyingTo && (
               <motion.div 
@@ -217,9 +217,9 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                     <Reply className="h-3 w-3" />
                     Replying to {replyingTo.sender_role === 'student' ? 'Student' : 'Supervisor'}
                   </div>
-                  <div className="text-sm text-gray-600 truncate">{replyingTo.content || 'Attachment'}</div>
+                  <div className="text-sm text-muted-foreground truncate">{replyingTo.content || 'Attachment'}</div>
                 </div>
-                <button title="Cancel reply" type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-primary/10 rounded-full text-gray-500 transition">
+                <button title="Cancel reply" type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-primary/10 rounded-full text-muted-foreground transition">
                   <X className="h-4 w-4" />
                 </button>
               </motion.div>

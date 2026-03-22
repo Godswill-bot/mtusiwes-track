@@ -376,7 +376,7 @@ const StudentDashboard = () => {
                   </CardHeader>
                   {gradeInfo && (
                     <CardContent>
-                      <div className="bg-white rounded-lg p-4 space-y-4">
+                      <div className="bg-card rounded-lg p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-lg flex items-center gap-2">
                             <Award className="h-5 w-5 text-purple-600" />
@@ -384,7 +384,7 @@ const StudentDashboard = () => {
                           </h3>
                           <Badge className={`text-lg px-3 py-1 ${
                             gradeInfo.grade === 'A' ? 'bg-green-500' :
-                            gradeInfo.grade === 'B' ? 'bg-blue-500' :
+                            gradeInfo.grade === 'B' ? 'bg-primary/100' :
                             gradeInfo.grade === 'C' ? 'bg-yellow-500' :
                             gradeInfo.grade === 'D' ? 'bg-orange-500' :
                             'bg-red-500'
@@ -394,7 +394,7 @@ const StudentDashboard = () => {
                         </div>
                         
                         <div className="grid grid-cols-4 gap-4 text-center">
-                          <div className="p-2 bg-blue-50 rounded">
+                          <div className="p-2 bg-primary/10 rounded">
                             <div className="text-2xl font-bold text-blue-600">{gradeInfo.attendanceScore.toFixed(1)}</div>
                             <div className="text-xs text-muted-foreground">Attendance /10</div>
                           </div>
@@ -406,8 +406,8 @@ const StudentDashboard = () => {
                             <div className="text-2xl font-bold text-purple-600">{gradeInfo.supervisorApprovalScore.toFixed(1)}</div>
                             <div className="text-xs text-muted-foreground">Approval /5</div>
                           </div>
-                          <div className="p-2 bg-gray-100 rounded">
-                            <div className="text-2xl font-bold text-gray-800">{gradeInfo.totalScore.toFixed(1)}</div>
+                          <div className="p-2 bg-muted rounded">
+                            <div className="text-2xl font-bold text-foreground">{gradeInfo.totalScore.toFixed(1)}</div>
                             <div className="text-xs text-muted-foreground">Total /30</div>
                           </div>
                         </div>
@@ -502,7 +502,7 @@ const StudentDashboard = () => {
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-                    <Card className="border-2 border-blue-200 bg-blue-50">
+                    <Card className="border-2 border-blue-200 bg-primary/10">
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -538,14 +538,14 @@ const StudentDashboard = () => {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-2 border-gray-200 bg-gray-50">
+                    <Card className="border-2 border-border bg-muted">
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-2xl font-bold text-gray-600">{stats.pending}</p>
-                            <p className="text-sm text-gray-600 mt-1">Pending</p>
+                            <p className="text-2xl font-bold text-muted-foreground">{stats.pending}</p>
+                            <p className="text-sm text-muted-foreground mt-1">Pending</p>
                           </div>
-                          <Calendar className="h-8 w-8 text-gray-400" />
+                          <Calendar className="h-8 w-8 text-muted-foreground" />
                         </div>
                       </CardContent>
                     </Card>

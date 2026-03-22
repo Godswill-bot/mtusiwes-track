@@ -93,8 +93,8 @@ export const DashboardOverview = () => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-100 rounded-lg shadow-lg text-sm z-50">
-          <p className="font-semibold text-gray-800">{payload[0].name || payload[0].payload?.fullName || "Category"}</p>
+        <div className="bg-card p-3 border border-border rounded-lg shadow-lg text-sm z-50">
+          <p className="font-semibold text-foreground">{payload[0].name || payload[0].payload?.fullName || "Category"}</p>
           <p className="text-primary font-medium mt-1">
             Count: {payload[0].value}
           </p>
@@ -163,9 +163,9 @@ export const DashboardOverview = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="shadow-sm border-gray-100 flex flex-col">
+        <Card className="shadow-sm border-border flex flex-col">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-800">
+            <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
               <Users className="h-4 w-4 text-emerald-500" />
               Students Assignment
             </CardTitle>
@@ -195,14 +195,14 @@ export const DashboardOverview = () => {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[220px] flex items-center justify-center text-sm text-gray-400">No data available</div>
+              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground/70">No data available</div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-gray-100 flex flex-col">
+        <Card className="shadow-sm border-border flex flex-col">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-800">
+            <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
               <UserCog className="h-4 w-4 text-blue-500" />
               Supervisors Distribution
             </CardTitle>
@@ -232,14 +232,14 @@ export const DashboardOverview = () => {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[220px] flex items-center justify-center text-sm text-gray-400">No data available</div>
+              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground/70">No data available</div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-gray-100 flex flex-col">
+        <Card className="shadow-sm border-border flex flex-col">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-800">
+            <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
               <GraduationCap className="h-4 w-4 text-purple-500" />
               Students by Faculty
             </CardTitle>
@@ -269,15 +269,15 @@ export const DashboardOverview = () => {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[220px] flex items-center justify-center text-sm text-gray-400">No data available</div>
+              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground/70">No data available</div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-sm border-gray-100">
+      <Card className="shadow-sm border-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-800">
+          <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
             <Building2 className="h-4 w-4 text-orange-500" />
             Top Departments
           </CardTitle>
@@ -317,7 +317,7 @@ export const DashboardOverview = () => {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-[300px] flex items-center justify-center text-sm text-gray-400">No data available</div>
+            <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground/70">No data available</div>
           )}
         </CardContent>
       </Card>

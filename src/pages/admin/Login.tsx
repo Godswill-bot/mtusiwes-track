@@ -62,7 +62,7 @@ const AdminLogin = () => {
             <img src={mtuLogo} alt="MTU Logo" className="h-24 w-auto object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2 text-gray-900">
+            <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2 text-card-foreground">
               <Shield className="h-6 w-6" />Admin Login
             </CardTitle>
             <CardDescription>MTU SIWES System Administration</CardDescription>

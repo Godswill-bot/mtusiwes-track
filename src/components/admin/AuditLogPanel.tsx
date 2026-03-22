@@ -60,13 +60,13 @@ const renderRecord = (record: Record<string, unknown> | null, otherRecord: Recor
         // Highlighting logic: if it's different from the other record
         const isDifferent = otherRecord && JSON.stringify(otherRecord[key]) !== JSON.stringify(value);
         return (
-          <div key={key} className={`grid grid-cols-[1fr_2fr] gap-3 py-1.5 border-b border-gray-100 last:border-0 ${isDifferent ? 'bg-indigo-50/40 -mx-1 px-1 rounded' : ''}`}>
-            <div className="text-xs font-medium text-gray-500 capitalize">
+          <div key={key} className={`grid grid-cols-[1fr_2fr] gap-3 py-1.5 border-b border-border last:border-0 ${isDifferent ? 'bg-indigo-50/40 -mx-1 px-1 rounded' : ''}`}>
+            <div className="text-xs font-medium text-muted-foreground capitalize">
               {key.replace(/_/g, ' ')}
             </div>
-            <div className={`text-xs break-words font-mono ${isDifferent ? 'text-indigo-700 font-semibold' : 'text-gray-800'}`}>
+            <div className={`text-xs break-words font-mono ${isDifferent ? 'text-indigo-700 font-semibold' : 'text-foreground'}`}>
               {value === null ? (
-                <span className="text-gray-400 italic">null</span>
+                <span className="text-muted-foreground/70 italic">null</span>
               ) : typeof value === 'boolean' ? (
                 value ? 'true' : 'false'
               ) : (

@@ -123,7 +123,7 @@ export const StudentNotifications = () => {
       case "system_alert":
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       default:
-        return <Bell className="h-4 w-4 text-gray-500" />;
+        return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -137,7 +137,7 @@ export const StudentNotifications = () => {
       case "system_alert":
         return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-foreground";
     }
   };
 
@@ -201,7 +201,7 @@ export const StudentNotifications = () => {
               <div
                 key={notification.id}
                 className={`flex items-start gap-3 p-3 rounded-lg border ${
-                  notification.is_read ? "bg-muted/30" : "bg-blue-50 border-blue-200"
+                  notification.is_read ? "bg-muted/30" : "bg-primary/10 border-blue-200"
                 } cursor-pointer`}
                   // Remove ref_id usage, fallback to notification.id for navigation if needed
                   onClick={() => {

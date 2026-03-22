@@ -9,12 +9,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 // Minimal supervisor mini-profile component
 function SupervisorProfile({ supervisor }: { supervisor: any }) {
   return (
-    <div className="flex flex-col items-center p-4 border-r h-full bg-white">
+    <div className="flex flex-col items-center p-4 border-r h-full bg-card">
       <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
         <User className="h-8 w-8 text-purple-700" />
       </div>
-      <div className="font-bold text-lg text-gray-800">{supervisor?.name || 'Supervisor'}</div>
-      <div className="text-sm text-gray-500">{supervisor?.email}</div>
+      <div className="font-bold text-lg text-foreground">{supervisor?.name || 'Supervisor'}</div>
+      <div className="text-sm text-muted-foreground">{supervisor?.email}</div>
     </div>
   );
 }
@@ -195,31 +195,31 @@ export default function StudentChatPage() {
   if (!supervisor) return <div className="flex items-center justify-center h-screen text-red-500">No supervisor assigned. Chat unavailable.</div>;
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50 border-t" onClick={() => setActiveMessageId(null)}>
+    <div className="flex flex-col md:flex-row h-screen bg-muted border-t" onClick={() => setActiveMessageId(null)}>
       {/* Left Profile */}
       <div className="hidden md:block w-1/4 max-w-[280px] shadow-sm z-10">
         <SupervisorProfile supervisor={supervisor} />
       </div>
 
       {/* Main Chat Thread */}
-      <div className="flex-1 flex flex-col h-full bg-white relative">
+      <div className="flex-1 flex flex-col h-full bg-card relative">
         {/* Mobile Header */}
-        <div className="md:hidden flex items-center p-3 border-b bg-white shadow-sm z-10">
-          <button onClick={() => navigate(-1)} className="mr-3 text-gray-500 hover:text-purple-700 transition" title="Go back">
+        <div className="md:hidden flex items-center p-3 border-b bg-card shadow-sm z-10">
+          <button onClick={() => navigate(-1)} className="mr-3 text-muted-foreground hover:text-purple-700 transition" title="Go back">
             <ArrowLeft />
           </button>
           <div className="flex items-center gap-2">
             <div className="bg-purple-100 p-1 rounded-full">
               <User className="h-5 w-5 text-purple-700" />
             </div>
-            <span className="font-bold text-gray-800">{supervisor.name}</span>
+            <span className="font-bold text-foreground">{supervisor.name}</span>
           </div>
         </div>
 
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar bg-[radial-gradient(#f3e8ff_1px,transparent_1px)] bg-[size:24px_24px]">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-70">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground/70 opacity-70">
               <Send className="h-12 w-12 mb-4 text-purple-200" />
               <p>Start a secure conversation with your supervisor.</p>
             </div>
@@ -237,7 +237,7 @@ export default function StudentChatPage() {
                   <React.Fragment key={msg.id}>
                     {showDateGroup && (
                       <div className="flex justify-center my-4 sticky top-0 z-10">
-                        <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full shadow-sm font-medium">
+                        <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full shadow-sm font-medium">
                           {currentDateGroup}
                         </span>
                       </div>
@@ -255,7 +255,7 @@ export default function StudentChatPage() {
                         {/* Option Actions Sidebar - Always visible on mobile, hover on desktop */}
                         <div
                           className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'} 
-                          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-white border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
+                          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
                           onClick={(e) => {
                             e.stopPropagation();
                             setReplyingTo(msg);
@@ -266,11 +266,11 @@ export default function StudentChatPage() {
                         </div>
 
                         {/* Message Bubble */}
-                        <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-purple-600 text-white rounded-tr-sm border-purple-700' : 'bg-white text-gray-800 rounded-tl-sm border-gray-100'}`}>
+                        <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-purple-600 text-white rounded-tr-sm border-purple-700' : 'bg-card text-foreground rounded-tl-sm border-border'}`}>
                            
                            {/* Replied to... section */}
                            {msg.parent && (
-                             <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-purple-500/50 border-purple-500' : 'bg-gray-50 border-gray-200'} flex flex-col opacity-90`}>
+                             <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-purple-500/50 border-purple-500' : 'bg-muted border-border'} flex flex-col opacity-90`}>
                                <span className={`font-semibold mb-1 ${isMe ? 'text-purple-100' : 'text-purple-700'}`}>
                                  {msg.parent.sender_role === 'student' ? 'You' : supervisor.name}
                                </span>
@@ -287,7 +287,7 @@ export default function StudentChatPage() {
                               {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                 <img src={msg.attachment_url} alt={msg.attachment_name} className="max-h-48 rounded-lg mt-1 cursor-pointer hover:opacity-90 transition border border-black/10" onClick={(e) => { e.stopPropagation(); window.open(msg.attachment_url, '_blank'); }} />
                               ) : (
-                                <div className={`flex items-center gap-2 p-2 rounded-lg border ${isMe ? 'bg-purple-700 border-purple-500' : 'bg-gray-50 border-gray-200'}`}>
+                                <div className={`flex items-center gap-2 p-2 rounded-lg border ${isMe ? 'bg-purple-700 border-purple-500' : 'bg-muted border-border'}`}>
                                   <Paperclip className="h-4 w-4 shrink-0" />
                                   <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
                                     {msg.attachment_name || 'Download File'}
@@ -298,7 +298,7 @@ export default function StudentChatPage() {
                           )}
 
                           {/* Metadata */}
-                          <div className={`text-[10px] mt-2 flex justify-end items-center gap-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>
+                          <div className={`text-[10px] mt-2 flex justify-end items-center gap-1 ${isMe ? 'text-purple-200' : 'text-muted-foreground/70'}`}>
                             {msg.optimistic ? 'sending...' : new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
@@ -315,7 +315,7 @@ export default function StudentChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white border-t z-10 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)]">
+        <div className="p-4 bg-card border-t z-10 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)]">
           <AnimatePresence>
             {replyingTo && (
               <motion.div 
@@ -329,9 +329,9 @@ export default function StudentChatPage() {
                     <Reply className="h-3 w-3" />
                     Replying to {replyingTo.sender_role === 'student' ? 'yourself' : supervisor.name}
                   </div>
-                  <div className="text-sm text-gray-600 truncate">{replyingTo.content || 'Attachment'}</div>
+                  <div className="text-sm text-muted-foreground truncate">{replyingTo.content || 'Attachment'}</div>
                 </div>
-                <button aria-label="Cancel reply" title="Cancel reply" type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-purple-100 rounded-full text-gray-400 hover:text-gray-600 transition">
+                <button aria-label="Cancel reply" title="Cancel reply" type="button" onClick={() => setReplyingTo(null)} className="p-1 hover:bg-purple-100 rounded-full text-muted-foreground/70 hover:text-muted-foreground transition">
                   <X className="h-4 w-4" />
                 </button>
               </motion.div>
@@ -339,7 +339,7 @@ export default function StudentChatPage() {
           </AnimatePresence>
 
           <form className="flex gap-2 items-center" onSubmit={handleSend}>
-            <label htmlFor="chat-upload" className="cursor-pointer p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition" title="Attach file">
+            <label htmlFor="chat-upload" className="cursor-pointer p-2 text-muted-foreground/70 hover:text-purple-600 hover:bg-purple-50 rounded-full transition" title="Attach file">
               <Paperclip className="h-5 w-5" />
             </label>
             <input
@@ -352,7 +352,7 @@ export default function StudentChatPage() {
               aria-label="Attach file"
             />
             
-            <div className="flex-1 flex flex-col bg-gray-50 border rounded-2xl ring-purple-100 focus-within:ring-2 focus-within:border-purple-300 transition-all overflow-hidden px-3 py-1">
+            <div className="flex-1 flex flex-col bg-muted border rounded-2xl ring-purple-100 focus-within:ring-2 focus-within:border-purple-300 transition-all overflow-hidden px-3 py-1">
               {attachment && (
                 <div className="flex items-center gap-2 text-xs bg-purple-100 text-purple-800 p-1.5 rounded-lg mb-1 mt-1 font-medium w-fit max-w-full">
                   <Paperclip className="h-3 w-3 shrink-0" />

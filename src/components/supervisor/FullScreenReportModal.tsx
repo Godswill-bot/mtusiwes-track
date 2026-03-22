@@ -408,7 +408,7 @@ export const FullScreenReportModal = ({
 
                 {/* Submitted at */}
                 {weekData.submitted_at && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="p-3 bg-primary/10 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-900 dark:text-blue-100">
                       Submitted on: {format(new Date(weekData.submitted_at), "MMMM d, yyyy 'at' h:mm a")}
                     </p>
@@ -499,7 +499,7 @@ export const FullScreenReportModal = ({
                             <img
                               src={stamp.image_path}
                               alt={stamp.method === 'signature' ? 'Signature' : 'Stamp'}
-                              className="max-h-24 max-w-full object-contain border border-green-300 rounded-md bg-white p-2 cursor-pointer hover:opacity-80"
+                              className="max-h-24 max-w-full object-contain border border-green-300 rounded-md bg-card p-2 cursor-pointer hover:opacity-80"
                               onClick={() => setExpandedImage(stamp.image_path!)}
                             />
                           ) : (
@@ -542,7 +542,7 @@ export const FullScreenReportModal = ({
                       </p>
                     )}
                     {weekData.school_supervisor_comments && (
-                      <div className="mt-2 p-2 bg-white rounded border">
+                      <div className="mt-2 p-2 bg-card rounded border">
                         <p className="text-xs text-muted-foreground mb-1">Supervisor Comments:</p>
                         <p className="text-sm">{weekData.school_supervisor_comments}</p>
                       </div>
@@ -557,7 +557,7 @@ export const FullScreenReportModal = ({
                       <span className="font-semibold text-red-800">Rejected</span>
                     </div>
                     {weekData.rejection_reason && (
-                      <div className="mt-2 p-2 bg-white rounded border">
+                      <div className="mt-2 p-2 bg-card rounded border">
                         <p className="text-xs text-muted-foreground mb-1">Rejection Reason:</p>
                         <p className="text-sm">{weekData.rejection_reason}</p>
                       </div>

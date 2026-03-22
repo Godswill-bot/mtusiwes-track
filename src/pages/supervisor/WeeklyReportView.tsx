@@ -718,7 +718,7 @@ const WeeklyReportView = () => {
               </div>
 
               {weekData.submitted_at && (
-                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="p-3 bg-primary/10 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <p className="text-sm text-blue-900 dark:text-blue-100">
                     Submitted on: {format(new Date(weekData.submitted_at), "MMMM d, yyyy 'at' h:mm a")} (Africa/Lagos time)
                   </p>
@@ -807,7 +807,7 @@ const WeeklyReportView = () => {
                           <img
                             src={stamp.image_path}
                             alt={`${stamp.method === 'signature' ? 'Signature' : 'Stamp'}`}
-                            className="max-h-24 max-w-full object-contain border border-green-300 rounded-md bg-white p-2 cursor-pointer hover:opacity-80"
+                            className="max-h-24 max-w-full object-contain border border-green-300 rounded-md bg-card p-2 cursor-pointer hover:opacity-80"
                             onClick={() => window.open(stamp.image_path!, '_blank')}
                           />
                         ) : (

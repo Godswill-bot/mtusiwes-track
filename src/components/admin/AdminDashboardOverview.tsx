@@ -37,10 +37,10 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-40 bg-gray-100 rounded-xl" />
+          <div key={i} className="h-40 bg-muted rounded-xl" />
         ))}
-        <div className="col-span-1 lg:col-span-3 h-96 bg-gray-100 rounded-xl" />
-        <div className="col-span-1 h-96 bg-gray-100 rounded-xl" />
+        <div className="col-span-1 lg:col-span-3 h-96 bg-muted rounded-xl" />
+        <div className="col-span-1 h-96 bg-muted rounded-xl" />
       </div>
     );
   }
@@ -121,10 +121,10 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 p-4 rounded-2xl backdrop-blur-sm border border-purple-100/50">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card/50 p-4 rounded-2xl backdrop-blur-sm border border-purple-100/50">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent">System Overview</h2>
-          <p className="text-gray-500 text-sm">Real-time statistics and analytics for the SIWES platform.</p>
+          <p className="text-muted-foreground text-sm">Real-time statistics and analytics for the SIWES platform.</p>
         </div>
         <PortalToggle />
       </div>
@@ -137,14 +137,14 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
           </div>
           <CardHeader className="pb-2">
             <CardDescription className="font-medium text-purple-600">Total Students</CardDescription>
-            <CardTitle className="text-4xl text-gray-800">{students.length}</CardTitle>
+            <CardTitle className="text-4xl text-foreground">{students.length}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2 text-sm mt-2">
-              <span className={`flex items-center ${usersActiveToday > 0 ? 'text-emerald-600 bg-emerald-50' : 'text-gray-500 bg-gray-100'} px-2 py-0.5 rounded-full font-medium`}>
+              <span className={`flex items-center ${usersActiveToday > 0 ? 'text-emerald-600 bg-emerald-50' : 'text-muted-foreground bg-muted'} px-2 py-0.5 rounded-full font-medium`}>
                 <Activity className="w-3 h-3 mr-1" /> {usersActiveToday > 0 ? usersActiveToday : 0}
               </span>
-              <span className="text-gray-500">Actively Online in System</span>
+              <span className="text-muted-foreground">Actively Online in System</span>
             </div>
           </CardContent>
         </Card>
@@ -155,14 +155,14 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
           </div>
           <CardHeader className="pb-2">
             <CardDescription className="font-medium text-blue-600">Total Supervisors</CardDescription>
-            <CardTitle className="text-4xl text-gray-800">{supervisors.length}</CardTitle>
+            <CardTitle className="text-4xl text-foreground">{supervisors.length}</CardTitle>
           </CardHeader>
           <CardContent>
              <div className="flex items-center gap-2 text-sm mt-2">
-              <span className="flex items-center text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+              <span className="flex items-center text-blue-600 bg-primary/10 px-2 py-0.5 rounded-full font-medium">
                 {schoolSupervisors} School
               </span>
-              <span className="text-gray-500">Supervisors onboarded</span>
+              <span className="text-muted-foreground">Supervisors onboarded</span>
             </div>
           </CardContent>
         </Card>
@@ -173,15 +173,15 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
           </div>
           <CardHeader className="pb-2">
             <CardDescription className="font-medium text-emerald-600">Assigned</CardDescription>
-            <CardTitle className="text-4xl text-gray-800">{assignedStudents}</CardTitle>
+            <CardTitle className="text-4xl text-foreground">{assignedStudents}</CardTitle>
           </CardHeader>
           <CardContent>
              <progress 
-               className="w-full appearance-none h-2 mt-4 rounded-full bg-gray-100 [&::-webkit-progress-bar]:bg-gray-100 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:bg-emerald-500 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:bg-emerald-500 [&::-moz-progress-bar]:rounded-full" 
+               className="w-full appearance-none h-2 mt-4 rounded-full bg-muted [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:bg-emerald-500 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:bg-emerald-500 [&::-moz-progress-bar]:rounded-full" 
                value={assignedStudents} 
                max={Math.max(students.length, 1)} 
              />
-             <p className="text-xs text-gray-500 mt-2">Placement completion rate</p>
+             <p className="text-xs text-muted-foreground mt-2">Placement completion rate</p>
           </CardContent>
         </Card>
 
@@ -191,7 +191,7 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
           </div>
           <CardHeader className="pb-2">
             <CardDescription className="font-medium text-rose-600">Pending Assignment</CardDescription>
-            <CardTitle className="text-4xl text-gray-800">{unassignedStudents}</CardTitle>
+            <CardTitle className="text-4xl text-foreground">{unassignedStudents}</CardTitle>
           </CardHeader>
           <CardContent>
              <div className="flex items-center gap-2 text-sm mt-2">
@@ -210,7 +210,7 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
         <Card className="lg:col-span-8 border-none shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-8">
             <div>
-              <CardTitle className="text-lg text-gray-800">Registration Growth Matrix</CardTitle>
+              <CardTitle className="text-lg text-foreground">Registration Growth Matrix</CardTitle>
               <CardDescription>Multi-metric tracking of platform adoption over current academic year</CardDescription>
             </div>
             <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
@@ -249,7 +249,7 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
         {/* Assignment Ratio Pie Chart */}
         <Card className="lg:col-span-4 border-none shadow-sm flex flex-col">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-800">Placement Distribution</CardTitle>
+            <CardTitle className="text-lg text-foreground">Placement Distribution</CardTitle>
             <CardDescription>Current status of student IT assignments</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col items-center justify-center">
@@ -278,16 +278,16 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="w-full mt-4 bg-gray-50 p-4 rounded-xl text-center">
-              <p className="text-sm text-gray-600">Total Unassigned requires attention</p>
-              <p className="text-xl font-bold text-rose-600 mt-1">{unassignedStudents} <span className="text-sm font-normal text-gray-500">Students</span></p>
+            <div className="w-full mt-4 bg-muted p-4 rounded-xl text-center">
+              <p className="text-sm text-muted-foreground">Total Unassigned requires attention</p>
+              <p className="text-xl font-bold text-rose-600 mt-1">{unassignedStudents} <span className="text-sm font-normal text-muted-foreground">Students</span></p>
             </div>
           </CardContent>
         </Card>
 
         {/* Weekly Engagement Bar Chart */}
         <Card className="lg:col-span-7 border-none shadow-sm bg-gradient-to-br from-indigo-900 to-purple-900 border-transparent text-white relative overflow-hidden">
-          <div className="absolute -right-20 -top-20 opacity-10 blur-2xl rounded-full w-64 h-64 bg-white" />
+          <div className="absolute -right-20 -top-20 opacity-10 blur-2xl rounded-full w-64 h-64 bg-card" />
           <CardHeader>
             <CardTitle className="text-lg text-white">Weekly Platform Engagement</CardTitle>
             <CardDescription className="text-indigo-200">Logbook submissions and portal visits per day</CardDescription>
@@ -317,31 +317,31 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
         <Card className="lg:col-span-5 border-none shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-lg text-gray-800">System Activity Pulse</CardTitle>
+              <CardTitle className="text-lg text-foreground">System Activity Pulse</CardTitle>
               <CardDescription>Most recent occurrences across the platform</CardDescription>
             </div>
-            <Activity className="w-5 h-5 text-gray-400" />
+            <Activity className="w-5 h-5 text-muted-foreground/70" />
           </CardHeader>
           <CardContent>
             <div className="space-y-4 mt-4">
               {displayActivities.length > 0 ? displayActivities.map((activity, i) => (
-                <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
+                <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition border border-transparent hover:border-border">
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                     activity.type === 'success' ? 'bg-emerald-500' :
-                    activity.type === 'info' ? 'bg-blue-500' :
+                    activity.type === 'info' ? 'bg-primary/100' :
                     activity.type === 'warning' ? 'bg-amber-500' : 'bg-purple-500'
                   }`} />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">{activity.label}</p>
-                    <p className="text-xs text-gray-500">by {activity.user}</p>
+                    <p className="text-sm font-medium text-foreground">{activity.label}</p>
+                    <p className="text-xs text-muted-foreground">by {activity.user}</p>
                   </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap flex items-center bg-gray-50 px-2 py-1 rounded-md">
+                  <span className="text-xs text-muted-foreground/70 whitespace-nowrap flex items-center bg-muted px-2 py-1 rounded-md">
                     <CalendarDays className="w-3 h-3 mr-1" />
                     {activity.time}
                   </span>
                 </div>
               )) : (
-                <div className="text-center py-6 text-sm text-gray-500">No recent activity detected.</div>
+                <div className="text-center py-6 text-sm text-muted-foreground">No recent activity detected.</div>
               )}
             </div>
             <button 

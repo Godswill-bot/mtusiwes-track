@@ -257,7 +257,7 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
                               </>
                             ) : (
                               <>
-                                <XCircle className="h-4 w-4 text-gray-400" />
+                                <XCircle className="h-4 w-4 text-muted-foreground/70" />
                                 <span className="text-sm text-muted-foreground">Not checked in</span>
                               </>
                             )}

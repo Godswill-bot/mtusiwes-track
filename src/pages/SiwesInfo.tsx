@@ -100,7 +100,7 @@ const SiwesInfo = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-white/90 via-purple-50/85 to-primary/20" />
       
       {/* Slideshow Indicators - positioned at bottom but won't overlap content */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex gap-3 bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex gap-3 bg-card/30 backdrop-blur-sm px-4 py-2 rounded-full">
         {slideshowImages.map((_, index) => (
           <button
             key={index}
@@ -116,7 +116,7 @@ const SiwesInfo = () => {
       </div>
       
       {/* Header with Logo */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-border shadow-sm py-6 relative z-10">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border shadow-sm py-6 relative z-10">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center space-x-4">
             <img
@@ -135,7 +135,7 @@ const SiwesInfo = () => {
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="mb-8 bg-white/50 backdrop-blur-sm hover:bg-white/70"
+          className="mb-8 bg-card/50 backdrop-blur-sm hover:bg-card/70"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
@@ -143,7 +143,7 @@ const SiwesInfo = () => {
 
         {/* ITF Logo */}
         <div className="flex flex-col items-center justify-center mb-12">
-          <div className="bg-white rounded-2xl p-4 shadow-lg">
+          <div className="bg-card rounded-2xl p-4 shadow-lg">
             <img
               src={itfLogo}
               alt="Industrial Training Fund Logo"
@@ -172,7 +172,7 @@ const SiwesInfo = () => {
 
         {/* SIWES Introduction */}
         <section className="max-w-4xl mx-auto mb-16 animate-fade-in-up animation-delay-200">
-          <Card className="shadow-elevated bg-white/80 backdrop-blur-sm">
+          <Card className="shadow-elevated bg-card/80 backdrop-blur-sm">
             <CardContent className="pt-6">
               <div className="prose prose-lg max-w-none">
                 <p className="text-base md:text-lg text-foreground/90 leading-relaxed mb-4">
@@ -200,7 +200,7 @@ const SiwesInfo = () => {
               return (
                 <Card
                   key={index}
-                  className="shadow-card hover:shadow-elevated transition-all duration-300 hover:scale-105 bg-white/80 backdrop-blur-sm"
+                  className="shadow-card hover:shadow-elevated transition-all duration-300 hover:scale-105 bg-card/80 backdrop-blur-sm"
                 >
                   <CardHeader>
                     <div className="flex items-center space-x-3 mb-2">
@@ -245,14 +245,14 @@ const SiwesInfo = () => {
                           {activity.step}
                         </div>
                         <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                          <div className="p-2 bg-white rounded-full shadow-md border-2 border-primary/20">
+                          <div className="p-2 bg-card rounded-full shadow-md border-2 border-primary/20">
                             <Icon className="h-5 w-5 text-primary" />
                           </div>
                         </div>
                       </div>
 
                       {/* Content */}
-                      <Card className="flex-1 shadow-card hover:shadow-elevated transition-all duration-300 ml-4 bg-white/80 backdrop-blur-sm">
+                      <Card className="flex-1 shadow-card hover:shadow-elevated transition-all duration-300 ml-4 bg-card/80 backdrop-blur-sm">
                         <CardHeader>
                           <CardTitle className="text-xl">{activity.title}</CardTitle>
                         </CardHeader>
@@ -281,7 +281,7 @@ const SiwesInfo = () => {
               <Button
                 onClick={() => navigate("/student/signup")}
                 size="lg"
-                className="bg-white text-primary hover:bg-primary-lighter hover:text-primary font-semibold"
+                className="bg-card text-primary hover:bg-primary-lighter hover:text-primary font-semibold"
               >
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -292,7 +292,7 @@ const SiwesInfo = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-border py-6 mt-12 relative z-10">
+      <footer className="bg-card/80 backdrop-blur-sm border-t border-border py-6 mt-12 relative z-10">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Mountain Top University. All rights reserved.</p>
         </div>

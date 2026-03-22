@@ -590,7 +590,7 @@ const Logbook = () => {
             <Button
               variant="ghost"
               onClick={() => navigate("/student/dashboard")}
-              className="hover:bg-white/50 w-fit"
+              className="hover:bg-card/50 w-fit"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
@@ -600,7 +600,7 @@ const Logbook = () => {
               variant="outline"
               onClick={handleDownloadPDF} 
               disabled={downloading}
-              className="bg-white hover:bg-gray-50 w-full sm:w-auto"
+              className="bg-card hover:bg-muted w-full sm:w-auto"
             >
               <Download className="h-4 w-4 mr-2" />
               {downloading ? "Generating PDF..." : "Download Logbook"}
@@ -612,7 +612,7 @@ const Logbook = () => {
               <h1 className="text-2xl sm:text-3xl font-bold text-primary">Weekly Logbook</h1>
               <p className="text-muted-foreground mt-1">Week {currentWeek}</p>
             </div>
-            <div className="flex items-center space-x-2 self-start sm:self-auto bg-white p-2 rounded-lg shadow-sm border border-border">
+            <div className="flex items-center space-x-2 self-start sm:self-auto bg-card p-2 rounded-lg shadow-sm border border-border">
               <Button
                 variant="outline"
                 size="icon"
@@ -654,10 +654,10 @@ const Logbook = () => {
                 </CardHeader>
                 <CardContent className="space-y-4 sm:space-y-6 px-3 sm:px-6">
                   {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].map((day) => (
-                    <div key={day} className="space-y-2 sm:space-y-3 p-3 sm:p-4 border border-border rounded-lg bg-white">
+                    <div key={day} className="space-y-2 sm:space-y-3 p-3 sm:p-4 border border-border rounded-lg bg-card">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <label className="font-medium capitalize text-base sm:text-lg text-gray-800">{day}</label>
-                        <span className="text-xs sm:text-sm text-muted-foreground font-medium bg-gray-100 px-2 py-1 rounded w-fit">
+                        <label className="font-medium capitalize text-base sm:text-lg text-foreground">{day}</label>
+                        <span className="text-xs sm:text-sm text-muted-foreground font-medium bg-muted px-2 py-1 rounded w-fit">
                           {format(addDays(new Date(weekData.start_date), ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].indexOf(day)), "MMM dd")}
                         </span>
                       </div>
@@ -683,15 +683,15 @@ const Logbook = () => {
                     </div>
                   ))}
 
-                  <div className="space-y-2 bg-gray-50 p-3 sm:p-4 rounded-lg border border-border">
-                    <label className="font-medium text-gray-800">Comments/Notes</label>
+                  <div className="space-y-2 bg-muted p-3 sm:p-4 rounded-lg border border-border">
+                    <label className="font-medium text-foreground">Comments/Notes</label>
                     <Textarea
                       value={weekData.comments || ""}
                       onChange={(e) => setWeekData({ ...weekData, comments: e.target.value })}
                       placeholder="Additional comments or observations..."
                       rows={4}
                       disabled={!canEdit}
-                      className="bg-white text-sm sm:text-base"
+                      className="bg-card text-sm sm:text-base"
                     />
                   </div>
 

@@ -143,24 +143,24 @@ export default function SupervisorStudentChatDrawer({
 
   // Render
   return (
-    <div className={`fixed inset-y-0 right-0 w-96 bg-white shadow-lg z-50 flex flex-col transition-transform ${open ? 'translate-x-0' : 'translate-x-full'}`} aria-modal="true" role="dialog">
+    <div className={`fixed inset-y-0 right-0 w-96 bg-card shadow-lg z-50 flex flex-col transition-transform ${open ? 'translate-x-0' : 'translate-x-full'}`} aria-modal="true" role="dialog">
       <div className="flex-none flex items-center justify-between p-4 border-b">
         <div>
           
           {isStudent ? (
             <>
               <div className="font-bold text-purple-700">{supervisorInfo?.name || 'Supervisor'}</div>
-              <div className="text-xs text-gray-500">Your Supervisor</div>
+              <div className="text-xs text-muted-foreground">Your Supervisor</div>
             </>
           ) : (
             <>
               <div className="font-bold text-purple-700">{student?.profile?.full_name || student?.full_name || student?.name || 'Student'}</div>
-              <div className="text-xs text-gray-500">Matric: {student?.matric_no || student?.matric_number || 'Unknown Matric'}</div>
+              <div className="text-xs text-muted-foreground">Matric: {student?.matric_no || student?.matric_number || 'Unknown Matric'}</div>
             </>
           )}
 
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-purple-700" aria-label="Close chat">✕</button>
+        <button onClick={onClose} className="text-muted-foreground/70 hover:text-purple-700" aria-label="Close chat">✕</button>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
@@ -168,10 +168,10 @@ export default function SupervisorStudentChatDrawer({
         ) : chatDisabled ? (
           <div className="text-center text-red-500">
             Chat is disabled. Please ensure you are assigned to a supervisor and SIWES is active.<br/>
-            <span className="text-xs text-gray-400">Debug: supervisorId={String(supervisorId)}, studentId={String(student?.id)}</span>
+            <span className="text-xs text-muted-foreground/70">Debug: supervisorId={String(supervisorId)}, studentId={String(student?.id)}</span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-gray-400">No messages yet</div>
+          <div className="text-center text-muted-foreground/70">No messages yet</div>
         ) : (
           <div>
             {messages.map((msg, index) => {
@@ -187,22 +187,22 @@ export default function SupervisorStudentChatDrawer({
               <React.Fragment key={msg.id}>
                 {showDateGroup && (
                   <div className="flex justify-center my-4">
-                    <span className="bg-gray-200 text-gray-600 text-[10px] px-3 py-1 rounded-full font-medium">
+                    <span className="bg-secondary text-muted-foreground text-[10px] px-3 py-1 rounded-full font-medium">
                       {currentDateGroup}
                     </span>
                   </div>
                 )}
               <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
-                <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-purple-100' : 'bg-white border'}`}>
+                <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-purple-100' : 'bg-card border'}`}>
                   {/* Action buttons on hover */}
-                  <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-white border rounded shadow-sm text-gray-500`}>
-                    {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-purple-700 hover:bg-gray-100 rounded" title="Reply"><Reply className="w-3 h-3" /></button>}
+                  <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border rounded shadow-sm text-muted-foreground`}>
+                    {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-purple-700 hover:bg-muted rounded" title="Reply"><Reply className="w-3 h-3" /></button>}
                     {isMine && !isEditing && (
-                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1 hover:text-purple-700 hover:bg-gray-100 rounded" title="Edit"><Pencil className="w-3 h-3" /></button>
+                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1 hover:text-purple-700 hover:bg-muted rounded" title="Edit"><Pencil className="w-3 h-3" /></button>
                     )}
                   </div>
 
-                  <div className={`text-[10px] text-gray-500 mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
+                  <div className={`text-[10px] text-muted-foreground mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
                     {isMine ? 'You' : theirName} • {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     {msg.is_edited && <span className="ml-1 italic">(edited)</span>}
                   </div>
@@ -225,7 +225,7 @@ export default function SupervisorStudentChatDrawer({
                         rows={2}
                       />
                       <div className="flex justify-end gap-1 mt-1">
-                        <button onClick={() => setEditingMessageId(null)} className="text-[10px] px-2 py-0.5 border rounded hover:bg-gray-50">Cancel</button>
+                        <button onClick={() => setEditingMessageId(null)} className="text-[10px] px-2 py-0.5 border rounded hover:bg-muted">Cancel</button>
                         <button 
                           onClick={() => editMutation.mutate({ messageId: msg.id, newContent: editContent })} 
                           disabled={editMutation.isPending || editContent.trim() === msg.content}
@@ -280,7 +280,7 @@ export default function SupervisorStudentChatDrawer({
                 download={selectedImage.name}
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-2.5 rounded-full font-medium transition-all shadow-lg flex items-center gap-2 backdrop-blur-md"
+                className="bg-card/10 hover:bg-card/20 text-white border border-white/20 px-6 py-2.5 rounded-full font-medium transition-all shadow-lg flex items-center gap-2 backdrop-blur-md"
               >
                 <Download className="w-4 h-4" /> Download Image
               </a>
@@ -297,14 +297,14 @@ export default function SupervisorStudentChatDrawer({
         )}
       </div>
       {(!chatDisabled && conversation) && (
-        <div className="flex-none bg-white border-t">
+        <div className="flex-none bg-card border-t">
           {replyingTo && (
-            <div className="px-4 py-2 bg-gray-50 text-xs flex items-center justify-between border-b">
-              <div className="flex items-center gap-2 text-gray-600 truncate">
+            <div className="px-4 py-2 bg-muted text-xs flex items-center justify-between border-b">
+              <div className="flex items-center gap-2 text-muted-foreground truncate">
                 <Reply className="w-3 h-3 flex-shrink-0" />
                 <span className="font-semibold">{replyingTo.sender_role === (isStudent ? 'student' : 'supervisor') ? 'You' : 'Them'}</span>: {replyingTo.content || 'Attached file'}
               </div>
-              <button type="button" aria-label="Cancel reply" title="Cancel reply" onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-gray-700">
+              <button type="button" aria-label="Cancel reply" title="Cancel reply" onClick={() => setReplyingTo(null)} className="text-muted-foreground/70 hover:text-foreground/90">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -316,8 +316,8 @@ export default function SupervisorStudentChatDrawer({
                 {imagePreview ? (
                   <img src={imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded border shadow-sm" />
                 ) : (
-                  <div className="w-16 h-16 bg-gray-100 flex items-center justify-center rounded border shadow-sm">
-                    <Paperclip className="w-6 h-6 text-gray-400" />
+                  <div className="w-16 h-16 bg-muted flex items-center justify-center rounded border shadow-sm">
+                    <Paperclip className="w-6 h-6 text-muted-foreground/70" />
                   </div>
                 )}
                 <button
@@ -325,12 +325,12 @@ export default function SupervisorStudentChatDrawer({
                   aria-label="Remove attachment"
                   title="Remove attachment"
                   onClick={() => handleAttachment(undefined)}
-                  className="absolute -top-2 -right-2 bg-white text-gray-600 rounded-full p-0.5 shadow-md border hover:bg-gray-100"
+                  className="absolute -top-2 -right-2 bg-card text-muted-foreground rounded-full p-0.5 shadow-md border hover:bg-muted"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </div>
-              <div className="text-xs text-gray-600 truncate pt-1 max-w-[200px]">
+              <div className="text-xs text-muted-foreground truncate pt-1 max-w-[200px]">
                 {attachment.name}
               </div>
             </div>
@@ -367,7 +367,7 @@ export default function SupervisorStudentChatDrawer({
               <Send className="h-5 w-5" />
             </button>
           </form>
-          <div className="px-4 pb-2 text-xs text-gray-500">Max file size: 5MB. Allowed: images, PDF, DOC, DOCX.</div>
+          <div className="px-4 pb-2 text-xs text-muted-foreground">Max file size: 5MB. Allowed: images, PDF, DOC, DOCX.</div>
           {uploadError && <div className="text-red-500 text-xs px-4 pb-2">{uploadError}</div>}
         </div>
       )}

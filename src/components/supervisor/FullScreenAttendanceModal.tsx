@@ -211,7 +211,7 @@ export const FullScreenAttendanceModal = ({
       );
     }
     return (
-      <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">
+      <Badge className="bg-muted text-muted-foreground hover:bg-muted">
         <XCircle className="h-3 w-3 mr-1" />
         No Check-in
       </Badge>
