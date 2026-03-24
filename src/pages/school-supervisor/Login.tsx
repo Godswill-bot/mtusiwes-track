@@ -17,7 +17,7 @@ const SchoolSupervisorLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [portalActive, setPortalActive] = useState(true);
+  const [portalActive, setPortalActive] = useState<boolean | null>(null);
   const [loginAttempted, setLoginAttempted] = useState(false);
 
   const { signIn, user, userRole, loading: authLoading, isInitialized } = useAuth();
@@ -72,6 +72,14 @@ const SchoolSupervisorLogin = () => {
       setLoading(false);
     }
   };
+
+  if (portalActive === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   if (!portalActive) {
     return (

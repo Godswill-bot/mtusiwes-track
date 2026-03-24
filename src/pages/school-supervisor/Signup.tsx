@@ -20,7 +20,7 @@ const SchoolSupervisorSignup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [portalActive, setPortalActive] = useState(true);
+  const [portalActive, setPortalActive] = useState<boolean | null>(null);
 
   const { signUp, user, userRole } = useAuth();
   const navigate = useNavigate();
@@ -224,6 +224,14 @@ const SchoolSupervisorSignup = () => {
       setLoading(false);
     }
   };
+
+  if (portalActive === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   if (!portalActive) {
     return (
