@@ -145,7 +145,8 @@ export default function Index() {
       <div className="relative w-full bg-slate-50 py-24 pb-32">
         {/* Huge Background Logo */}
         <div className="absolute inset-0 z-0 opacity-40 pointer-events-none flex items-center justify-center overflow-hidden">
-            <img src={mtuLogo} alt="Background MTU Logo" className="w-[600px] md:w-[1000px] max-w-none h-auto object-contain blur-sm" />
+            <img src={mtuLogo} alt="Background MTU Logo" className="w-[400px] md:w-[700px] max-w-none h-auto object-contain" />
+        </div>
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
           {/* Learn More Card */}
           <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
