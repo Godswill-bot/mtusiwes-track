@@ -139,7 +139,7 @@ const SchoolSupervisorLogin = () => {
         </div>
         
         {/* Right Side - Form */}
-        <div className="relative flex w-full flex-col lg:w-1/2 overflow-y-auto bg-card">
+        <div className="relative flex w-full flex-col lg:w-1/2 overflow-y-auto no-scrollbar bg-card">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/")} 
