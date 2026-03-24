@@ -144,8 +144,8 @@ export default function Index() {
       {/* Main Content Section (with Background Logo) */}
       <div className="relative w-full bg-slate-50 py-24 pb-32">
         {/* Huge Background Logo */}
-        <div className="absolute inset-0 z-0 opacity-100 pointer-events-none flex items-center justify-center overflow-hidden">
-          <img src={mtuLogo} alt="Background MTU Logo" className="w-[1000px] md:w-[1600px] max-w-none h-auto object-contain" />
+        <div className="absolute inset-0 z-0 opacity-40 mix-blend-overlay pointer-events-none flex items-center justify-center overflow-hidden">
+          <img src={mtuLogo} alt="Background MTU Logo" className="w-[1000px] md:w-[1600px] max-w-none h-auto object-contain blur-sm" />
         </div>
 
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
