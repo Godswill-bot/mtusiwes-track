@@ -113,7 +113,11 @@ export default function Index() {
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-primary/60 z-0" />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 animate-fade-in-up">            <img src={mtuLogo} alt="MTU Logo" className="w-32 md:w-48 h-auto mx-auto drop-shadow-2xl mb-6" />          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg tracking-tight">
+          <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 animate-fade-in-up">
+            <div className="mx-auto inline-block bg-white/90 p-6 rounded-full shadow-2xl backdrop-blur-sm mb-4">
+              <img src={mtuLogo} alt="MTU Logo" className="w-24 md:w-36 h-auto drop-shadow-lg" />
+            </div>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg tracking-tight">
             Welcome to the MTU SIWES Platform
           </h1>
           <h2 className="text-lg md:text-2xl text-white/90 max-w-3xl mx-auto font-light drop-shadow">
@@ -141,10 +145,8 @@ export default function Index() {
 
         {/* Background Logo Wrapper for Content Sections */}
         <div className="relative w-full overflow-hidden bg-white">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 opacity-[0.04] pointer-events-none flex items-center justify-center pointer-events-none w-full h-[150%]">
-            <img src={mtuLogo} alt="Background MTU Logo" className="w-[1200px] max-w-none h-auto object-contain" />
-          </div>
-
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 opacity-10 pointer-events-none flex items-center justify-center w-full h-[150%]">
+              <img src={mtuLogo} alt="Background MTU Logo" className="w-[1200px] max-w-none h-auto object-contain grayscale-[20%]" />
         {/* Learn More Section (Image Right, Text Left) */}
         <div className="relative z-10 w-full bg-slate-50/80 border-b border-gray-200 backdrop-blur-sm">
         <section ref={learnMoreRef} className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center gap-12 lg:gap-20">
