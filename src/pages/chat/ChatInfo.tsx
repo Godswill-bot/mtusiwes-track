@@ -48,9 +48,9 @@ export default function ChatInfo() {
             <Button variant="ghost" size="icon" className="rounded-full text-slate-800 hover:bg-slate-100 shrink-0 hidden sm:flex">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="flex items-center gap-2 md:gap-3">
-              <img src={mtuLogo} alt="MTU Logo" className="h-8 md:h-10 transition-transform group-hover:scale-105 shrink-0" />
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-[#4B0082] whitespace-nowrap">
+            <div className="flex items-center gap-3">
+              <img src={mtuLogo} alt="MTU Logo" className="h-10 md:h-12 transition-transform group-hover:scale-105 shrink-0" />
+              <h1 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-[#4B0082] whitespace-nowrap leading-none mt-1">
                 MTU Chat System
               </h1>
             </div>
