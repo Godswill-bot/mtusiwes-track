@@ -190,7 +190,7 @@ export default function Index() {
                 <Button onClick={() => navigate("/student/login")} size="lg" className="bg-success/70 backdrop-blur-md text-white border-2 border-transparent hover:border-success/50 hover:bg-success rounded-full font-bold px-8 shadow-2xl transition-all">
                  <LogIn className="mr-2 h-5 w-5" /> Student Log in
               </Button>
-              <Button onClick={() => navigate("/school-supervisor/login")} size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/20 rounded-full font-bold px-8 backdrop-blur-sm transition-all">
+              <Button onClick={() => navigate("/school-supervisor/login")} size="lg" className="bg-black/50 backdrop-blur-md text-white border-2 border-transparent hover:border-white/20 hover:bg-black/70 rounded-full font-bold px-8 shadow-2xl transition-all">
                  <Users className="mr-2 h-5 w-5" /> Supervisor Log in
               </Button>
            </div>
