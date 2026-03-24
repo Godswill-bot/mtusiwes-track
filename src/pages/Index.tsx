@@ -150,7 +150,7 @@ export default function Index() {
 
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
           {/* Learn More Card */}
-          <div className="bg-white/90 backdrop-blur-xl border border-white shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+          <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
             <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
               <div className="flex-1 space-y-6">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
@@ -170,7 +170,7 @@ export default function Index() {
           </div>
 
           {/* Chat System Card */}
-          <div className="bg-white/90 backdrop-blur-xl border border-white shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+          <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
             <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
               <div className="flex-1 space-y-6">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
