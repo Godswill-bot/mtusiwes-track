@@ -68,8 +68,8 @@ export default function ChatInfo() {
             </div>
           </div>
 
-          <div className="flex-[1.4] w-full flex justify-center items-center relative animate-fade-in lg:translate-x-8 xl:translate-x-12">
-            <div className="relative w-full max-w-5xl scale-110 lg:scale-[1.35] 2xl:scale-[1.5] origin-center -z-10 mt-12 lg:mt-0">
+          <div className="flex-[1.4] w-full flex justify-center items-center relative animate-fade-in lg:translate-x-4">
+            <div className="relative w-full max-w-3xl scale-95 lg:scale-100 xl:scale-110 origin-center -z-10 mt-12 lg:mt-0">
                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 w-full h-[120%] -top-[10%] to-purple-500/10 rounded-[6rem] transform rotate-3 scale-110 -z-20 blur-2xl"></div>
                <img
                  src={chatImage}
