@@ -1,20 +1,23 @@
 ﻿import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowDown, Users, Shield, Zap } from "lucide-react";
+import { ArrowLeft, ArrowDown, Users, Shield, Zap, ArrowRight, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import chatImage from "@/assets/chatttttt.webp";
 import mtuLogo from "@/assets/mtu-logo.png";
 
 export default function ChatInfo() {
   const navigate = useNavigate();
-  const moreInfoRef = useRef<HTMLDivElement>(null);
+  const aboutRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const loginRef = useRef<HTMLDivElement>(null);
 
-  const scrollToMoreInfo = () => {
-    moreInfoRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToRef = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden flex flex-col font-sans">
+      {/* Background SVGs */}
       <div className="absolute top-0 left-0 w-full h-screen overflow-hidden pointer-events-none stroke-primary/20 fill-none z-0">
         <svg className="absolute top-[10%] left-[45%] w-32 h-16 opacity-40" viewBox="0 0 24 24">
           <path d="M6 16C3.79086 16 2 14.2091 2 12C2 9.79086 3.79086 8 6 8C6.34586 8 6.68114 8.04383 7 8.125C7.57503 6.32675 9.14187 5 11 5C13.4853 5 15.5 7.01472 15.5 9.5C15.5 9.58988 15.4975 9.67914 15.4925 9.7677C16.892 9.94071 18 11.1306 18 12.6C18 14.1464 16.7464 15.4 15.2 15.4H6Z" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
@@ -31,7 +34,7 @@ export default function ChatInfo() {
         <div className="absolute bottom-[18%] right-[32%] w-5 h-5 rounded-full border-2 border-rose-400 opacity-50"></div>
       </div>
 
-      <div className="min-h-screen flex flex-col relative z-10">
+      <div className="min-h-screen flex flex-col relative z-10" ref={aboutRef}>
         <header className="w-full px-6 py-6 flex justify-between items-center bg-transparent">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/")}>
             <Button variant="ghost" size="icon" className="rounded-full text-foreground hover:bg-muted">
@@ -39,17 +42,15 @@ export default function ChatInfo() {
             </Button>
             <img src={mtuLogo} alt="MTU Logo" className="h-10 transition-transform group-hover:scale-105" />
           </div>
-          
+
           <nav className="hidden lg:flex gap-10 text-sm font-medium text-foreground/80">
-            <span className="cursor-pointer hover:text-primary transition-colors" onClick={scrollToMoreInfo}>About</span>
-            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => navigate("/login")}>Where to Login</span>
-            <span className="cursor-pointer hover:text-primary transition-colors">Features</span>
-            <span className="cursor-pointer hover:text-primary transition-colors">Process</span>
-            <span className="cursor-pointer hover:text-primary transition-colors">Contacts</span>
+            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(aboutRef)}>About</span>
+            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(featuresRef)}>Features</span>
+            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(loginRef)}>Where to Login</span>
           </nav>
 
-          <Button onClick={() => navigate("/student/login")} className="rounded-full px-8 py-5 font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-transform hover:scale-105">
-            Portal
+          <Button onClick={() => scrollToRef(loginRef)} className="rounded-full px-8 py-5 font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-transform hover:scale-105">
+            Get Started
           </Button>
         </header>
 
@@ -70,32 +71,33 @@ export default function ChatInfo() {
 
           <div className="flex-[1.4] w-full flex justify-center items-center relative animate-fade-in lg:translate-x-4">
             <div className="relative w-full max-w-3xl scale-95 lg:scale-100 xl:scale-110 origin-center -z-10 mt-12 lg:mt-0">
-               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 w-full h-[120%] -top-[10%] to-purple-500/10 rounded-[6rem] transform rotate-3 scale-110 -z-20 blur-2xl"></div>
-               <img
-                 src={chatImage}
-                 alt="Chat Communication System"
-                 className="w-full h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-700 hover:-translate-y-2 hover:scale-[1.02]"
-               />
+                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 w-full h-[120%] -top-[10%] to-purple-500/10 rounded-[6rem] transform rotate-3 scale-110 -z-20 blur-2xl"></div>
+                 <img 
+                   src={chatImage} 
+                   alt="Chat Communication System" 
+                   className="w-full h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-700 hover:-translate-y-2 hover:scale-[1.02]"
+                   style={{ mixBlendMode: 'multiply' }}
+                 />
             </div>
           </div>
         </main>
 
         <div className="w-full pb-10 pt-4 flex flex-col items-center justify-end flex-grow text-foreground/60 z-10">
           <span className="text-sm font-semibold mb-3 tracking-wide">Read more</span>
-          <div onClick={scrollToMoreInfo} className="w-12 h-12 rounded-full border-2 border-foreground/30 flex items-center justify-center animate-bounce shadow-sm bg-background/50 backdrop-blur-sm cursor-pointer hover:border-primary hover:text-primary transition-all hover:scale-110">
+          <div onClick={() => scrollToRef(featuresRef)} className="w-12 h-12 rounded-full border-2 border-foreground/30 flex items-center justify-center animate-bounce shadow-sm bg-background/50 backdrop-blur-sm cursor-pointer hover:border-primary hover:text-primary transition-all hover:scale-110">
             <ArrowDown className="h-6 w-6" />
           </div>
         </div>
       </div>
 
-      {/* Modern Detailed Section */}
-      <div ref={moreInfoRef} className="min-h-[80vh] w-full bg-slate-50 relative z-10 flex flex-col items-center justify-center px-6 py-20">
+      {/* Features Section */}
+      <div ref={featuresRef} className="min-h-[80vh] w-full bg-slate-50 relative z-10 flex flex-col items-center justify-center px-6 py-20">
         <div className="max-w-6xl mx-auto w-full">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">Seamless Collaboration</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Experience real-time interaction designed specifically to enhance the industrial training evaluation process.</p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 group">
               <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -122,6 +124,25 @@ export default function ChatInfo() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Login & Signup Section */}
+      <div ref={loginRef} className="min-h-[60vh] w-full bg-white relative z-10 flex flex-col items-center justify-center px-6 py-20 border-t border-slate-100">
+         <div className="max-w-4xl mx-auto w-full text-center space-y-8">
+            <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+               <UserPlus className="w-10 h-10" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">Get Started with Your Account</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              To use the chat system, you need to sign up and own an account either as a student or a school supervisor. Create your profile to securely access your dedicated SIWES portals and communication channels.
+            </p>
+            <div className="pt-8">
+               <Button onClick={() => navigate("/signup")} size="lg" className="rounded-full px-8 py-7 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl transition-all hover:scale-105 hover:shadow-primary/25 group">
+                  Let's get started
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+               </Button>
+            </div>
+         </div>
       </div>
     </div>
   );
