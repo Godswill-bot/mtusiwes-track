@@ -77,7 +77,9 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
+        sans: ['"DM Sans"', 'sans-serif'],
         poppins: ['Poppins', 'sans-serif'],
+        dmsans: ['"DM Sans"', 'sans-serif'],
       },
       boxShadow: {
         card: 'var(--shadow-card)',
