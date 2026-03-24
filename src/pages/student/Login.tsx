@@ -117,7 +117,7 @@ const StudentLogin = () => {
         <AuthSlideshow />
 
         {/* Form Pane */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-y-auto">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-y-auto no-scrollbar">
           <div className="w-full max-w-md my-auto py-8">
           <div className="mb-8 relative">
             <Button
