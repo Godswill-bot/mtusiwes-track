@@ -43,11 +43,19 @@ export default function ChatInfo() {
       </div>
 
       <div className="min-h-screen flex flex-col relative z-10">
-        <header className="w-full px-6 py-6 flex justify-between items-center bg-transparent">
+        <header className="w-full px-6 py-6 flex justify-between items-center bg-transparent relative">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/")}>
             <Button variant="ghost" size="icon" className="rounded-full text-slate-800 hover:bg-slate-100">
               <ArrowLeft className="h-5 w-5" />
             </Button>
+          </div>
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-[#4B0082]">
+              MTU CHAT SYSTEM
+            </h1>
+          </div>
+          <div className="w-10 h-10"></div> {/* Spacer to balance header flexbox */}
+        </header>
             <img src={mtuLogo} alt="MTU Logo" className="h-10 transition-transform group-hover:scale-105" />
           </div>
 
