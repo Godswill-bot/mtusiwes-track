@@ -114,9 +114,7 @@ export default function Index() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-primary/60 z-0" />
 
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 animate-fade-in-up">
-            <div className="mx-auto inline-block bg-white/90 p-6 rounded-full shadow-2xl backdrop-blur-sm mb-4">
-              <img src={mtuLogo} alt="MTU Logo" className="w-24 md:w-36 h-auto drop-shadow-lg" />
-            </div>
+            <img src={mtuLogo} alt="MTU Logo" className="w-32 md:w-48 h-auto mx-auto drop-shadow-2xl mb-6" />
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg tracking-tight">
             Welcome to the MTU SIWES Platform
           </h1>
@@ -143,50 +141,54 @@ export default function Index() {
         </div>
       </header>
 
-        {/* Background Logo Wrapper for Content Sections */}
-        <div className="relative w-full overflow-hidden bg-white">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 opacity-10 pointer-events-none flex items-center justify-center w-full h-[150%]">
-              <img src={mtuLogo} alt="Background MTU Logo" className="w-[1200px] max-w-none h-auto object-contain grayscale-[20%]" />
-        {/* Learn More Section (Image Right, Text Left) */}
-        <div className="relative z-10 w-full bg-slate-50/80 border-b border-gray-200 backdrop-blur-sm">
-        <section ref={learnMoreRef} className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center gap-12 lg:gap-20">
-          <div className="flex-1 space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
-            <p className="text-lg text-gray-600 leading-relaxed font-light">
-              The MTU SIWES Platform is engineered precisely to aid students in managing and tracking their industrial training routines. The portal ensures strict academic compliance, allows direct supervisor assignments, handles weekly log submissions effortlessly, and fosters quick industry evaluations. 
-            </p>
-            <div className="pt-4">
-              <Button variant="outline" onClick={() => navigate("/siwes-info")} className="text-primary border-primary bg-white hover:bg-primary hover:text-white rounded-full px-6 transition-all">
-                <BookOpen className="mr-2 h-4 w-4" /> Full Documentation
-              </Button>
-            </div>
-          </div>
-          <div className="flex-1 w-full max-w-md">
-            <img src={itfBuilding} alt="ITF Building" className="w-full h-auto rounded-xl shadow-2xl hover:scale-[1.02] transition-transform duration-500 object-cover" />
-          </div>
-        </section>
-      </div>
+      {/* Main Content Section (with Background Logo) */}
+      <div className="relative w-full bg-slate-50 py-24 pb-32">
+        {/* Huge Background Logo */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 opacity-[0.03] pointer-events-none flex items-center justify-center w-full h-full overflow-hidden">
+          <img src={mtuLogo} alt="Background MTU Logo" className="w-[1000px] md:w-[1400px] max-w-none h-auto object-contain" />
+        </div>
 
-      {/* Chat System Section (Image Left, Text Right) */}
-        <div className="relative z-10 w-full bg-[#f8f9fa]/80 border-b border-gray-200 backdrop-blur-sm">
-        <section ref={chatSystemRef} className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
-          <div className="flex-1 space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
-            <p className="text-lg text-gray-600 leading-relaxed font-light">
-              Need to ask your supervisor a question about your work log? Want to clarify a constraint quickly? The integrated SIWES Chat System bypasses the hassle of emails seamlessly. It connects you strictly with your verified school supervisor for instant feedback, logbook discussion, and file sharing in a secured institutional environment.
-            </p>
-            <div className="pt-4">
-               <Button onClick={() => navigate("/chat/info")} className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-md transition-all group">
-                  Enter Chat System <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-               </Button>
-            </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 flex flex-col gap-16">
+          {/* Learn More Card */}
+          <div className="bg-white/90 backdrop-blur-xl border border-white shadow-2xl rounded-[2.5rem] overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+            <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+              <div className="flex-1 space-y-6">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
+                <p className="text-lg text-gray-600 leading-relaxed font-light">
+                  The MTU SIWES Platform is engineered precisely to aid students in managing and tracking their industrial training routines. The portal ensures strict academic compliance, allows direct supervisor assignments, handles weekly log submissions effortlessly, and fosters quick industry evaluations. 
+                </p>
+                <div className="pt-4">
+                  <Button variant="outline" onClick={() => navigate("/siwes-info")} className="text-primary border-primary bg-white hover:bg-primary hover:text-white rounded-full px-6 transition-all">
+                    <BookOpen className="mr-2 h-4 w-4" /> Full Documentation
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 w-full max-w-md">
+                <img src={itfBuilding} alt="ITF Building" className="w-full h-auto rounded-xl shadow-2xl hover:scale-[1.02] transition-transform duration-500 object-cover" />
+              </div>
+            </section>
           </div>
-          <div className="flex-1 w-full max-w-md relative p-8">
-             <div className="absolute inset-0 bg-primary/5 rounded-[3rem] -z-10 translate-x-4 translate-y-4"></div>
-             <img src={chatImage} style={{ mixBlendMode: 'multiply' }} alt="Chat Communication" className="w-full h-auto drop-shadow-xl hover:-translate-y-2 transition-transform duration-500" />
+
+          {/* Chat System Card */}
+          <div className="bg-white/90 backdrop-blur-xl border border-white shadow-2xl rounded-[2.5rem] overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+            <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
+              <div className="flex-1 space-y-6">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
+                <p className="text-lg text-gray-600 leading-relaxed font-light">
+                  Need to ask your supervisor a question about your work log? Want to clarify a constraint quickly? The integrated SIWES Chat System bypasses the hassle of emails seamlessly. It connects you strictly with your verified school supervisor for instant feedback, logbook discussion, and file sharing in a secured institutional environment.
+                </p>
+                <div className="pt-4">
+                   <Button onClick={() => navigate("/chat/info")} className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-md transition-all group">
+                      Enter Chat System <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                   </Button>
+                </div>
+              </div>
+              <div className="flex-1 w-full max-w-md relative p-4 md:p-8">
+                 <img src={chatImage} style={{ mixBlendMode: 'multiply' }} alt="Chat Communication" className="w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500" />
+              </div>
+            </section>
           </div>
-        </section>
-      </div>
+        </div>
       </div>
 
       {/* Bottom Footer Call to action */}
