@@ -56,7 +56,7 @@ export default function ChatInfo() {
             </div>
           </div>
 
-          <Button onClick={() => scrollToRef(loginRef)} className="rounded-full px-5 md:px-8 py-4 md:py-5 text-sm md:text-base font-semibold bg-primary hover:bg-primary/90 text-white shadow-md transition-transform hover:scale-105 shrink-0">
+          <Button onClick={() => navigate("/student/signup")} className="rounded-full px-5 md:px-8 py-4 md:py-5 text-sm md:text-base font-semibold bg-primary hover:bg-primary/90 text-white shadow-md transition-transform hover:scale-105 shrink-0">
             Get Started
           </Button>
         </header>
