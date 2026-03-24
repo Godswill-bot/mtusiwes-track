@@ -48,15 +48,13 @@ export default function ChatInfo() {
             <Button variant="ghost" size="icon" className="rounded-full text-slate-800 hover:bg-slate-100">
               <ArrowLeft className="h-5 w-5" />
             </Button>
+            <img src={mtuLogo} alt="MTU Logo" className="h-10 transition-transform group-hover:scale-105" />
           </div>
+
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-[#4B0082]">
               MTU CHAT SYSTEM
             </h1>
-          </div>
-          <div className="w-10 h-10"></div> {/* Spacer to balance header flexbox */}
-        </header>
-            <img src={mtuLogo} alt="MTU Logo" className="h-10 transition-transform group-hover:scale-105" />
           </div>
 
           <Button onClick={() => scrollToRef(loginRef)} className="rounded-full px-8 py-5 font-semibold bg-primary hover:bg-primary/90 text-white shadow-md transition-transform hover:scale-105">
