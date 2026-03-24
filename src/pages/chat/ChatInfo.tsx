@@ -33,7 +33,7 @@ export default function ChatInfo() {
         <svg className="absolute top-[15%] right-[15%] w-24 h-12 opacity-40" viewBox="0 0 24 24">
           <path d="M6 16C3.79086 16 2 14.2091 2 12C2 9.79086 3.79086 8 6 8C6.34586 8 6.68114 8.04383 7 8.125C7.57503 6.32675 9.14187 5 11 5C13.4853 5 15.5 7.01472 15.5 9.5C15.5 9.58988 15.4975 9.67914 15.4925 9.7677C16.892 9.94071 18 11.1306 18 12.6C18 14.1464 16.7464 15.4 15.2 15.4H6Z" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <svg className="absolute top-[18%] left-[30%] w-16 h-16 opacity-60 text-yellow-500 stroke-yellow-500" viewBox="0 0 24 24">
+        <svg className="hidden md:block absolute top-[18%] left-[30%] w-16 h-16 opacity-60 text-yellow-500 stroke-yellow-500" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="4" strokeWidth="1"/>
           <path d="M12 4V2M12 22V20M4 12H2M22 12H20M6.34315 6.34315L4.92893 4.92893M17.6569 17.6569L19.0711 19.0711M6.34315 17.6569L4.92893 19.0711M17.6569 6.34315L19.0711 4.92893" strokeWidth="1" strokeLinecap="round"/>
         </svg>
@@ -61,12 +61,12 @@ export default function ChatInfo() {
           </Button>
         </header>
 
-        <main className="flex-1 max-w-[1500px] mx-auto w-full flex flex-col lg:flex-row items-center px-6 lg:px-12 py-4 gap-4 xl:gap-12">
-          <div className="flex-1 flex flex-col space-y-8 max-w-xl animate-fade-in-up mt-8 lg:mt-0">
-            <h1 className="text-[80px] lg:text-[160px] font-black text-slate-900 tracking-tighter leading-none whitespace-nowrap" style={{ fontFamily: 'Georgia, serif' }}>
+        <main className="flex-1 max-w-[1500px] mx-auto w-full flex flex-col lg:flex-row items-center px-4 md:px-6 lg:px-12 py-4 gap-4 xl:gap-12 relative z-10">
+          <div className="flex-1 flex flex-col space-y-6 md:space-y-8 max-w-xl animate-fade-in-up mt-8 lg:mt-0 relative z-20">
+            <h1 className="text-[60px] sm:text-[80px] lg:text-[160px] font-black text-slate-900 tracking-tighter leading-none whitespace-nowrap" style={{ fontFamily: 'Georgia, serif' }}>
               Chat
             </h1>
-            <p className="text-xl text-slate-600 leading-relaxed max-w-md font-medium">
+            <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-md font-medium">
               Secure and direct SIWES communication system between MTU students and their assigned school supervisors. Share logbooks, request reviews, and collaborate in real-time.
             </p>
             <div className="pt-4">
