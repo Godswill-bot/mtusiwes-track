@@ -41,6 +41,7 @@ export function ThemeRouteObserver() {
       location.pathname === "/" ||
       location.pathname.includes("/login") ||
       location.pathname.includes("/signup") ||
+      location.pathname.includes("/siwes-info") ||
       location.pathname.includes("/chat/info");
 
     if (isLightModeOnlyPage) {
