@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeRouteObserver } from "@/components/ThemeRouteObserver";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -94,6 +95,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+              <ThemeRouteObserver />
             <Routes>
               <Route path="/" element={<Index />} />
               {/* New authentication routes */}
