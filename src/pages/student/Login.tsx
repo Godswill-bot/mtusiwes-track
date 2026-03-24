@@ -160,11 +160,8 @@ const StudentLogin = () => {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label htmlFor="password">Password</Label>
-                   <Button variant="link" className="p-0 h-auto text-sm text-primary" onClick={(e) => { e.preventDefault(); navigate("/forgot-password"); }}>
-                    Forgot Password?
-                   </Button>
-                </div>
+                    <Label htmlFor="password">Password</Label>
+                  </div>
                 <Input
                   id="password"
                   type="password"
@@ -179,14 +176,19 @@ const StudentLogin = () => {
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-            <div className="mt-8 text-center pb-8 border-t pt-6">
-              <p className="text-muted-foreground">
-                Don't have an account?{" "}
-                <Button variant="link" className="p-0 h-auto font-semibold text-primary hover:text-primary/80" onClick={() => navigate("/student/signup")}>
-                  Sign up here
-                </Button>
-              </p>
-            </div>
+            <div className="mt-8 text-center pb-8 border-t pt-6 flex flex-col items-center gap-2">
+                <p className="text-muted-foreground">
+                  Don't have an account?{" "}
+                  <Button variant="link" className="p-0 h-auto font-semibold text-primary hover:text-primary/80" onClick={() => navigate("/student/signup")}>
+                    Sign up here
+                  </Button>
+                </p>
+                <div className="mt-2">
+                  <Button variant="link" className="p-0 h-auto text-sm text-foreground hover:text-primary transition-colors" onClick={(e) => { e.preventDefault(); navigate("/forgot-password"); }}>
+                    Forgot Password?
+                  </Button>
+                </div>
+              </div>
           </div>
         </div>
       </div>
