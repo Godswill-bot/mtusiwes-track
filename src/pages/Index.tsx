@@ -213,13 +213,7 @@ const Index = () => {
                 >
                   Supervisor Login
                 </Button>
-                <Button
-                  onClick={() => navigate("/admin/login")}
-                  variant="outline"
-                  className="w-full sm:w-auto bg-white/20 text-white border-white/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary"
-                >
-                  Admin Login
-                </Button>
+                {/* Admin portal secured via URL parameter */}
                 <Button
                   onClick={() => navigate("/chat/info")}
                   variant="outline"

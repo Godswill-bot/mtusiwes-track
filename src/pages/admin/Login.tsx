@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,24 @@ const AdminLogin = () => {
 
   const { signIn, user, userRole, loading: authLoading, isInitialized } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const isAuthorizedUrl = searchParams.get("access") === "mtu_admin_secure";
+
+  if (!isAuthorizedUrl) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4">
+        <Shield className="h-24 w-24 text-red-500 mb-6" />
+        <h1 className="text-4xl font-bold mb-4 tracking-tight">Access Denied</h1>
+        <p className="text-lg text-muted-foreground mb-8 text-center max-w-md">
+          This portal is restricted to authorized administrative personnel. 
+        </p>
+        <Button variant="outline" size="lg" onClick={() => navigate("/")}>
+          Return to Portal
+        </Button>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (loginAttempted && user && userRole === "admin" && isInitialized && !authLoading) {
