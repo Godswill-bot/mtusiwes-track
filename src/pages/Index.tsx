@@ -101,7 +101,12 @@ export default function Index() {
               key={index}
               src={image}
               alt={"Slideshow"}
-              className={"object-cover w-full h-full absolute inset-0 transform transition-all duration-[6000ms] ease-in-out origin-center " + (index === currentSlide ? "opacity-100 scale-110" : "opacity-0 scale-100")}
+              className="object-cover w-full h-full absolute inset-0 origin-center"
+              style={{
+                transition: "opacity 1s ease-in-out, transform 7s linear",
+                opacity: index === currentSlide ? 1 : 0,
+                transform: index === currentSlide ? "scale(1.15)" : "scale(1)"
+              }}
             />
           ))}
         </div>
@@ -182,7 +187,7 @@ export default function Index() {
         <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-20 flex flex-col md:flex-row items-center justify-between text-white gap-8 text-center md:text-left">
            <h3 className="text-3xl md:text-4xl font-bold leading-tight">Connect and Start<br/>Logging</h3>
            <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => navigate("/student/login")} size="lg" className="bg-white text-slate-900 border-2 border-transparent hover:border-slate-300 hover:bg-slate-50 hover:text-primary rounded-full font-bold px-8 shadow-2xl transition-all">
+                <Button onClick={() => navigate("/student/login")} size="lg" className="bg-success/70 backdrop-blur-md text-white border-2 border-transparent hover:border-success/50 hover:bg-success rounded-full font-bold px-8 shadow-2xl transition-all">
                  <LogIn className="mr-2 h-5 w-5" /> Student Log in
               </Button>
               <Button onClick={() => navigate("/school-supervisor/login")} size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/20 rounded-full font-bold px-8 backdrop-blur-sm transition-all">
