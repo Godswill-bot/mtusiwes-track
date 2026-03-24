@@ -1,4 +1,4 @@
-﻿import React, { useRef } from "react";
+﻿import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowDown, Users, Shield, Zap, ArrowRight, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,10 @@ export default function ChatInfo() {
   const navigate = useNavigate();
   const featuresRef = useRef<HTMLDivElement>(null);
   const loginRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const scrollToRef = (ref: React.RefObject<HTMLDivElement>) => {
     if (ref.current) {
@@ -46,11 +50,6 @@ export default function ChatInfo() {
             </Button>
             <img src={mtuLogo} alt="MTU Logo" className="h-10 transition-transform group-hover:scale-105" />
           </div>
-
-          <nav className="hidden lg:flex gap-10 text-sm font-semibold text-slate-700">
-            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(featuresRef)}>Features</span>
-            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(loginRef)}>Where to Login</span>
-          </nav>
 
           <Button onClick={() => scrollToRef(loginRef)} className="rounded-full px-8 py-5 font-semibold bg-primary hover:bg-primary/90 text-white shadow-md transition-transform hover:scale-105">
             Get Started
