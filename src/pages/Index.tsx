@@ -113,8 +113,7 @@ export default function Index() {
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-primary/60 z-0" />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 animate-fade-in-up">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg tracking-tight">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 animate-fade-in-up">            <img src={mtuLogo} alt="MTU Logo" className="w-32 md:w-48 h-auto mx-auto drop-shadow-2xl mb-6" />          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg tracking-tight">
             Welcome to the MTU SIWES Platform
           </h1>
           <h2 className="text-lg md:text-2xl text-white/90 max-w-3xl mx-auto font-light drop-shadow">
@@ -140,8 +139,14 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Learn More Section (Image Right, Text Left) */}
-      <div className="w-full bg-slate-50 border-b border-gray-200">
+        {/* Background Logo Wrapper for Content Sections */}
+        <div className="relative w-full overflow-hidden bg-white">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 opacity-[0.04] pointer-events-none flex items-center justify-center pointer-events-none w-full h-[150%]">
+            <img src={mtuLogo} alt="Background MTU Logo" className="w-[1200px] max-w-none h-auto object-contain" />
+          </div>
+
+        {/* Learn More Section (Image Right, Text Left) */}
+        <div className="relative z-10 w-full bg-slate-50/80 border-b border-gray-200 backdrop-blur-sm">
         <section ref={learnMoreRef} className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center gap-12 lg:gap-20">
           <div className="flex-1 space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
@@ -161,7 +166,7 @@ export default function Index() {
       </div>
 
       {/* Chat System Section (Image Left, Text Right) */}
-      <div className="w-full bg-[#f8f9fa] border-b border-gray-200">
+        <div className="relative z-10 w-full bg-[#f8f9fa]/80 border-b border-gray-200 backdrop-blur-sm">
         <section ref={chatSystemRef} className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
           <div className="flex-1 space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
@@ -179,6 +184,7 @@ export default function Index() {
              <img src={chatImage} style={{ mixBlendMode: 'multiply' }} alt="Chat Communication" className="w-full h-auto drop-shadow-xl hover:-translate-y-2 transition-transform duration-500" />
           </div>
         </section>
+      </div>
       </div>
 
       {/* Bottom Footer Call to action */}
