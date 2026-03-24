@@ -2,21 +2,25 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowDown, Users, Shield, Zap, ArrowRight, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import chatImage from "@/assets/chatttttt.webp";
+import chatImage from "@/assets/chat pic.png";
 import mtuLogo from "@/assets/mtu-logo.png";
 
 export default function ChatInfo() {
   const navigate = useNavigate();
-  const aboutRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const loginRef = useRef<HTMLDivElement>(null);
 
   const scrollToRef = (ref: React.RefObject<HTMLDivElement>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" });
+    if (ref.current) {
+        window.scrollTo({
+            top: ref.current.offsetTop,
+            behavior: "smooth"
+        });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-hidden flex flex-col font-sans">
+    <div className="min-h-screen bg-white relative overflow-x-hidden flex flex-col font-sans text-slate-900">
       {/* Background SVGs */}
       <div className="absolute top-0 left-0 w-full h-screen overflow-hidden pointer-events-none stroke-primary/20 fill-none z-0">
         <svg className="absolute top-[10%] left-[45%] w-32 h-16 opacity-40" viewBox="0 0 24 24">
@@ -34,36 +38,35 @@ export default function ChatInfo() {
         <div className="absolute bottom-[18%] right-[32%] w-5 h-5 rounded-full border-2 border-rose-400 opacity-50"></div>
       </div>
 
-      <div className="min-h-screen flex flex-col relative z-10" ref={aboutRef}>
+      <div className="min-h-screen flex flex-col relative z-10">
         <header className="w-full px-6 py-6 flex justify-between items-center bg-transparent">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/")}>
-            <Button variant="ghost" size="icon" className="rounded-full text-foreground hover:bg-muted">
+            <Button variant="ghost" size="icon" className="rounded-full text-slate-800 hover:bg-slate-100">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <img src={mtuLogo} alt="MTU Logo" className="h-10 transition-transform group-hover:scale-105" />
           </div>
 
-          <nav className="hidden lg:flex gap-10 text-sm font-medium text-foreground/80">
-            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(aboutRef)}>About</span>
+          <nav className="hidden lg:flex gap-10 text-sm font-semibold text-slate-700">
             <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(featuresRef)}>Features</span>
             <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(loginRef)}>Where to Login</span>
           </nav>
 
-          <Button onClick={() => scrollToRef(loginRef)} className="rounded-full px-8 py-5 font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-transform hover:scale-105">
+          <Button onClick={() => scrollToRef(loginRef)} className="rounded-full px-8 py-5 font-semibold bg-primary hover:bg-primary/90 text-white shadow-md transition-transform hover:scale-105">
             Get Started
           </Button>
         </header>
 
         <main className="flex-1 max-w-[1500px] mx-auto w-full flex flex-col lg:flex-row items-center px-6 lg:px-12 py-4 gap-4 xl:gap-12">
           <div className="flex-1 flex flex-col space-y-8 max-w-xl animate-fade-in-up mt-8 lg:mt-0">
-            <h1 className="text-[80px] lg:text-[160px] font-black text-foreground tracking-tighter leading-none whitespace-nowrap" style={{ fontFamily: 'Georgia, serif' }}>
+            <h1 className="text-[80px] lg:text-[160px] font-black text-slate-900 tracking-tighter leading-none whitespace-nowrap" style={{ fontFamily: 'Georgia, serif' }}>
               Chat
             </h1>
-            <p className="text-xl text-foreground/80 leading-relaxed max-w-md font-medium">
+            <p className="text-xl text-slate-600 leading-relaxed max-w-md font-medium">
               Secure and direct SIWES communication system between MTU students and their assigned school supervisors. Share logbooks, request reviews, and collaborate in real-time.
             </p>
             <div className="pt-4">
-               <span className="inline-block font-bold text-foreground/90 text-sm uppercase tracking-[0.2em] border-b-[3px] border-primary pb-2">
+               <span className="inline-block font-bold text-slate-800 text-sm uppercase tracking-[0.2em] border-b-[3px] border-primary pb-2">
                  MTU SIWES Series
                </span>
             </div>
@@ -82,10 +85,10 @@ export default function ChatInfo() {
           </div>
         </main>
 
-        <div className="w-full pb-10 pt-4 flex flex-col items-center justify-end flex-grow text-foreground/60 z-10">
+        <div className="w-full pb-10 pt-4 flex flex-col items-center justify-end flex-grow text-slate-500 z-10">
           <span className="text-sm font-semibold mb-3 tracking-wide">Read more</span>
-          <div onClick={() => scrollToRef(featuresRef)} className="w-12 h-12 rounded-full border-2 border-foreground/30 flex items-center justify-center animate-bounce shadow-sm bg-background/50 backdrop-blur-sm cursor-pointer hover:border-primary hover:text-primary transition-all hover:scale-110">
-            <ArrowDown className="h-6 w-6" />
+          <div onClick={() => scrollToRef(featuresRef)} className="w-12 h-12 rounded-full border-2 border-slate-300 flex items-center justify-center animate-bounce shadow-sm bg-white/50 backdrop-blur-sm cursor-pointer hover:border-primary hover:text-primary transition-all hover:scale-110">
+            <ArrowDown className="h-6 w-6 text-slate-700" />
           </div>
         </div>
       </div>
@@ -94,8 +97,8 @@ export default function ChatInfo() {
       <div ref={featuresRef} className="min-h-[80vh] w-full bg-slate-50 relative z-10 flex flex-col items-center justify-center px-6 py-20">
         <div className="max-w-6xl mx-auto w-full">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">Seamless Collaboration</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Experience real-time interaction designed specifically to enhance the industrial training evaluation process.</p>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">Seamless Collaboration</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Experience real-time interaction designed specifically to enhance the industrial training evaluation process.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -103,24 +106,24 @@ export default function ChatInfo() {
               <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Zap className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Instant Feedback</h3>
-              <p className="text-muted-foreground leading-relaxed">Supervisors can add remarks to daily records directly. Get notified the moment your logbook is reviewed without waiting.</p>
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Instant Feedback</h3>
+              <p className="text-slate-600 leading-relaxed">Supervisors can add remarks to daily records directly. Get notified the moment your logbook is reviewed without waiting.</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 group mt-4 md:mt-0">
               <div className="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Shield className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Secure & Verified</h3>
-              <p className="text-muted-foreground leading-relaxed">All chat sessions are tied to verified matriculation numbers and staff IDs. Your data remains strictly within MTU's controlled environment.</p>
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Secure & Verified</h3>
+              <p className="text-slate-600 leading-relaxed">All chat sessions are tied to verified matriculation numbers and staff IDs. Your data remains strictly within MTU's controlled environment.</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300 group mt-4 md:mt-0">
               <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Users className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Media Support</h3>
-              <p className="text-muted-foreground leading-relaxed">Need to show a diagram of your work? Snap, upload, and send images seamlessly to clarify constraints faced at your firm.</p>
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Media Support</h3>
+              <p className="text-slate-600 leading-relaxed">Need to show a diagram of your work? Snap, upload, and send images seamlessly to clarify constraints faced at your firm.</p>
             </div>
           </div>
         </div>
@@ -132,12 +135,12 @@ export default function ChatInfo() {
             <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
                <UserPlus className="w-10 h-10" />
             </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">Get Started with Your Account</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">Get Started with Your Account</h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
               To use the chat system, you need to sign up and own an account either as a student or a school supervisor. Create your profile to securely access your dedicated SIWES portals and communication channels.
             </p>
             <div className="pt-8">
-               <Button onClick={() => navigate("/signup")} size="lg" className="rounded-full px-8 py-7 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl transition-all hover:scale-105 hover:shadow-primary/25 group">
+               <Button onClick={() => navigate("/signup")} size="lg" className="rounded-full px-8 py-7 text-lg font-semibold bg-primary hover:bg-primary/90 text-white shadow-xl transition-all hover:scale-105 hover:shadow-primary/25 group">
                   Let's get started
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                </Button>
