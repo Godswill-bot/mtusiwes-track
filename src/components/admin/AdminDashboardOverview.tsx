@@ -121,9 +121,9 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card/50 p-4 rounded-2xl backdrop-blur-sm border border-purple-100/50">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card/50 p-4 rounded-2xl backdrop-blur-sm border border-purple-100/50 dark:border-purple-900/50">
         <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent">System Overview</h2>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">System Overview</h2>
           <p className="text-muted-foreground text-sm">Real-time statistics and analytics for the SIWES platform.</p>
         </div>
         <PortalToggle />
@@ -131,17 +131,17 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
 
       {/* Top KPI Cards - Highly Detailed */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-sm bg-gradient-to-br from-purple-50 via-white to-purple-50/50 hover:shadow-md transition-all overflow-hidden relative">
+        <Card className="border-none shadow-sm bg-gradient-to-br from-purple-50 via-white to-purple-50/50 dark:from-purple-950/20 dark:via-background dark:to-purple-900/10 hover:shadow-md transition-all overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Users className="w-16 h-16" />
           </div>
           <CardHeader className="pb-2">
-            <CardDescription className="font-medium text-purple-600">Total Students</CardDescription>
+            <CardDescription className="font-medium text-purple-600 dark:text-purple-400">Total Students</CardDescription>
             <CardTitle className="text-4xl text-foreground">{students.length}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2 text-sm mt-2">
-              <span className={`flex items-center ${usersActiveToday > 0 ? 'text-emerald-600 bg-emerald-50' : 'text-muted-foreground bg-muted'} px-2 py-0.5 rounded-full font-medium`}>
+              <span className={`flex items-center ${usersActiveToday > 0 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10' : 'text-muted-foreground bg-muted'} px-2 py-0.5 rounded-full font-medium`}>
                 <Activity className="w-3 h-3 mr-1" /> {usersActiveToday > 0 ? usersActiveToday : 0}
               </span>
               <span className="text-muted-foreground">Actively Online in System</span>
@@ -149,17 +149,17 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50 via-white to-blue-50/50 hover:shadow-md transition-all overflow-hidden relative">
+        <Card className="border-none shadow-sm bg-gradient-to-br from-blue-50 via-white to-blue-50/50 dark:from-blue-950/20 dark:via-background dark:to-blue-900/10 hover:shadow-md transition-all overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <UserCog className="w-16 h-16" />
           </div>
           <CardHeader className="pb-2">
-            <CardDescription className="font-medium text-blue-600">Total Supervisors</CardDescription>
+            <CardDescription className="font-medium text-blue-600 dark:text-blue-400">Total Supervisors</CardDescription>
             <CardTitle className="text-4xl text-foreground">{supervisors.length}</CardTitle>
           </CardHeader>
           <CardContent>
              <div className="flex items-center gap-2 text-sm mt-2">
-              <span className="flex items-center text-blue-600 bg-primary/10 px-2 py-0.5 rounded-full font-medium">
+              <span className="flex items-center text-blue-600 dark:text-blue-400 bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded-full font-medium">
                 {schoolSupervisors} School
               </span>
               <span className="text-muted-foreground">Supervisors onboarded</span>
@@ -167,12 +167,12 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 hover:shadow-md transition-all overflow-hidden relative">
+        <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 dark:from-emerald-950/20 dark:via-background dark:to-emerald-900/10 hover:shadow-md transition-all overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <CheckCircle className="w-16 h-16" />
           </div>
           <CardHeader className="pb-2">
-            <CardDescription className="font-medium text-emerald-600">Assigned</CardDescription>
+            <CardDescription className="font-medium text-emerald-600 dark:text-emerald-400">Assigned</CardDescription>
             <CardTitle className="text-4xl text-foreground">{assignedStudents}</CardTitle>
           </CardHeader>
           <CardContent>
@@ -185,12 +185,12 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-gradient-to-br from-rose-50 via-white to-rose-50/50 hover:shadow-md transition-all overflow-hidden relative">
+        <Card className="border-none shadow-sm bg-gradient-to-br from-rose-50 via-white to-rose-50/50 dark:from-rose-950/20 dark:via-background dark:to-rose-900/10 hover:shadow-md transition-all overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <AlertCircle className="w-16 h-16" />
           </div>
           <CardHeader className="pb-2">
-            <CardDescription className="font-medium text-rose-600">Pending Assignment</CardDescription>
+            <CardDescription className="font-medium text-rose-600 dark:text-rose-400">Pending Assignment</CardDescription>
             <CardTitle className="text-4xl text-foreground">{unassignedStudents}</CardTitle>
           </CardHeader>
           <CardContent>
@@ -286,7 +286,7 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
         </Card>
 
         {/* Weekly Engagement Bar Chart */}
-        <Card className="lg:col-span-7 border-none shadow-sm bg-gradient-to-br from-indigo-900 to-purple-900 border-transparent text-white relative overflow-hidden">
+        <Card className="lg:col-span-7 border-none shadow-sm bg-gradient-to-br from-indigo-900 to-purple-900 dark:from-indigo-950 dark:to-purple-950 dark:border-purple-900/30 border-transparent text-white relative overflow-hidden">
           <div className="absolute -right-20 -top-20 opacity-10 blur-2xl rounded-full w-64 h-64 bg-card" />
           <CardHeader>
             <CardTitle className="text-lg text-white">Weekly Platform Engagement</CardTitle>
