@@ -9,50 +9,57 @@ export function ThemeRouteObserver() {
   const { user } = useAuth();
   const previousUserId = useRef<string | undefined>();
 
-  // 1. Load User's Individual Theme preference on Login
   useEffect(() => {
+    // When the user changes (logs in, logs out, or switches accounts)
     if (user?.id !== previousUserId.current) {
       if (user?.id) {
-        // Find their specific saved theme, default to light
-        const userTheme = localStorage.getItem('theme-preference-' + user.id) || 'light';
-        if (userTheme !== theme) {
-          setTheme(userTheme as 'light' | 'dark' | 'system');
+        // Logged in: grab this specific user's preferred theme, default to system
+        const userTheme = localStorage.getItem(\	heme-preference-\\) as any;
+        if (userTheme && userTheme !== theme) {
+          setTheme(userTheme);
+        } else if (!userTheme) {
+          // If no preference yet, set a sensible default for new users (light)
+          setTheme("light");
         }
       } else {
-        // User logged out, revert to light
-        setTheme('light');
+        // Logged out
+        setTheme("light");
       }
       previousUserId.current = user?.id;
     }
   }, [user?.id, setTheme, theme]);
 
-  // 2. Save User's Individual Theme Preference when they change it
   useEffect(() => {
+    // Whenever the global theme changes, save it to the current user's profile if logged in
     if (user?.id) {
-      localStorage.setItem('theme-preference-' + user.id, theme);
+      localStorage.setItem(\	heme-preference-\\, theme);
     }
   }, [theme, user?.id]);
 
-  // 3. Force UI changes based on route
   useEffect(() => {
     const root = window.document.documentElement;
 
+    // Pages that must ALWAYS be in light mode
     const isLightModeOnlyPage =
       location.pathname === "/" ||
       location.pathname.includes("/login") ||
-      location.pathname.includes("/signup") ||
-      location.pathname.includes("/chat/info");
+      location.pathname.includes("/signup");
 
     if (isLightModeOnlyPage) {
       root.classList.remove("dark");
       root.classList.add("light");
+      // Optional: setting data-theme for extra safety
       root.setAttribute('data-theme', 'light');
     } else {
+      // Re-apply the user's selected theme
       root.classList.remove("light", "dark");
+
       if (theme === "system") {
-        const sys = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        root.classList.add(sys);
-        root.setAttribute('data-theme', sys);
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+        root.classList.add(systemTheme);
+        root.setAttribute('data-theme', systemTheme);
       } else {
         root.classList.add(theme);
         root.setAttribute('data-theme', theme);
