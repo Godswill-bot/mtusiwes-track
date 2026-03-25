@@ -144,7 +144,7 @@ export default function ChatInfo() {
               To use the chat system, you need to sign up and own an account either as a student or a school supervisor. Create your profile to securely access your dedicated SIWES portals and communication channels.
             </p>
             <div className="pt-8">
-               <Button onClick={() => navigate("/signup")} size="lg" className="rounded-full px-8 py-7 text-lg font-semibold bg-primary hover:bg-primary/90 text-white shadow-xl transition-all hover:scale-105 hover:shadow-primary/25 group">
+               <Button onClick={() => navigate("/student/signup")} size="lg" className="rounded-full px-8 py-7 text-lg font-semibold bg-primary hover:bg-primary/90 text-white shadow-xl transition-all hover:scale-105 hover:shadow-primary/25 group">
                   Let's get started
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                </Button>
