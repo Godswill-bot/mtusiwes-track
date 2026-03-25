@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Bell, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 type AnnouncementRow = {
   id: string;
@@ -17,6 +19,7 @@ type AnnouncementRow = {
 
 const StudentAnnouncements = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ["student", "announcements"],
@@ -31,6 +34,12 @@ const StudentAnnouncements = () => {
       return data || [];
     },
   });
+
+  useEffect(() => {
+    if (user?.id) {
+      localStorage.setItem(`lastReadAnnouncementTime_${user.id}`, new Date().toISOString());
+    }
+  }, [user?.id, announcements]);
 
   return (
     <div className="min-h-screen bg-gradient-light">

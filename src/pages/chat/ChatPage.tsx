@@ -6,10 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { ChatFileUpload } from "@/components/chat/ChatFileUpload";
-import { Reply, X } from "lucide-react";
+import { Reply, X, Copy, RefreshCw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { listMessages, formatDateGroup } from "@/lib/chatHelpers";
 import React from 'react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Message {
   id: string;
@@ -28,12 +35,15 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
   const { user, userRole } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [studentAvatar, setStudentAvatar] = useState<string | null>(null);
+  const [studentName, setStudentName] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Reply states
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -42,26 +52,53 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
     const fetchMsgs = async () => {
       const msgs = await listMessages(conversationId);
       setMessages(msgs || []);
+      
+      try {
+        const { data: convData } = await supabase
+          .from('conversations' as any)
+          .select('student_id')
+          .eq('id', conversationId)
+          .single() as any;
+          
+        if (convData?.student_id) {
+          const { data: studentData } = await supabase
+            .from('students')
+            .select('profile_image_url, full_name')
+            .eq('id', convData.student_id)
+            .single() as any;
+            
+          if (studentData) {
+            setStudentAvatar(studentData.profile_image_url);
+            setStudentName(studentData.full_name || "");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch student details", err);
+      }
     };
     fetchMsgs();
 
-    const channel = supabase
-      .channel(`chat-${conversationId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
-        async (payload) => {
-          // Re-fetch to get the joins (parent messages), easier than manually querying the parent
-          const updatedMsgs = await listMessages(conversationId);
-          setMessages(updatedMsgs || []);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Removed automatic reload / Realtime channel per user request
+    // Only manual reloading is allowed now
   }, [conversationId]);
+
+  const handleManualReload = async () => {
+    if (!conversationId) return;
+    setIsRefreshing(true);
+    const msgs = await listMessages(conversationId);
+    setMessages(msgs || []);
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  const handleReply = (msg: Message) => {
+    setReplyingTo(msg);
+    setTimeout(() => {
+      const input = document.getElementById('message-input');
+      if (input) {
+        input.focus();
+      }
+    }, 150);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -109,10 +146,18 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
 
   return (
     <Card className="max-w-3xl mx-auto mt-8 shadow-card flex flex-col h-[80vh]" onClick={() => setActiveMessageId(null)}>
-      <CardHeader className="border-b bg-muted/50 pb-4">
-        <CardTitle className="text-xl text-primary">Chat Console</CardTitle>
-      </CardHeader>
-      
+        <CardHeader className="border-b bg-muted/50 pb-4 flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-xl text-primary">Chat Console</CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleManualReload}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-background relative  ">
           {messages.length === 0 ? (
@@ -136,64 +181,103 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
                         </span>
                       </div>
                     )}
-                    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                    <div 
-                      className="group relative max-w-[85%] md:max-w-[70%]"
-                    >
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`relative transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-                      >
-                        {/* Option Actions Sidebar - Always visible on mobile, hover on desktop */}
-                        <div 
-                          className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'} 
-                          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setReplyingTo(msg);
-                          }}
-                          title="Reply"
-                        >
-                          <Reply className="h-4 w-4 text-primary hover:text-primary" />
-                        </div>
+                      <div className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} gap-2`}>
+                        {!isMe && (
+                          <Avatar className="h-8 w-8 mt-auto shrink-0 shadow-sm border border-primary/20">
+                            {studentAvatar && <AvatarImage src={studentAvatar} alt="Student profile" />}
+                            <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
+                              {studentName?.charAt(0)?.toUpperCase() || 'S'}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                      <div className="group relative max-w-[85%] md:max-w-[70%]">
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            <motion.div 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className={`relative transition flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                            >
+                              {/* Option Actions Sidebar - Always visible on mobile, hover on desktop */}
+                              <div 
+                                className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'} 
+                                opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReply(msg);
+                                }}
+                                title="Reply"
+                              >
+                                <Reply className="h-4 w-4 text-primary hover:text-primary" />
+                              </div>
 
-                        {/* Message Bubble */}
-                        <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm border-primary' : 'bg-card text-foreground rounded-bl-sm border-border'}`}>
-                          
-                          {/* Replied to section */}
-                          {msg.parent && (
-                            <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-primary-foreground/20 border-primary-foreground/30' : 'bg-muted border-border'} flex flex-col opacity-90`}>
-                              <span className="font-semibold mb-1 opacity-80">
-                                Replying to {msg.parent.sender_role === msg.sender_role ? 'themselves' : (msg.parent.sender_role === 'student' ? 'Student' : 'Supervisor')}
-                              </span>
-                              <span className="truncate">{msg.parent.content || 'Attachment'}</span>
-                            </div>
-                          )}
+                              {/* Message Bubble */}
+                              <div className={`p-3.5 rounded-2xl shadow-sm border ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm border-primary' : 'bg-card text-foreground rounded-bl-sm border-border'}`}>
+                                
+                                {/* Replied to section */}
+                                {msg.parent && (
+                                  <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-primary-foreground/20 border-primary-foreground/30' : 'bg-muted border-border'} flex flex-col opacity-90`}>
+                                    <span className="font-semibold mb-1 opacity-80">
+                                      Replying to {msg.parent.sender_role === msg.sender_role ? 'themselves' : (msg.parent.sender_role === 'student' ? 'Student' : 'Supervisor')}
+                                    </span>
+                                    <span className="truncate">{msg.parent.content || 'Attachment'}</span>
+                                  </div>
+                                )}
 
-                          {/* Content */}
-                          {msg.content && <div className="text-[15px] leading-relaxed break-words">{msg.content}</div>}
-                          
-                          {/* Attachment Container */}
-                          {msg.attachment_url && (
-                            <div className="mt-2 text-sm">
-                              {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) || msg.attachment_type?.startsWith('image') ? (
-                                <img src={msg.attachment_url} alt="attachment" className="max-h-48 rounded-lg mt-1 cursor-pointer hover:opacity-90 transition border border-black/10" onClick={(e) => { e.stopPropagation(); window.open(msg.attachment_url!, '_blank'); }} />
-                              ) : (
-                                <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className={`underline mt-2 inline-block ${isMe ? 'text-primary-foreground' : 'text-primary'}`}>
-                                  Download ${msg.attachment_type === 'application/pdf' ? 'PDF' : 'Attachment'}
-                                </a>
-                              )}
-                            </div>
-                          )}
+                                {/* Content */}
+                                {msg.content && <div className="text-[15px] leading-relaxed break-words">{msg.content}</div>}
+                                
+                                {/* Attachment Container */}
+                                {msg.attachment_url && (
+                                  <div className="mt-2 text-sm">
+                                    {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) || msg.attachment_type?.startsWith('image') ? (
+                                      <img src={msg.attachment_url} alt="attachment" className="max-h-48 rounded-lg mt-1 cursor-pointer hover:opacity-90 transition border border-black/10" onClick={(e) => { e.stopPropagation(); window.open(msg.attachment_url!, '_blank'); }} />
+                                    ) : (
+                                      <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className={`underline mt-2 inline-block ${isMe ? 'text-primary-foreground' : 'text-primary'}`}>
+                                        Download ${msg.attachment_type === 'application/pdf' ? 'PDF' : 'Attachment'}
+                                      </a>
+                                    )}
+                                  </div>
+                                )}
 
-                          <div className={`text-[10px] mt-2 flex justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>
-                            {format(new Date(msg.created_at), "p")}
-                          </div>
-                        </div>
-                      </motion.div>
+                                <div className={`text-[10px] mt-2 flex justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>
+                                  {format(new Date(msg.created_at), "p")}
+                                </div>
+                              </div>
+                            </motion.div>
+                          </ContextMenuTrigger>
+
+                          <ContextMenuContent className="w-48 bg-card shadow-lg p-1">
+                            <ContextMenuItem 
+                              onSelect={() => handleReply(msg)}
+                              className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
+                            >
+                              <Reply className="mr-2 h-4 w-4" />
+                              <span>Reply</span>
+                            </ContextMenuItem>
+                            {msg.content && (
+                              <ContextMenuItem 
+                                onSelect={(e) => {
+                                  // e.preventDefault(); 
+                                  navigator.clipboard.writeText(msg.content);
+                                }}
+                                className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
+                              >
+                                <Copy className="mr-2 h-4 w-4" />
+                                <span>Copy message</span>
+                              </ContextMenuItem>
+                            )}
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      </div>
+                      {isMe && (
+                        <Avatar className="h-8 w-8 mt-auto shrink-0 shadow-sm border border-primary/20">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                            {user?.email?.charAt(0)?.toUpperCase() || 'S'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
-                  </div>
                   </React.Fragment>
                 );
               })}
@@ -228,6 +312,7 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
 
           <div className="flex gap-2 items-center">
             <Input
+              id="message-input"
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="Type your message..."
@@ -244,3 +329,9 @@ export const ChatPage = ({ conversationId }: { conversationId: string }) => {
     </Card>
   );
 };
+
+
+
+
+
+

@@ -33,8 +33,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
+        
+        // Prevent entire app re-rendering and refetching on simple tab-focus token refreshes
+        if (event === 'TOKEN_REFRESHED') {
+          return;
+        }
+
         setUser(session?.user ?? null);
         
         if (session?.user) {

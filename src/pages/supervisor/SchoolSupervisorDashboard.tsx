@@ -4,6 +4,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -41,7 +52,7 @@ interface StudentWithWeeks {
 }
 
 const SchoolSupervisorDashboard = () => {
-  const { userRole, profile, user } = useAuth();
+  const { userRole, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [students, setStudents] = useState<StudentWithWeeks[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,14 +268,29 @@ const SchoolSupervisorDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Home
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you leaving?</AlertDialogTitle>
+              <AlertDialogDescription>
+                For your security, would you like to sign out before leaving the dashboard, or just return to the home page?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <Button variant="outline" onClick={() => navigate("/")}>Just Go Home</Button>
+              <AlertDialogAction onClick={() => signOut()} className="bg-primary hover:bg-primary/90">
+                Sign Out & Leave
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">School Supervisor Dashboard</h1>

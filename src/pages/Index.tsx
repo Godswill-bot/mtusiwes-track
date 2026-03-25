@@ -7,7 +7,7 @@ import siwesStudents from "@/assets/siwes-students.webp";
 import itfBuilding from "@/assets/itf-building.png";
 import studentLogbook from "@/assets/student-logbook.jpg";
 import chatImage from "@/assets/chat pic.png";
-import { ArrowRight, LogIn, Users, BookOpen } from "lucide-react";
+import { ArrowRight, LogIn, Users, BookOpen, GraduationCap, Briefcase, Library, Laptop, PenTool, Lightbulb, FileText, Globe } from "lucide-react";
 
 const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
 
@@ -17,6 +17,20 @@ const preloadImages = () => {
     img.src = src;
   });
 };
+
+const EducationalBackground = () => (
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.03]">
+    <BookOpen className="absolute top-[10%] left-[5%] w-24 h-24 -rotate-12" />
+    <GraduationCap className="absolute top-[20%] right-[10%] w-32 h-32 rotate-12" />
+    <Briefcase className="absolute top-[40%] left-[15%] w-20 h-20 -rotate-6" />
+    <Library className="absolute top-[60%] right-[5%] w-28 h-28 rotate-6" />
+    <Laptop className="absolute top-[80%] left-[10%] w-24 h-24 -rotate-12" />
+    <PenTool className="absolute top-[30%] right-[25%] w-16 h-16 rotate-45" />
+    <Lightbulb className="absolute top-[75%] right-[20%] w-20 h-20 -rotate-12" />
+    <FileText className="absolute top-[50%] left-[30%] w-16 h-16 rotate-12" />
+    <Globe className="absolute top-[15%] left-[40%] w-20 h-20 -rotate-12" />
+  </div>
+);
 
 export default function Index() {
   const { user, userRole, loading, isInitialized } = useAuth();
@@ -85,7 +99,8 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans overflow-x-hidden bg-white text-slate-900">
+    <div className="min-h-screen flex flex-col font-sans overflow-x-hidden bg-white text-slate-900 relative">
+      <EducationalBackground />
       {/* Navigation Bar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 md:px-12 flex justify-between items-center ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-transparent'}`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>

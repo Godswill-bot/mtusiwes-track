@@ -4,6 +4,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, Lock, Award, Bell } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { SignaturePad } from "@/components/SignaturePad";
 
 const StudentDashboard = () => {
-  const { user, userRole, profile } = useAuth();
+  const { user, userRole, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { portalOpen, loading: portalLoading } = usePortalStatus();
   const [hasRegistration, setHasRegistration] = useState(false);
@@ -47,6 +58,34 @@ const StudentDashboard = () => {
   const [allWeeksCompleted, setAllWeeksCompleted] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showIndustrySignaturePad, setShowIndustrySignaturePad] = useState(false);
+
+  // Fetch unread announcements count
+  const { data: unreadAnnouncementsCount = 0 } = useQuery({
+    queryKey: ["student", "unread-announcements", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      
+      const lastReadISO = localStorage.getItem(`lastReadAnnouncementTime_${user.id}`);
+      
+      let query = supabase
+        .from("announcements")
+        .select("id", { count: "exact", head: true });
+        
+      if (lastReadISO) {
+        query = query.gt("created_at", lastReadISO);
+      }
+      
+      const { count, error } = await query;
+      if (error) {
+        console.error("Error fetching unread announcements count:", error);
+        return 0;
+      }
+      
+      return count || 0;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
 
   // Fetch current session
   const { data: currentSession } = useQuery({
@@ -263,14 +302,29 @@ const StudentDashboard = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" className="mb-4">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you leaving?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  For your security, would you like to sign out before leaving the dashboard, or just return to the home page?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button variant="outline" onClick={() => navigate("/")}>Just Go Home</Button>
+                <AlertDialogAction onClick={() => signOut()} className="bg-primary hover:bg-primary/90">
+                  Sign Out & Leave
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-primary">
@@ -606,13 +660,17 @@ const StudentDashboard = () => {
                 <Button 
                   onClick={() => navigate("/student/announcements")}
                   variant="outline"
-                  className="h-24 flex-col gap-2"
-                  size="lg"
-                >
-                  <Bell className="h-6 w-6" />
-                  <span>Announcements</span>
-                </Button>
-
+                    className="relative h-24 flex-col gap-2"
+                    size="lg"
+                  >
+                    <div className="relative">
+                      <Bell className="h-6 w-6" />
+                      {unreadAnnouncementsCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                          {unreadAnnouncementsCount > 9 ? "9+" : unreadAnnouncementsCount}
+                        </span>
+                      )}
+                    </div>
                 <Button 
                   onClick={() => navigate("/student/pre-siwes")} 
                   variant="outline"

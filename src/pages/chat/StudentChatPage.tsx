@@ -1,10 +1,41 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOrCreateConversation, listMessages, sendMessage, formatDateGroup } from '@/lib/chatHelpers';
-import { Paperclip, Send, User, ArrowLeft, Reply, X } from 'lucide-react';
+import { Paperclip, Send, User, ArrowLeft, Reply, X, RefreshCw, Copy, Edit2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+// Custom hook to simulate long press for touch devices
+function useLongPress(onLongPress: (e: any) => void, ms = 500) {
+  const timerRef = useRef<NodeJS.Timeout>();
+
+  const start = useCallback((e: any) => {
+    e.persist?.();
+    timerRef.current = setTimeout(() => {
+      onLongPress(e);
+    }, ms);
+  }, [onLongPress, ms]);
+
+  const stop = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+  }, []);
+
+  return {
+    onTouchStart: start,
+    onTouchEnd: stop,
+    onTouchMove: stop,
+  };
+}
 
 // Minimal supervisor mini-profile component
 function SupervisorProfile({ supervisor }: { supervisor: any }) {
@@ -25,6 +56,7 @@ export default function StudentChatPage() {
   const [conversation, setConversation] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [message, setMessage] = useState('');
+  const [myAvatar, setMyAvatar] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState('');
   const [supervisor, setSupervisor] = useState<any>(null);
@@ -34,8 +66,57 @@ export default function StudentChatPage() {
   // New states for reply feature
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<any>(null);
+  const [editingMsg, setEditingMsg] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleReply = (msg: any) => {
+    setReplyingTo(msg);
+    setEditingMsg(null);
+    setTimeout(() => {
+      const input = document.getElementById('message-input');
+      if (input) {
+        input.focus();
+      }
+    }, 150);
+  };
+
+  const handleEdit = (msg: any) => {
+    setEditingMsg(msg);
+    setReplyingTo(null);
+    setInput(msg.content || "");
+    setTimeout(() => {
+      const inputEl = document.getElementById('message-input');
+      if (inputEl) inputEl.focus();
+    }, 150);
+  };
+
+  const longPressHandlers = useLongPress((e) => {
+    if (e.touches && e.touches.length > 0) {
+      const touch = e.touches[0];
+      const target = e.target as HTMLElement;
+      // We simulate a context menu event
+      const contextMenuEvent = new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+      target.dispatchEvent(contextMenuEvent);
+      // Try to vibrate
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+  }, 500);
+
+  const handleManualReload = async () => {
+    if (!conversation?.id) return;
+    setIsRefreshing(true);
+    const msgs = await listMessages(conversation.id);
+    setMessages(msgs);
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
 
   // Fetch assigned supervisor and conversation
   useEffect(() => {
@@ -48,7 +129,7 @@ export default function StudentChatPage() {
       
       const { data: studentData } = await supabase
         .from('students')
-        .select('id, supervisor_id, school_supervisor_name, school_supervisor_email')
+        .select('id, supervisor_id, school_supervisor_name, school_supervisor_email, profile_image_url')
         .eq('user_id', user?.id)
         .maybeSingle();
 
@@ -57,8 +138,10 @@ export default function StudentChatPage() {
         supervisorId = studentData.supervisor_id;
         supervisorName = studentData.school_supervisor_name;
         supervisorEmail = studentData.school_supervisor_email;
+        if (studentData.profile_image_url) {
+          setMyAvatar(studentData.profile_image_url);
+        }
       }
-      
       if (stuId) {
         const { data: assignment } = await supabase
           .from('supervisor_assignments')
@@ -104,7 +187,26 @@ export default function StudentChatPage() {
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!message && !attachment) return;
-    
+
+    if (editingMsg) {
+      // Handle optimistic update
+      const tempId = editingMsg.id;
+      setMessages((prev: any[]) => prev.map(m => m.id === tempId ? { ...m, content: message.trim() } : m));
+      
+      const { error } = await (supabase as any)
+        .from('messages')
+        .update({ content: message.trim() })
+        .eq('id', tempId);
+        
+      if (error) {
+         console.error('Failed to update message', error);
+         // could optionally restore old message here
+      }
+      setEditingMsg(null);
+      setMessage('');
+      return;
+    }
+
     let attachmentUrl = null;
     let attachmentName = null;
     
@@ -181,16 +283,6 @@ export default function StudentChatPage() {
     }
   }
 
-  // Poll
-  useEffect(() => {
-    if (!conversation?.id) return;
-    const interval = setInterval(async () => {
-      const msgs = await listMessages(conversation.id);
-      setMessages(msgs);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [conversation?.id]);
-
   if (loading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/40 border-t-transparent"></div></div>;
   if (!supervisor) return <div className="flex items-center justify-center h-screen text-red-500">No supervisor assigned. Chat unavailable.</div>;
 
@@ -203,18 +295,30 @@ export default function StudentChatPage() {
 
       {/* Main Chat Thread */}
       <div className="flex-1 flex flex-col h-full bg-card relative">
-        {/* Mobile Header */}
-        <div className="md:hidden flex items-center p-3 border-b bg-card shadow-sm z-10">
-          <button onClick={() => navigate(-1)} className="mr-3 text-muted-foreground hover:text-primary transition" title="Go back">
-            <ArrowLeft />
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/20 p-1 rounded-full">
-              <User className="h-5 w-5 text-primary" />
+          {/* Header */}
+          <div className="flex items-center p-3 border-b bg-card shadow-sm z-10 justify-between">
+            <div className="flex items-center">
+              <button onClick={() => navigate(-1)} className="mr-3 md:hidden text-muted-foreground hover:text-primary transition" title="Go back">
+                <ArrowLeft />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/20 p-1 rounded-full md:hidden">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <span className="font-bold text-foreground md:hidden">{supervisor.name}</span>
+                <span className="font-bold text-foreground hidden md:inline ml-2">Chat Thread</span>
+              </div>
             </div>
-            <span className="font-bold text-foreground">{supervisor.name}</span>
+            
+            <button 
+              onClick={handleManualReload}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-muted text-sm font-medium transition"
+              title="Refresh messages"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
           </div>
-        </div>
 
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar  ">
@@ -242,23 +346,33 @@ export default function StudentChatPage() {
                         </span>
                       </div>
                     )}
-                    <div className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div
-                      className="group relative max-w-[85%] md:max-w-[70%]"
-                    >
-                      {/* Message Bubble container */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`relative transition select-none flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-                      >
+                    <div className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} gap-2`}>
+                      {!isMe && (
+                        <Avatar className="h-8 w-8 mt-auto shrink-0 shadow-sm">
+                          <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
+                            {supervisor?.name?.charAt(0)?.toUpperCase() || 'S'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div className="group relative max-w-[85%] md:max-w-[70%]">
+                        {/* Message Bubble container with ContextMenu */}
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              onContextMenu={(e) => setActiveMessageId(msg.id)}
+                                {...longPressHandlers}
+                                style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
+                              className={`relative transition flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                            >
                         {/* Option Actions Sidebar - Always visible on mobile, hover on desktop */}
                         <div
                           className={`absolute top-1/2 -translate-y-1/2 ${isMe ? '-left-12' : '-right-12'} 
                           opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border shadow-sm rounded-full p-1.5 z-10 cursor-pointer`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setReplyingTo(msg);
+                              handleReply(msg);
                           }}
                           title="Reply"
                         >
@@ -303,9 +417,47 @@ export default function StudentChatPage() {
                           </div>
                         </div>
 
-                      </motion.div>
-                    </div>
-                  </div>
+                            </motion.div>
+                          </ContextMenuTrigger>
+
+                          <ContextMenuContent className="w-48 bg-card shadow-lg p-1">
+                            <ContextMenuItem 
+                              onSelect={() => handleReply(msg)}
+                                className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
+                              >
+                                <Reply className="mr-2 h-4 w-4" />
+                                <span>Reply</span>
+                              </ContextMenuItem>
+                              {isMe && msg.content && (
+                                <ContextMenuItem
+                                  onSelect={() => handleEdit(msg)}
+                                  className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
+                                >
+                                  <Edit2 className="mr-2 h-4 w-4" />
+                                  <span>Edit</span>
+                                </ContextMenuItem>
+                              )}
+                              {msg.content && (
+                                <ContextMenuItem 
+                                  onSelect={(e) => {
+                                    navigator.clipboard.writeText(msg.content);
+                                }}
+                                className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
+                              >
+                                <Copy className="mr-2 h-4 w-4" />
+                                <span>Copy message</span>
+                              </ContextMenuItem>
+                            )}
+                          </ContextMenuContent>
+                        </ContextMenu>
+                    </div>                      {isMe && (
+                        <Avatar className="h-8 w-8 mt-auto shrink-0 shadow-sm border border-primary/20">
+                          {myAvatar && <AvatarImage src={myAvatar} alt="My profile" />}
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                            {user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}                  </div>
                   </React.Fragment>
                 );
               })}
@@ -337,6 +489,24 @@ export default function StudentChatPage() {
               </motion.div>
             )}
           </AnimatePresence>
+
+        {/* Edit mode banner */}
+        {editingMsg && (
+          <div className="flex items-center justify-between bg-primary/10 px-4 py-2 border-t border-primary/20">
+            <div className="text-sm text-primary font-medium flex items-center gap-2">
+              <Edit className="h-4 w-4" />
+              Editing message...
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 rounded-full"
+              onClick={() => setEditingMsg(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
           <form className="flex gap-2 items-center" onSubmit={handleSend}>
             <label htmlFor="chat-upload" className="cursor-pointer p-2 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-full transition" title="Attach file">
@@ -390,3 +560,4 @@ export default function StudentChatPage() {
     </div>
   );
 }
+
