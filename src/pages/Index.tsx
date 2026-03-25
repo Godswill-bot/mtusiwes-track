@@ -23,6 +23,7 @@ export default function Index() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const learnMoreRef = useRef<HTMLElement>(null);
   const chatSystemRef = useRef<HTMLElement>(null);
@@ -30,6 +31,14 @@ export default function Index() {
   const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
     ref.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     preloadImages();
@@ -78,22 +87,22 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col font-sans overflow-x-hidden bg-white text-slate-900">
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 py-4 px-6 md:px-12 flex justify-between items-center shadow-sm">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 md:px-12 flex justify-between items-center ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-transparent'}`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <img src={mtuLogo} alt="MTU Logo" className="h-10 w-auto" />
-          <span className="font-bold text-lg md:text-xl tracking-tight text-primary hidden md:block">MTU SIWES</span>
+          <span className={`font-bold text-lg md:text-xl tracking-tight hidden md:block transition-colors duration-300 ${isScrolled ? 'text-primary' : 'text-white drop-shadow-md'}`}>MTU SIWES</span>
         </div>
-        <div className="flex items-center gap-6 md:gap-10 text-sm font-semibold text-gray-600">
-          <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(learnMoreRef)}>Learn More</span>
-          <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => scrollToRef(chatSystemRef)}>Chat System</span>
-          <Button onClick={() => navigate("/student/login")} variant="default" className="bg-primary hover:bg-primary/90 text-white rounded-full px-6">
+        <div className={`flex items-center gap-6 md:gap-10 text-sm font-semibold transition-colors duration-300 ${isScrolled ? 'text-gray-600' : 'text-white/90 drop-shadow-md'}`}>
+          <span className={`cursor-pointer transition-colors ${isScrolled ? 'hover:text-primary' : 'hover:text-white'}`} onClick={() => scrollToRef(learnMoreRef)}>Learn More</span>
+          <span className={`cursor-pointer transition-colors ${isScrolled ? 'hover:text-primary' : 'hover:text-white'}`} onClick={() => scrollToRef(chatSystemRef)}>Chat System</span>
+          <Button onClick={() => navigate("/student/login")} variant="default" className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-lg border border-transparent">
             Sign In
           </Button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <header className="relative w-full h-[80vh] min-h-[600px] mt-16 flex items-center justify-center overflow-hidden bg-black">
+      <header className="relative w-full h-[100vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-black">
         {/* Slideshow Background */}
         <div className="absolute inset-0 z-0">
           {slideshowImages.map((image, index) => (
