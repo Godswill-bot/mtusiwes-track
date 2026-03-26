@@ -19,7 +19,7 @@ const preloadImages = () => {
 };
 
 const EducationalBackground = () => (
-  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.03]">
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.08] text-primary">
     <BookOpen className="absolute top-[10%] left-[5%] w-24 h-24 -rotate-12" />
     <GraduationCap className="absolute top-[20%] right-[10%] w-32 h-32 rotate-12" />
     <Briefcase className="absolute top-[40%] left-[15%] w-20 h-20 -rotate-6" />
