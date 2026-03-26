@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, Calendar } from "lucide-react";
+import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, Calendar, ShieldCheck, FileSearch, Notebook, Eye, Network, BookOpenCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PrintableStudentsTable } from "@/components/supervisor/PrintableStudentsTable";
@@ -23,6 +23,19 @@ import { PrintableStudentsTable } from "@/components/supervisor/PrintableStudent
 import { StudentTabsView } from "@/components/supervisor/StudentTabsView";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/utils/api";
+
+const SupervisorBackgroundIcons = () => (
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.04] text-primary">
+    <ShieldCheck className="absolute top-[12%] left-[8%] w-32 h-32 -rotate-12" />
+    <FileSearch className="absolute top-[28%] right-[10%] w-36 h-36 rotate-[15deg]" />
+    <Users className="absolute top-[50%] left-[12%] w-28 h-28 -rotate-6" />
+    <Notebook className="absolute top-[65%] right-[15%] w-32 h-32 rotate-12" />
+    <Eye className="absolute top-[80%] left-[20%] w-24 h-24 -rotate-12" />
+    <Network className="absolute top-[35%] right-[35%] w-28 h-28 rotate-45" />
+    <FileCheck className="absolute top-[75%] right-[25%] w-24 h-24 -rotate-12" />
+    <BookOpenCheck className="absolute top-[45%] left-[35%] w-20 h-20 rotate-12" />
+  </div>
+);
 
 interface StudentWithWeeks {
   id: string;
@@ -265,9 +278,10 @@ const SchoolSupervisorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative z-0">
+      <SupervisorBackgroundIcons />
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative z-10">
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="ghost" className="mb-4">

@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, Lock, Award, Bell } from "lucide-react";
+import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, Lock, Award, Bell, Briefcase, GraduationCap, Laptop, Route, Map, FileSignature } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
@@ -28,6 +28,19 @@ import { Badge } from "@/components/ui/badge";
 import { StudentNotifications } from "@/components/student/StudentNotifications";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SignaturePad } from "@/components/SignaturePad";
+
+const StudentBackgroundIcons = () => (
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.04] text-primary">
+    <Briefcase className="absolute top-[15%] left-[8%] w-32 h-32 -rotate-12" />
+    <GraduationCap className="absolute top-[25%] right-[12%] w-40 h-40 rotate-[15deg]" />
+    <Laptop className="absolute top-[45%] left-[15%] w-28 h-28 -rotate-6" />
+    <FileSignature className="absolute top-[65%] right-[8%] w-36 h-36 rotate-12" />
+    <Route className="absolute top-[80%] left-[15%] w-32 h-32 -rotate-12" />
+    <Map className="absolute top-[35%] right-[30%] w-24 h-24 rotate-45" />
+    <Building className="absolute top-[75%] right-[25%] w-28 h-28 -rotate-12" />
+    <Award className="absolute top-[55%] left-[30%] w-20 h-20 rotate-12" />
+  </div>
+);
 
 const StudentDashboard = () => {
   const { user, userRole, profile, signOut } = useAuth();
@@ -297,10 +310,11 @@ const StudentDashboard = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative z-0">
+      <StudentBackgroundIcons />
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-8">
+
+      <main className="container mx-auto px-4 py-8 relative z-10">
         <div className="max-w-6xl mx-auto space-y-6">
           <AlertDialog>
             <AlertDialogTrigger asChild>
