@@ -19,8 +19,9 @@ const preloadImages = () => {
 };
 
 const EducationalBackground = () => (
-  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.08] text-primary">
-    <BookOpen className="absolute top-[10%] left-[5%] w-24 h-24 -rotate-12" />
+  <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.25] text-primary">
+    {/* Upper Section */}
+    <BookOpen className="absolute top-[15%] left-[8%] w-32 h-32 -rotate-12" />
     <GraduationCap className="absolute top-[20%] right-[10%] w-32 h-32 rotate-12" />
     <Briefcase className="absolute top-[40%] left-[15%] w-20 h-20 -rotate-6" />
     <Library className="absolute top-[60%] right-[5%] w-28 h-28 rotate-6" />
@@ -100,7 +101,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans overflow-x-hidden bg-white text-slate-900 relative">
-      <EducationalBackground />
       {/* Navigation Bar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 md:px-12 flex justify-between items-center ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-transparent'}`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -165,8 +165,10 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Main Content Section (with Background Logo) */}
+      {/* Main Content Section (with Background Logo & Icons) */}
       <div className="relative w-full bg-slate-50 py-24 pb-32">
+        <EducationalBackground />
+        
         {/* Huge Background Logo */}
         <div className="absolute inset-0 z-0 opacity-40 pointer-events-none flex items-center justify-center overflow-hidden">
             <img src={mtuLogo} alt="Background MTU Logo" className="w-[400px] md:w-[700px] max-w-none h-auto object-contain" />
