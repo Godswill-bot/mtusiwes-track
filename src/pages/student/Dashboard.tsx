@@ -671,6 +671,9 @@ const StudentDashboard = () => {
                         </span>
                       )}
                     </div>
+                    <span>Announcements</span>
+                  </Button>
+
                 <Button 
                   onClick={() => navigate("/student/pre-siwes")} 
                   variant="outline"
