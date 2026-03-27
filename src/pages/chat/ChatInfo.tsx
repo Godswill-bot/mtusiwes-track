@@ -63,7 +63,7 @@ export default function ChatInfo() {
 
         <main className="flex-1 max-w-[1500px] mx-auto w-full flex flex-col lg:flex-row items-center px-4 md:px-6 lg:px-12 py-4 gap-4 xl:gap-12 relative z-10">
           <div className="flex-1 flex flex-col space-y-6 md:space-y-8 max-w-xl animate-fade-in-up mt-8 lg:mt-0 relative z-20">
-            <h1 className="text-[60px] sm:text-[80px] lg:text-[160px] font-black text-slate-900 tracking-tighter leading-none whitespace-nowrap" style={{ fontFamily: 'Georgia, serif' }}>
+            <h1 className="text-[60px] sm:text-[80px] lg:text-[160px] font-black text-slate-900 tracking-tighter leading-none whitespace-nowrap font-serif">
               Chat
             </h1>
             <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-md font-medium">
@@ -82,8 +82,7 @@ export default function ChatInfo() {
                  <img 
                    src={chatImage} 
                    alt="Chat Communication System" 
-                   className="w-full h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-700 hover:-translate-y-2 hover:scale-[1.02]"
-                   style={{ mixBlendMode: 'multiply' }}
+                   className="w-full h-auto object-contain drop-shadow-2xl relative z-10 transition-transform duration-700 hover:-translate-y-2 hover:scale-[1.02] mix-blend-multiply"
                  />
             </div>
           </div>

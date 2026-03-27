@@ -209,7 +209,7 @@ export default function Index() {
                 </div>
               </div>
               <div className="flex-1 w-full max-w-md relative p-4 md:p-8">
-                 <img src={chatImage} style={{ mixBlendMode: 'multiply' }} alt="Chat Communication" className="w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500" />
+                 <img src={chatImage} alt="Chat Communication" className="w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500 mix-blend-multiply" />
               </div>
             </section>
           </div>

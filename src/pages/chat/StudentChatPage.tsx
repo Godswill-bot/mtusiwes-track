@@ -12,6 +12,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 // Custom hook to simulate long press for touch devices
 function useLongPress(onLongPress: (e: any) => void, ms = 500) {
@@ -85,7 +86,7 @@ export default function StudentChatPage() {
   const handleEdit = (msg: any) => {
     setEditingMsg(msg);
     setReplyingTo(null);
-    setInput(msg.content || "");
+    setMessage(msg.content || "");
     setTimeout(() => {
       const inputEl = document.getElementById('message-input');
       if (inputEl) inputEl.focus();
@@ -494,7 +495,7 @@ export default function StudentChatPage() {
         {editingMsg && (
           <div className="flex items-center justify-between bg-primary/10 px-4 py-2 border-t border-primary/20">
             <div className="text-sm text-primary font-medium flex items-center gap-2">
-              <Edit className="h-4 w-4" />
+              <Edit2 className="h-4 w-4" />
               Editing message...
             </div>
             <Button 
