@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import mtuLogo from "@/assets/mtu-logo.png";
-import itfLogo from "@/assets/itf-logo.png";
+import itfLogo from "@/assets/ITFLOGO.png";
 import siwesStudents from "@/assets/siwes-students.webp";
 import itfBuilding from "@/assets/itf-building.png";
 import studentLogbook from "@/assets/student-logbook.jpg";
