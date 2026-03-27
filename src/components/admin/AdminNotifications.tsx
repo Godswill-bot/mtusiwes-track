@@ -77,14 +77,10 @@ export const AdminNotifications = () => {
       if (error) throw error;
       return data || [];
     },
-    refetchInterval: 300000 // Refetch every 5 minutes
-  });
 
   const { data: notifications = [], isPending, refetch } = useQuery({
     queryKey: ["admin", "notifications"],
     queryFn: fetchNotifications,
-    refetchInterval: 30000, // Refetch every 30 seconds
-  });
 
   const markReadMutation = useMutation({
     mutationFn: markAsRead,

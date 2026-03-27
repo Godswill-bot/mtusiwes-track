@@ -97,8 +97,6 @@ const StudentDashboard = () => {
       return count || 0;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000,
-  });
 
   // Fetch current session
   const { data: currentSession } = useQuery({

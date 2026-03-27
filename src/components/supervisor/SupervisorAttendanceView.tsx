@@ -93,9 +93,7 @@ export const SupervisorAttendanceView = ({ onViewStudent }: SupervisorAttendance
       }
     },
     enabled: !!user?.id,
-    refetchInterval: 60000, // Refresh every minute
-    retry: 2, // Retry failed requests up to 2 times
-    retryDelay: 1000, // Wait 1 second between retries
+
   });
 
   // Download attendance PDF for a student

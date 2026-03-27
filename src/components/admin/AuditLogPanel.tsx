@@ -89,9 +89,7 @@ export const AuditLogPanel = () => {
   const auditQuery = useQuery({
     queryKey: ["admin", "audit"],
     queryFn: fetchAuditLogs,
-    refetchInterval: 30000,
-    retry: 1,
-  });
+
 
   useEffect(() => {
     if (auditQuery.error) {

@@ -42,8 +42,6 @@ export default function SupervisorStudentChatDrawer({
     queryKey: ['chat-messages', conversation?.id],
     queryFn: () => conversation?.id ? listMessages(conversation.id) : [],
     enabled: !!conversation?.id,
-    refetchInterval: open ? 3000 : false,
-  });
 
   // Mark messages as read when opened
   useEffect(() => {

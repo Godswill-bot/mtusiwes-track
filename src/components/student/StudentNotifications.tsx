@@ -71,8 +71,6 @@ export const StudentNotifications = () => {
       return allNotifs;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Refetch every 30 seconds
-  });
 
   const markReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {

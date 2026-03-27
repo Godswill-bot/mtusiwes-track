@@ -89,8 +89,6 @@ const StudentAttendance = () => {
       return response.json();
     },
     enabled: !!user?.id,
-    refetchInterval: 60000, // Refresh every minute
-  });
 
   // Check-in mutation
   const checkInMutation = useMutation({
