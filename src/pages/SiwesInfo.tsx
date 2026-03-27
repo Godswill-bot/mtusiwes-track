@@ -143,7 +143,7 @@ const SiwesInfo = () => {
 
         {/* ITF Logo */}
         <div className="flex flex-col items-center justify-center mb-12">
-          <div className="bg-card rounded-2xl p-4 shadow-lg">
+          <div>
             <img
               src={itfLogo}
               alt="Industrial Training Fund Logo"
