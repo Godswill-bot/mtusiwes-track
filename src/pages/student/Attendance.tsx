@@ -89,6 +89,7 @@ const StudentAttendance = () => {
       return response.json();
     },
     enabled: !!user?.id,
+  });
 
   // Check-in mutation
   const checkInMutation = useMutation({

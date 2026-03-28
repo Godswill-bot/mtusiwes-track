@@ -135,6 +135,7 @@ export const StudentAttendanceTabsView = () => {
       return response.json();
     },
     enabled: !!user?.id,
+  });
 
   // Set initial active tab when data loads
   useMemo(() => {

@@ -77,10 +77,12 @@ export const AdminNotifications = () => {
       if (error) throw error;
       return data || [];
     },
+  });
 
   const { data: notifications = [], isPending, refetch } = useQuery({
     queryKey: ["admin", "notifications"],
     queryFn: fetchNotifications,
+  });
 
   const markReadMutation = useMutation({
     mutationFn: markAsRead,

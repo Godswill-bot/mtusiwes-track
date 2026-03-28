@@ -71,6 +71,7 @@ export const StudentNotifications = () => {
       return allNotifs;
     },
     enabled: !!user?.id,
+  });
 
   const markReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
