@@ -31,7 +31,8 @@ function useLongPress(onLongPress: (e: any) => void, ms = 500) {
     }
   }, []);
 
-  return { onTouchStart: start, onTouchEnd: stop, onTouchMove: stop, onTouchCancel: stop }; }
+  return { onTouchStart: start, onTouchEnd: stop, onTouchMove: stop, onTouchCancel: stop };
+}
 
 // Minimal supervisor mini-profile component
 function SupervisorProfile({ supervisor }: { supervisor: any }) {
@@ -58,12 +59,12 @@ export default function StudentChatPage() {
   const [supervisor, setSupervisor] = useState<any>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // New states for reply feature
   const [replyingTo, setReplyingTo] = useState<any>(null);
   const [editingMsg, setEditingMsg] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleReply = (msg: any) => {
@@ -121,7 +122,7 @@ export default function StudentChatPage() {
       let supervisorName = null;
       let supervisorEmail = null;
       let stuId = null;
-      
+
       const { data: studentData } = await supabase
         .from('students')
         .select('id, supervisor_id, school_supervisor_name, school_supervisor_email, profile_image_url')
@@ -144,32 +145,32 @@ export default function StudentChatPage() {
           .eq('student_id', stuId)
           .eq('assignment_type', 'school_supervisor')
           .maybeSingle();
-          
+
         if (assignment && assignment.supervisor_id) {
           supervisorId = assignment.supervisor_id;
           supervisorName = (assignment.supervisors as any)?.name;
           supervisorEmail = (assignment.supervisors as any)?.email;
         }
       }
-      
+
       if (!supervisorId || !stuId) {
         setLoading(false);
         return;
       }
-      
+
       setSupervisor({ id: supervisorId, name: supervisorName, email: supervisorEmail });
-      
+
       const conv = await getOrCreateConversation(supervisorId, stuId);
       setConversation(conv);
       setStudentId(stuId);
-      
+
       if (conv) {
         const msgs = await listMessages(conv.id);
         setMessages(msgs);
       }
       setLoading(false);
     }
-    
+
     if (user?.id) fetchChat();
   }, [user?.id]);
 
@@ -187,15 +188,15 @@ export default function StudentChatPage() {
       // Handle optimistic update
       const tempId = editingMsg.id;
       setMessages((prev: any[]) => prev.map(m => m.id === tempId ? { ...m, content: message.trim() } : m));
-      
+
       const { error } = await (supabase as any)
         .from('messages')
         .update({ content: message.trim() })
         .eq('id', tempId);
-        
+
       if (error) {
-         console.error('Failed to update message', error);
-         // could optionally restore old message here
+        console.error('Failed to update message', error);
+        // could optionally restore old message here
       }
       setEditingMsg(null);
       setMessage('');
@@ -204,7 +205,7 @@ export default function StudentChatPage() {
 
     let attachmentUrl = null;
     let attachmentName = null;
-    
+
     if (attachment) {
       if (attachment.size > 5 * 1024 * 1024) {
         setUploadError('File too large (max 5MB)');
@@ -215,24 +216,24 @@ export default function StudentChatPage() {
         setUploadError('Invalid file type');
         return;
       }
-      
+
       const filePath = `chat/${conversation.id}/${Date.now()}_${attachment.name}`;
       const { error } = await supabase.storage.from('chat-attachments').upload(filePath, attachment);
-      
+
       if (error) {
         setUploadError('Upload failed');
         return;
       }
-      
+
       const { data: publicData } = supabase.storage.from('chat-attachments').getPublicUrl(filePath);
       attachmentUrl = publicData?.publicUrl;
       attachmentName = attachment.name;
     }
-    
+
     setUploadError('');
-    
+
     const tempId = `temp-${Date.now()}`;
-    
+
     // Add optimistic message
     setMessages(msgs => [...msgs, {
       id: tempId,
@@ -250,10 +251,10 @@ export default function StudentChatPage() {
       } : null,
       optimistic: true,
     }]);
-    
+
     const sentMessageContent = message;
     const parentIdToUse = replyingTo?.id;
-    
+
     setMessage('');
     setAttachment(null);
     setReplyingTo(null);
@@ -266,7 +267,7 @@ export default function StudentChatPage() {
       attachmentName,
       parentId: parentIdToUse,
     });
-    
+
     if (sent) {
       // In case the sent message doesn't return the joined parent object, we manually add it for the UI
       if (parentIdToUse) {
@@ -280,6 +281,21 @@ export default function StudentChatPage() {
   if (!supervisor) return <div className="flex items-center justify-center h-screen text-red-500">No supervisor assigned. Chat unavailable.</div>;
 
   const chatWallpaper = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%236366f1' fill-opacity='0.04'%3E%3Cpath d='M20 20h12v16H20z'/%3E%3Cpath d='M22 22h8v2h-8zm0 4h8v2h-8zm0 4h8v2h-8z'/%3E%3Cpath d='M80 30l10-5 10 5-10 5zm-6 2v6l6 3 6-3v-6'/%3E%3Cpath d='M30 80l2-2 6 6-2 2h-4v-4l-2-2z'/%3E%3Cpath d='M85 80l3-7 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5z'/%3E%3Ccircle cx='60' cy='50' r='3'/%3E%3C/g%3E%3C/svg%3E`;
+
+  // Educational background icons for chat wallpaper
+  const ChatEducationalBackground = () => (
+    <div className="pointer-events-none absolute inset-0 z-0 opacity-20 select-none">
+      <BookOpen className="absolute top-[10%] left-[8%] w-16 h-16 -rotate-12 text-primary/40" />
+      <GraduationCap className="absolute top-[20%] right-[10%] w-16 h-16 rotate-12 text-primary/40" />
+      <Briefcase className="absolute top-[40%] left-[15%] w-10 h-10 -rotate-6 text-primary/40" />
+      <Library className="absolute top-[60%] right-[5%] w-14 h-14 rotate-6 text-primary/40" />
+      <Laptop className="absolute top-[80%] left-[10%] w-12 h-12 -rotate-12 text-primary/40" />
+      <PenTool className="absolute top-[30%] right-[25%] w-8 h-8 rotate-45 text-primary/40" />
+      <Lightbulb className="absolute top-[75%] right-[20%] w-10 h-10 -rotate-12 text-primary/40" />
+      <FileText className="absolute top-[50%] left-[30%] w-8 h-8 rotate-12 text-primary/40" />
+      <Globe className="absolute top-[15%] left-[40%] w-10 h-10 -rotate-12 text-primary/40" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-muted border-t" >
@@ -321,10 +337,8 @@ export default function StudentChatPage() {
           </div>
 
         {/* Chat Area */}
-        <div 
-          className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar"
-          style={{ backgroundImage: `url("${chatWallpaper}")` }}
-        >
+        <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar relative">
+          <ChatEducationalBackground />
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground/70 opacity-70">
               <Send className="h-12 w-12 mb-4 text-primary/40" />
@@ -429,16 +443,16 @@ export default function StudentChatPage() {
                             </ContextMenuContent>
                           </ContextMenu>
                         </motion.div>
-<div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 ${isMe ? 'right-[100%] mr-1' : 'left-[100%] ml-1'} items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 ease-in-out scale-95 group-hover:scale-100 z-10`}>
-                          <button onClick={() => handleReply(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Reply">
-                            <Reply className="h-3.5 w-3.5" />
-                          </button>
-                          {isMe && msg.content && (
-                            <button onClick={() => handleEdit(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Edit">
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
+<div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 ${isMe ? 'right-0 translate-x-full' : 'left-0 -translate-x-full'} items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 ease-in-out scale-95 group-hover:scale-100 z-10`}>
+  <button onClick={() => handleReply(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Reply">
+    <Reply className="h-3.5 w-3.5" />
+  </button>
+  {isMe && msg.content && (
+    <button onClick={() => handleEdit(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Edit">
+      <Edit2 className="h-3.5 w-3.5" />
+    </button>
+  )}
+</div>
                       </div>
                       
                       {isMe && (
