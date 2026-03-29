@@ -70,12 +70,15 @@ const SchoolSupervisorDashboard = () => {
   const [students, setStudents] = useState<StudentWithWeeks[]>([]);
   const [loading, setLoading] = useState(true);
   const [compilingLogbook, setCompilingLogbook] = useState<string | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [supervisorRecordId, setSupervisorRecordId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalStudents: 0,
     pendingReviews: 0,
     approved: 0,
-    thisWeek: 0
+    thisWeek: 0,
+    pendingRegistrations: 0
   });
 
   useEffect(() => {
@@ -105,7 +108,7 @@ const SchoolSupervisorDashboard = () => {
   const fetchForwardedSubmissions = useCallback(async () => {
     if (!user) return;
 
-    setLoading(true);
+    if (students.length === 0) setLoading(true);
     try {
         // Get supervisor's email and id from supervisors table
         const { data: supervisorData, error: supervisorError } = await supabase
@@ -198,11 +201,37 @@ const SchoolSupervisorDashboard = () => {
         return submittedDate && submittedDate >= startOfWeek;
       }).length;
 
+      // Fetch pending registrations count
+      let pendingRegCount = 0;
+      if (supervisorData?.id) {
+        const { data: assignments } = await supabase
+          .from('supervisor_assignments')
+          .select(`
+            student:students (
+              pre_registration (status)
+            )
+          `)
+          .eq('supervisor_id', supervisorData.id)
+          .eq('assignment_type', 'school_supervisor');
+        
+        if (assignments) {
+          assignments.forEach(a => {
+            const studentPreRegs = (a.student as any)?.pre_registration;
+            if (studentPreRegs && Array.isArray(studentPreRegs)) {
+              if (studentPreRegs.some(pr => pr.status === 'pending')) {
+                pendingRegCount++;
+              }
+            }
+          });
+        }
+      }
+
       setStats({
         totalStudents,
         pendingReviews,
         approved,
-        thisWeek
+        thisWeek,
+        pendingRegistrations: pendingRegCount
       });
     } catch (error: unknown) {
       toast.error("Error loading submissions");
@@ -213,10 +242,17 @@ const SchoolSupervisorDashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    if (profile?.role && user) {
+    if (profile?.role && user && !hasLoaded) {
       fetchForwardedSubmissions();
+      setHasLoaded(true);
     }
-  }, [profile, user, fetchForwardedSubmissions]);
+  }, [profile, user, fetchForwardedSubmissions, hasLoaded]);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchForwardedSubmissions();
+    setIsRefreshing(false);
+  };
 
   // Handle Compile Logbook - generates complete 24-week PDF
   const handleCompileLogbook = async (studentId: string, studentName: string) => {
@@ -312,9 +348,14 @@ const SchoolSupervisorDashboard = () => {
               Review student submissions forwarded by industry supervisors
             </p>
           </div>
-          <Button variant="outline" onClick={() => navigate("/profile/edit")}>
-            Edit Profile
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleManualRefresh} variant="outline" disabled={isRefreshing}>
+              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/profile/edit")}>
+              Edit Profile
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Cards */}
@@ -377,9 +418,14 @@ const SchoolSupervisorDashboard = () => {
             <Users className="h-4 w-4 mr-2" />
             View All Students
           </Button>
-          <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline" className="w-full sm:w-auto">
+          <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline" className="w-full sm:w-auto relative">
             <FileCheck className="h-4 w-4 mr-2" />
             Manage Registrations
+            {stats.pendingRegistrations > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+                {stats.pendingRegistrations > 99 ? '99+' : stats.pendingRegistrations}
+              </span>
+            )}
           </Button>
         </div>
 

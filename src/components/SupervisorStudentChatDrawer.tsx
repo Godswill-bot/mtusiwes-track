@@ -143,25 +143,40 @@ export default function SupervisorStudentChatDrawer({
   // Render
   return (
     <div className={`fixed inset-y-0 right-0 w-96 bg-card shadow-lg z-50 flex flex-col transition-transform ${open ? 'translate-x-0' : 'translate-x-full'}`} aria-modal="true" role="dialog">
-      <div className="flex-none flex items-center justify-between p-4 border-b">
-        <div>
-          
+      <div className="flex-none flex items-center justify-between p-4 border-b bg-card relative z-10">
+        <div className="flex items-center gap-3">
           {isStudent ? (
             <>
-              <div className="font-bold text-primary">{supervisorInfo?.name || 'Supervisor'}</div>
-              <div className="text-xs text-muted-foreground">Your Supervisor</div>
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold shrink-0 shadow-sm border border-primary/10">
+                {supervisorInfo?.name?.charAt(0)?.toUpperCase() || 'S'}
+              </div>
+              <div>
+                <div className="font-bold text-primary leading-tight">{supervisorInfo?.name || 'Supervisor'}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Your Supervisor</div>
+              </div>
             </>
           ) : (
             <>
-              <div className="font-bold text-primary">{student?.profile?.full_name || student?.full_name || student?.name || 'Student'}</div>
-              <div className="text-xs text-muted-foreground">Matric: {student?.matric_no || student?.matric_number || 'Unknown Matric'}</div>
+              {student?.profile?.profile_image_url || student?.profile_image_url || student?.avatar_url ? (
+                <img src={student?.profile?.profile_image_url || student?.profile_image_url || student?.avatar_url} alt="Profile" className="h-10 w-10 rounded-full object-cover shrink-0 shadow-sm border border-primary/10" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold shrink-0 shadow-sm border border-primary/10">
+                  {(student?.profile?.full_name || student?.full_name || student?.name || 'S').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <div className="font-bold text-primary leading-tight">{student?.profile?.full_name || student?.full_name || student?.name || 'Student'}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Matric: {student?.matric_no || student?.matric_number || 'Unknown Matric'}</div>
+              </div>
             </>
           )}
-
         </div>
-        <button onClick={onClose} className="text-muted-foreground/70 hover:text-primary" aria-label="Close chat">✕</button>
+        <button onClick={onClose} className="text-muted-foreground/70 hover:text-primary transition z-10" aria-label="Close chat">✕</button>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div 
+        className="flex-1 overflow-y-auto p-4 custom-scrollbar"
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%236366f1' fill-opacity='0.04'%3E%3Cpath d='M20 20h12v16H20z'/%3E%3Cpath d='M22 22h8v2h-8zm0 4h8v2h-8zm0 4h8v2h-8z'/%3E%3Cpath d='M80 30l10-5 10 5-10 5zm-6 2v6l6 3 6-3v-6'/%3E%3Cpath d='M30 80l2-2 6 6-2 2h-4v-4l-2-2z'/%3E%3Cpath d='M85 80l3-7 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5z'/%3E%3Ccircle cx='60' cy='50' r='3'/%3E%3C/g%3E%3C/svg%3E")` }}
+      >
         {isLoading ? (
           <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-4 border-primary/40 border-t-transparent"></div></div>
         ) : chatDisabled ? (
@@ -191,23 +206,24 @@ export default function SupervisorStudentChatDrawer({
                     </span>
                   </div>
                 )}
-              <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
-                <div className={`max-w-xs rounded-lg p-2 shadow relative ${isMine ? 'bg-primary/20' : 'bg-card border'}`}>
-                  {/* Action buttons on hover */}
-                  <div className={`absolute -top-3 ${isMine ? '-left-16' : '-right-16'} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 ease-in-out flex bg-card border rounded shadow-sm text-muted-foreground`}>
-                    {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-primary hover:bg-muted rounded" title="Reply"><Reply className="w-3 h-3" /></button>}
-                    {isMine && !isEditing && (
-                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1 hover:text-primary hover:bg-muted rounded" title="Edit"><Pencil className="w-3 h-3" /></button>
-                    )}
-                  </div>
+              <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group relative`}>
+                {/* Action buttons on hover */}
+                <div className={`hidden sm:flex absolute top-1/2 -translate-y-1/2 ${isMine ? 'right-[100%] mr-1' : 'left-[100%] ml-1'} items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 ease-in-out scale-95 group-hover:scale-100 z-10`}>
+                  {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Reply"><Reply className="w-3.5 h-3.5" /></button>}
+                  {isMine && !isEditing && (
+                    <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                  )}
+                </div>
 
-                  <div className={`text-[10px] text-muted-foreground mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
+                <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm relative ${isMine ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-card border rounded-tl-sm text-foreground'}`}>
+
+                  <div className={`text-[10px] ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'} mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
                     {isMine ? 'You' : theirName} • {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     {msg.is_edited && <span className="ml-1 italic">(edited)</span>}
                   </div>
 
                   {msg.parent && (
-                    <div className="mb-2 p-1.5 bg-muted rounded text-xs border-l-2 border-primary/50 opacity-80 line-clamp-2">
+                    <div className={`mb-2 p-1.5 rounded text-xs border-l-2 opacity-90 line-clamp-2 ${isMine ? 'bg-primary-foreground/20 border-primary-foreground/30 text-primary-foreground' : 'bg-muted border-primary/50 text-foreground'}`}>
                        <span className="font-semibold">{msg.parent.sender_role === (isStudent ? 'student' : 'supervisor') ? 'You' : theirName}</span>: {msg.parent.content || 'Attached file'}
                     </div>
                   )}
@@ -250,7 +266,7 @@ export default function SupervisorStudentChatDrawer({
                           </div>
                         </div>
                       ) : (
-                        <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" download className="text-primary underline text-sm break-all flex items-center gap-1">
+                          <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" download className={`${isMine ? 'text-primary-foreground hover:text-primary-foreground/80' : 'text-primary hover:text-primary/80'} underline text-sm break-all flex items-center gap-1`}>
                           <Paperclip className="h-3 w-3 flex-shrink-0" /> {msg.attachment_name || 'Download File'}
                         </a>
                       )}
@@ -336,11 +352,11 @@ export default function SupervisorStudentChatDrawer({
           )}
 
           <form className="p-4 flex gap-2 items-center" onSubmit={e => { e.preventDefault(); mutation.mutate({ content: message, attachment, parentId: replyingTo?.id }); }} aria-label="Send message">
-            <label htmlFor="chat-upload" className="cursor-pointer flex items-center" title="Attach file">
-              <Paperclip className="h-5 w-5 text-primary" />
+            <label htmlFor="drawer-chat-upload" className="cursor-pointer p-2 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-full transition" title="Attach file">
+              <Paperclip className="h-5 w-5" />
             </label>
             <input
-              id="chat-upload"
+              id="drawer-chat-upload"
               type="file"
               accept="image/*,.pdf,.doc,.docx"
               onChange={e => handleAttachment(e.target.files?.[0])}
@@ -348,22 +364,26 @@ export default function SupervisorStudentChatDrawer({
               disabled={chatDisabled}
               className="hidden"
             />
-            <input
-              type="text"
-              className="flex-1 border bg-transparent dark:bg-muted/10 text-foreground rounded px-2 py-1"
-              placeholder="Type a message..."
-              value={message}
-              onChange={e => setMessage(e.target.value)}
-              aria-label="Message input"
-              disabled={chatDisabled}
-            />
+            
+            <div className="flex-1 flex flex-col bg-transparent dark:bg-muted/10 border rounded-3xl ring-primary/20 focus-within:ring-2 focus-within:border-primary/40 transition-all overflow-hidden px-4 py-1.5 shadow-sm">
+              <input
+                type="text"
+                className="w-full bg-transparent border-none focus:outline-none py-1 text-[14px] text-foreground placeholder:text-muted-foreground"
+                placeholder="Type a message..."
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                aria-label="Message input"
+                disabled={chatDisabled}
+              />
+            </div>
+            
             <button
               type="submit"
               disabled={chatDisabled || (!message && !attachment) || mutation.isPending}
-              className="bg-primary text-white px-3 py-1 rounded disabled:opacity-50 flex items-center justify-center"
+              className="bg-primary hover:bg-primary text-primary-foreground p-2.5 rounded-full disabled:opacity-50 disabled:hover:bg-primary transition flex items-center justify-center shadow-md active:scale-95"
               aria-label="Send message"
             >
-              <Send className="h-5 w-5" />
+              <Send className="h-5 w-5 ml-1" />
             </button>
           </form>
           <div className="px-4 pb-2 text-xs text-muted-foreground">Max file size: 5MB. Allowed: images, PDF, DOC, DOCX.</div>

@@ -8,6 +8,7 @@ import itfBuilding from "@/assets/itf-building.png";
 import studentLogbook from "@/assets/student-logbook.jpg";
 import chatImage from "@/assets/chat pic.png";
 import { ArrowRight, LogIn, Users, BookOpen, GraduationCap, Briefcase, Library, Laptop, PenTool, Lightbulb, FileText, Globe } from "lucide-react";
+import ScrollFadeIn from "@/components/ScrollFadeIn";
 
 const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
 
@@ -175,44 +176,48 @@ export default function Index() {
         </div>
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
           {/* Learn More Card */}
-          <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
-            <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
-              <div className="flex-1 space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
-                <p className="text-lg text-gray-600 leading-relaxed font-light">
-                  The MTU SIWES Platform is engineered precisely to aid students in managing and tracking their industrial training routines. The portal ensures strict academic compliance, allows direct supervisor assignments, handles weekly log submissions effortlessly, and fosters quick industry evaluations. 
-                </p>
-                <div className="pt-4">
-                  <Button variant="outline" onClick={() => navigate("/siwes-info")} className="text-primary border-primary bg-white hover:bg-primary hover:text-white rounded-full px-6 transition-all">
-                    <BookOpen className="mr-2 h-4 w-4" /> Full Documentation
-                  </Button>
+          <ScrollFadeIn y={60} duration={0.8}>
+            <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+              <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+                <div className="flex-1 space-y-6">
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
+                  <p className="text-lg text-gray-600 leading-relaxed font-light">
+                    The MTU SIWES Platform is engineered precisely to aid students in managing and tracking their industrial training routines. The portal ensures strict academic compliance, allows direct supervisor assignments, handles weekly log submissions effortlessly, and fosters quick industry evaluations. 
+                  </p>
+                  <div className="pt-4">
+                    <Button variant="outline" onClick={() => navigate("/siwes-info")} className="text-primary border-primary bg-white hover:bg-primary hover:text-white rounded-full px-6 transition-all">
+                      <BookOpen className="mr-2 h-4 w-4" /> Full Documentation
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 w-full max-w-md">
-                <img src={itfBuilding} alt="ITF Building" className="w-full h-auto rounded-xl shadow-2xl hover:scale-[1.02] transition-transform duration-500 object-cover" />
-              </div>
-            </section>
-          </div>
+                <div className="flex-1 w-full max-w-md">
+                  <img src={itfBuilding} alt="ITF Building" className="w-full h-auto rounded-xl shadow-2xl hover:scale-[1.02] transition-transform duration-500 object-cover" />
+                </div>
+              </section>
+            </div>
+          </ScrollFadeIn>
 
           {/* Chat System Card */}
-          <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
-            <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
-              <div className="flex-1 space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
-                <p className="text-lg text-gray-600 leading-relaxed font-light">
-                  Need to ask your supervisor a question about your work log? Want to clarify a constraint quickly? The integrated SIWES Chat System bypasses the hassle of emails seamlessly. It connects you strictly with your verified school supervisor for instant feedback, logbook discussion, and file sharing in a secured institutional environment.
-                </p>
-                <div className="pt-4">
-                   <Button onClick={() => navigate("/chat/info")} className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-md transition-all group">
-                      Enter Chat System <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                   </Button>
+          <ScrollFadeIn y={60} duration={0.8} delay={0.15}>
+            <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+              <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
+                <div className="flex-1 space-y-6">
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
+                  <p className="text-lg text-gray-600 leading-relaxed font-light">
+                    Need to ask your supervisor a question about your work log? Want to clarify a constraint quickly? The integrated SIWES Chat System bypasses the hassle of emails seamlessly. It connects you strictly with your verified school supervisor for instant feedback, logbook discussion, and file sharing in a secured institutional environment.
+                  </p>
+                  <div className="pt-4">
+                     <Button onClick={() => navigate("/chat/info")} className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-md transition-all group">
+                        Enter Chat System <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                     </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 w-full max-w-md relative p-4 md:p-8">
-                 <img src={chatImage} alt="Chat Communication" className="w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500 mix-blend-multiply" />
-              </div>
-            </section>
-          </div>
+                <div className="flex-1 w-full max-w-md relative p-4 md:p-8">
+                   <img src={chatImage} alt="Chat Communication" className="w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500 mix-blend-multiply" />
+                </div>
+              </section>
+            </div>
+          </ScrollFadeIn>
         </div>
       </div>
 
@@ -234,6 +239,8 @@ export default function Index() {
            Copyright © Mountain Top University SIWES Track 2026. All Rights Reserved.
         </div>
       </footer>
+      <ScrollFadeIn y={40} duration={0.7} delay={0.3}>
+      </ScrollFadeIn>
     </div>
   );
 }

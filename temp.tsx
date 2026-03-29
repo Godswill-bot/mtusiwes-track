@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -279,8 +279,6 @@ export default function StudentChatPage() {
   if (loading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/40 border-t-transparent"></div></div>;
   if (!supervisor) return <div className="flex items-center justify-center h-screen text-red-500">No supervisor assigned. Chat unavailable.</div>;
 
-  const chatWallpaper = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%236366f1' fill-opacity='0.04'%3E%3Cpath d='M20 20h12v16H20z'/%3E%3Cpath d='M22 22h8v2h-8zm0 4h8v2h-8zm0 4h8v2h-8z'/%3E%3Cpath d='M80 30l10-5 10 5-10 5zm-6 2v6l6 3 6-3v-6'/%3E%3Cpath d='M30 80l2-2 6 6-2 2h-4v-4l-2-2z'/%3E%3Cpath d='M85 80l3-7 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5z'/%3E%3Ccircle cx='60' cy='50' r='3'/%3E%3C/g%3E%3C/svg%3E`;
-
   return (
     <div className="flex flex-col md:flex-row h-screen bg-muted border-t" >
       {/* Left Profile */}
@@ -297,16 +295,11 @@ export default function StudentChatPage() {
                 <ArrowLeft />
               </button>
               <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8 shadow-sm">
-                  {supervisor?.profile_image_url && <AvatarImage src={supervisor.profile_image_url} alt={supervisor.name} />}
-                  <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
-                    {supervisor.name?.charAt(0)?.toUpperCase() || 'S'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-bold text-foreground text-sm leading-tight md:hidden">{supervisor.name}</span>
-                  <span className="font-bold text-foreground text-sm leading-tight hidden md:inline">Chat with {supervisor.name}</span>
+                <div className="bg-primary/20 p-1 rounded-full md:hidden">
+                  <User className="h-5 w-5 text-primary" />
                 </div>
+                <span className="font-bold text-foreground md:hidden">{supervisor.name}</span>
+                <span className="font-bold text-foreground hidden md:inline ml-2">Chat Thread</span>
               </div>
             </div>
             
@@ -321,10 +314,7 @@ export default function StudentChatPage() {
           </div>
 
         {/* Chat Area */}
-        <div 
-          className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar"
-          style={{ backgroundImage: `url("${chatWallpaper}")` }}
-        >
+        <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar  ">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground/70 opacity-70">
               <Send className="h-12 w-12 mb-4 text-primary/40" />
@@ -349,58 +339,68 @@ export default function StudentChatPage() {
                     )}
                     <div className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} gap-2`}>
                       {!isMe && (
-                        <Avatar className="h-8 w-8 mt-auto shrink-0 shadow-sm border border-primary/10">
-                          {supervisor?.profile_image_url && <AvatarImage src={supervisor.profile_image_url} alt={supervisor.name} />}
+                        <Avatar className="h-8 w-8 mt-auto shrink-0 shadow-sm">
                           <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
                             {supervisor?.name?.charAt(0)?.toUpperCase() || 'S'}
                           </AvatarFallback>
                         </Avatar>
                       )}
                       <div className="group relative max-w-[92%] sm:max-w-[85%] md:max-w-[70%]">
+                        {/* Message Bubble container with ContextMenu */}
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className={`relative transition flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                         >
-                          <ContextMenu>
-                            <ContextMenuTrigger asChild>
-                              <div
-                                {...longPressHandlers}
-                                style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
-                                className={`flex flex-col w-full ${isMe ? 'items-end' : 'items-start'}`}
-                              >
-                                {msg.parent && (
-                                  <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-primary-foreground/20 border-primary-foreground/30 text-primary-foreground' : 'bg-muted border-border text-foreground'} flex flex-col opacity-90`}>
-                                    <span className={`font-semibold mb-1 ${isMe ? 'text-primary-foreground' : 'text-primary'}`}>
-                                      {msg.parent.sender_role === 'student' ? 'You' : supervisor.name}
-                                    </span>
-                                    <span className="truncate">{msg.parent.content || 'Attachment'}</span>
-                                  </div>
-                                )}
-                                {msg.content && <div className={`px-4 py-2 rounded-2xl ${isMe ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted text-foreground rounded-tl-sm'} text-[15px] leading-relaxed break-words`}>{msg.content}</div>}
-                                {msg.attachment_url && (
-                                  <div className="mt-2 text-sm">
-                                    {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                                      <img src={msg.attachment_url} alt={msg.attachment_name} className="max-h-48 rounded-lg mt-1 cursor-pointer hover:opacity-90 transition border border-black/10" onClick={(e) => { e.stopPropagation(); window.open(msg.attachment_url, '_blank'); }} />
-                                    ) : (
-                                      <div className={`flex items-center gap-2 p-2 rounded-lg border ${isMe ? 'bg-primary-foreground/20 border-primary-foreground/30 text-primary-foreground' : 'bg-muted border-border text-foreground'}`}>
-                                        <Paperclip className="h-4 w-4 shrink-0" />
-                                        <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
-                                          {msg.attachment_name || 'Download File'}
-                                        </a>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                <div className={`text-[10px] mt-2 flex justify-end items-center gap-1 ${isMe ? 'text-primary/40' : 'text-muted-foreground/70'}`}>
-                                  {msg.optimistic ? 'sending...' : new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                              </div>
-                            </ContextMenuTrigger>
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            <div
+                              {...longPressHandlers}
+                              style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
+                              className={`flex flex-col w-full ${isMe ? 'items-end' : 'items-start'}`}
+                            >
+                           
+                           {/* Replied to... section */}
+                           {msg.parent && (
+                             <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-primary/50 border-primary' : 'bg-muted border-border'} flex flex-col opacity-90`}>
+                               <span className={`font-semibold mb-1 ${isMe ? 'text-primary-foreground' : 'text-primary'}`}>
+                                 {msg.parent.sender_role === 'student' ? 'You' : supervisor.name}
+                               </span>
+                               <span className="truncate">{msg.parent.content || 'Attachment'}</span>
+                             </div>
+                           )}
 
-                            <ContextMenuContent className="w-48 bg-card shadow-lg p-1">
-                              <ContextMenuItem 
-                                onSelect={() => handleReply(msg)}
+                          {/* Content */}
+                          {msg.content && <div className="text-[15px] leading-relaxed break-words">{msg.content}</div>}
+                          
+                          {/* Attachments */}
+                          {msg.attachment_url && (
+                            <div className="mt-2 text-sm">
+                              {msg.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                <img src={msg.attachment_url} alt={msg.attachment_name} className="max-h-48 rounded-lg mt-1 cursor-pointer hover:opacity-90 transition border border-black/10" onClick={(e) => { e.stopPropagation(); window.open(msg.attachment_url, '_blank'); }} />
+                              ) : (
+                                <div className={`flex items-center gap-2 p-2 rounded-lg border ${isMe ? 'bg-primary border-primary' : 'bg-muted border-border'}`}>
+                                  <Paperclip className="h-4 w-4 shrink-0" />
+                                  <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
+                                    {msg.attachment_name || 'Download File'}
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Metadata */}
+                          <div className={`text-[10px] mt-2 flex justify-end items-center gap-1 ${isMe ? 'text-primary/40' : 'text-muted-foreground/70'}`}>
+                            {msg.optimistic ? 'sending...' : new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+
+                            </div>
+                          </ContextMenuTrigger>
+
+                          <ContextMenuContent className="w-48 bg-card shadow-lg p-1">
+                            <ContextMenuItem 
+                              onSelect={() => handleReply(msg)}
                                 className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
                               >
                                 <Reply className="mr-2 h-4 w-4" />
@@ -419,37 +419,24 @@ export default function StudentChatPage() {
                                 <ContextMenuItem 
                                   onSelect={(e) => {
                                     navigator.clipboard.writeText(msg.content);
-                                  }}
-                                  className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
-                                >
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  <span>Copy message</span>
-                                </ContextMenuItem>
-                              )}
-                            </ContextMenuContent>
-                          </ContextMenu>
+                                }}
+                                className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none rounded-sm hover:bg-muted focus:bg-muted"
+                              >
+                                <Copy className="mr-2 h-4 w-4" />
+                                <span>Copy message</span>
+                              </ContextMenuItem>
+                            )}
+                          </ContextMenuContent>
+                        </ContextMenu>
                         </motion.div>
-<div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 ${isMe ? 'right-[100%] mr-1' : 'left-[100%] ml-1'} items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 ease-in-out scale-95 group-hover:scale-100 z-10`}>
-                          <button onClick={() => handleReply(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Reply">
-                            <Reply className="h-3.5 w-3.5" />
-                          </button>
-                          {isMe && msg.content && (
-                            <button onClick={() => handleEdit(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Edit">
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {isMe && (
+                    </div>                      {isMe && (
                         <Avatar className="h-8 w-8 mt-auto shrink-0 shadow-sm border border-primary/20">
                           {myAvatar && <AvatarImage src={myAvatar} alt="My profile" />}
                           <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                             {user?.email?.charAt(0)?.toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
-                      )}
-                    </div>
+                      )}                  </div>
                   </React.Fragment>
                 );
               })}
@@ -514,7 +501,7 @@ export default function StudentChatPage() {
               aria-label="Attach file"
             />
             
-            <div className="flex-1 flex flex-col bg-transparent dark:bg-muted/10 border rounded-3xl ring-primary/20 focus-within:ring-2 focus-within:border-primary/40 transition-all overflow-hidden px-4 py-1.5 shadow-sm">
+            <div className="flex-1 flex flex-col bg-transparent dark:bg-muted/10 border rounded-2xl ring-primary/20 focus-within:ring-2 focus-within:border-primary/40 transition-all overflow-hidden px-3 py-1">
               {attachment && (
                 <div className="flex items-center gap-2 text-xs bg-primary/20 text-primary p-1.5 rounded-lg mb-1 mt-1 font-medium w-fit max-w-full">
                   <Paperclip className="h-3 w-3 shrink-0" />
