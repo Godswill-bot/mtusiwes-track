@@ -9,6 +9,7 @@ import studentLogbook from "@/assets/student-logbook.jpg";
 import chatImage from "@/assets/chat pic.png";
 import { ArrowRight, LogIn, Users, BookOpen, GraduationCap, Briefcase, Library, Laptop, PenTool, Lightbulb, FileText, Globe } from "lucide-react";
 import ScrollFadeIn from "@/components/ScrollFadeIn";
+import "@/styles/custom-fixes.css";
 
 const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
 
@@ -126,12 +127,7 @@ export default function Index() {
               key={index}
               src={image}
               alt={"Slideshow"}
-              className="object-cover w-full h-full absolute inset-0 origin-center"
-              style={{
-                transition: "opacity 1s ease-in-out, transform 7s linear",
-                opacity: index === currentSlide ? 1 : 0,
-                transform: index === currentSlide ? "scale(1.15)" : "scale(1)"
-              }}
+              className={`object-cover w-full h-full absolute inset-0 origin-center hero-slideshow-img ${index === currentSlide ? "hero-slideshow-img--active" : "hero-slideshow-img--inactive"}`}
             />
           ))}
         </div>
@@ -240,6 +236,7 @@ export default function Index() {
         </div>
       </footer>
       <ScrollFadeIn y={40} duration={0.7} delay={0.3}>
+        <div />
       </ScrollFadeIn>
     </div>
   );

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrCreateConversation, listMessages, sendMessage, markMessagesRead, editMessage, formatDateGroup } from '../lib/chatHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import "@/styles/custom-fixes.css";
 
 export default function SupervisorStudentChatDrawer({
   open, onClose, supervisorId, student, supervisorInfo,
@@ -174,8 +175,7 @@ export default function SupervisorStudentChatDrawer({
         <button onClick={onClose} className="text-muted-foreground/70 hover:text-primary transition z-10" aria-label="Close chat">✕</button>
       </div>
       <div 
-        className="flex-1 overflow-y-auto p-4 custom-scrollbar"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%236366f1' fill-opacity='0.04'%3E%3Cpath d='M20 20h12v16H20z'/%3E%3Cpath d='M22 22h8v2h-8zm0 4h8v2h-8zm0 4h8v2h-8z'/%3E%3Cpath d='M80 30l10-5 10 5-10 5zm-6 2v6l6 3 6-3v-6'/%3E%3Cpath d='M30 80l2-2 6 6-2 2h-4v-4l-2-2z'/%3E%3Cpath d='M85 80l3-7 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5z'/%3E%3Ccircle cx='60' cy='50' r='3'/%3E%3C/g%3E%3C/svg%3E")` }}
+        className="flex-1 overflow-y-auto p-4 custom-scrollbar supervisor-chat-bg"
       >
         {isLoading ? (
           <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-4 border-primary/40 border-t-transparent"></div></div>
