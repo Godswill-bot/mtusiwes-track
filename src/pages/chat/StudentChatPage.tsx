@@ -1,9 +1,10 @@
+import './StudentChatPage.css';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOrCreateConversation, listMessages, sendMessage, formatDateGroup } from '@/lib/chatHelpers';
-import { Paperclip, Send, User, ArrowLeft, Reply, X, RefreshCw, Copy, Edit2 } from 'lucide-react';
+import { Paperclip, Send, User, ArrowLeft, Reply, X, RefreshCw, Copy, Edit2, BookOpen, GraduationCap, Briefcase, Library, Laptop, PenTool, Lightbulb, FileText, Globe } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ContextMenu,
@@ -380,8 +381,7 @@ export default function StudentChatPage() {
                             <ContextMenuTrigger asChild>
                               <div
                                 {...longPressHandlers}
-                                style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
-                                className={`flex flex-col w-full ${isMe ? 'items-end' : 'items-start'}`}
+                                className={`no-select flex flex-col w-full ${isMe ? 'items-end' : 'items-start'}`}
                               >
                                 {msg.parent && (
                                   <div className={`mb-2 p-2 rounded-lg text-xs border ${isMe ? 'bg-primary-foreground/20 border-primary-foreground/30 text-primary-foreground' : 'bg-muted border-border text-foreground'} flex flex-col opacity-90`}>
