@@ -71,6 +71,8 @@ const StudentDashboard = () => {
   const [allWeeksCompleted, setAllWeeksCompleted] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showIndustrySignaturePad, setShowIndustrySignaturePad] = useState(false);
+  // Tab state: 0=Logbook, 1=Chat, 2=Announcements, 3=Registration
+  const [activeTab, setActiveTab] = useState(0);
 
   // Fetch unread announcements count
   const { data: unreadAnnouncementsCount = 0 } = useQuery({
@@ -314,8 +316,176 @@ const StudentDashboard = () => {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 relative z-10">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <AlertDialog>
+        <div className="max-w-3xl mx-auto space-y-6">
+          {/* Modern Tab Bar */}
+          <div className="flex w-full rounded-xl overflow-hidden shadow border mb-6 bg-card">
+            {[
+              { label: 'Logbook', icon: <BookOpen className='w-5 h-5 mr-1' /> },
+              { label: 'Chat', icon: <span className='text-lg mr-1'>💬</span> },
+              { label: 'Announcements', icon: <Bell className='w-5 h-5 mr-1' /> },
+              { label: 'Registration', icon: <FileText className='w-5 h-5 mr-1' /> },
+            ].map((tab, idx) => (
+              <button
+                key={tab.label}
+                className={`flex-1 flex items-center justify-center gap-1 py-3 text-sm font-semibold transition-all focus:outline-none border-b-2 ${
+                  activeTab === idx
+                    ? 'bg-primary/10 text-primary border-primary'
+                    : 'bg-card text-muted-foreground border-transparent hover:bg-muted/30'
+                }`}
+                onClick={() => setActiveTab(idx)}
+                style={{ minWidth: 0 }}
+              >
+                {tab.icon}
+                {tab.label}
+                {/* Badge for Announcements */}
+                {tab.label === 'Announcements' && unreadAnnouncementsCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-destructive text-white text-[10px] font-bold">
+                    {unreadAnnouncementsCount > 9 ? '9+' : unreadAnnouncementsCount}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Panels */}
+          <div className="rounded-xl bg-card shadow p-4 min-h-[300px] transition-all">
+            {activeTab === 0 && (
+              // Logbook Tab
+              <div className="flex flex-col items-center justify-center gap-6">
+                <Button 
+                  onClick={() => navigate("/student/logbook")} 
+                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
+                  size="lg"
+                  disabled={!isApproved || siwesLocked}
+                  variant={siwesLocked ? "outline" : "default"}
+                >
+                  {siwesLocked ? <Lock className="h-6 w-6" /> : <BookOpen className="h-6 w-6" />}
+                  <span>{siwesLocked ? "View Logbook (Read-Only)" : "My Logbook"}</span>
+                  {!isApproved && !siwesLocked && (
+                    <span className="text-xs text-muted-foreground">(Awaiting approval)</span>
+                  )}
+                </Button>
+                <Card className="w-full max-w-xl mt-4">
+                  <CardHeader>
+                    <CardTitle>Weekly Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Overall Completion</span>
+                        <span className="font-bold text-primary">{completionPercentage}%</span>
+                      </div>
+                      <Progress value={completionPercentage} className="h-3" />
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+                      <Card className="border-2 border-blue-200 bg-primary/10"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-primary/80">{stats.submitted}</p><p className="text-sm text-primary/80 mt-1">Submitted</p></div><Clock className="h-8 w-8 text-primary/80" /></div></CardContent></Card>
+                      <Card className="border-2 border-green-200 bg-green-50"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-success">{stats.approved}</p><p className="text-sm text-success mt-1">Approved</p></div><CheckCircle className="h-8 w-8 text-success" /></div></CardContent></Card>
+                      <Card className="border-2 border-destructive/20 bg-destructive/10"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-destructive">{stats.rejected}</p><p className="text-sm text-destructive mt-1">Rejected</p></div><XCircle className="h-8 w-8 text-destructive" /></div></CardContent></Card>
+                      <Card className="border-2 border-border bg-muted"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-muted-foreground">{stats.pending}</p><p className="text-sm text-muted-foreground mt-1">Pending</p></div><Calendar className="h-8 w-8 text-muted-foreground" /></div></CardContent></Card>
+                    </div>
+                  </CardContent>
+                </Card>
+                {allWeeksCompleted && studentInfo && (
+                  <Card className="shadow-elevated border-2 border-green-200 bg-green-50 w-full max-w-xl mt-4">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-success"><CheckCircle className="h-6 w-6" />All 24 Weeks Completed!</CardTitle>
+                      <CardDescription>Download your SIWES summary PDF to take to ITF</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <PDFDownloadButton studentId={studentInfo.id} type="student" />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+            {activeTab === 1 && (
+              // Chat Tab
+              <div className="flex flex-col items-center justify-center gap-6">
+                <Button
+                  onClick={() => setChatOpen(true)}
+                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
+                  size="lg"
+                  disabled={!isApproved || siwesLocked || !studentInfo?.school_supervisor_name}
+                  variant="outline"
+                  title="Chat with your assigned supervisor"
+                >
+                  <span className="text-2xl">💬</span>
+                  <span>Chat with Supervisor</span>
+                  {!studentInfo?.school_supervisor_name && (
+                    <span className="text-xs text-muted-foreground">(No supervisor assigned)</span>
+                  )}
+                </Button>
+                <SupervisorStudentChatDrawer
+                  open={chatOpen}
+                  onClose={() => setChatOpen(false)}
+                  supervisorId={
+                    studentInfo?.school_supervisor_id
+                    || studentInfo?.supervisor_id
+                    || (studentInfo?.supervisor_assignments && Array.isArray(studentInfo.supervisor_assignments)
+                          ? studentInfo.supervisor_assignments[0]?.supervisor_id
+                          : undefined)
+                  }
+                  student={{
+                    id: studentInfo?.id,
+                    name: profile?.full_name,
+                    matric_number: studentInfo?.matric_no,
+                  }}
+                  supervisorInfo={{
+                    name: studentInfo?.school_supervisor_name,
+                    email: studentInfo?.school_supervisor_email,
+                    photo: studentInfo?.school_supervisor_photo_url || undefined,
+                  }}
+                />
+              </div>
+            )}
+            {activeTab === 2 && (
+              // Announcements Tab
+              <div className="flex flex-col items-center justify-center gap-6">
+                <Button 
+                  onClick={() => navigate("/student/announcements")}
+                  variant="outline"
+                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
+                  size="lg"
+                >
+                  <Bell className="h-6 w-6" />
+                  <span>View Announcements</span>
+                </Button>
+                <StudentNotifications />
+              </div>
+            )}
+            {activeTab === 3 && (
+              // Registration Tab
+              <div className="flex flex-col items-center justify-center gap-6">
+                <Button 
+                  onClick={() => navigate("/student/pre-siwes")}
+                  variant="outline"
+                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
+                  size="lg"
+                  disabled={siwesLocked}
+                >
+                  <FileText className="h-6 w-6" />
+                  <span>View Registration</span>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Dialog for Industry Signature Pad (unchanged) */}
+          <Dialog open={showIndustrySignaturePad} onOpenChange={setShowIndustrySignaturePad}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Industry Supervisor Signature</DialogTitle>
+              </DialogHeader>
+              <SignaturePad 
+                onSignatureComplete={handleUploadIndustrySignature}
+                onCancel={() => setShowIndustrySignaturePad(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </main>
+    </div>
+  );
             <AlertDialogTrigger asChild>
               <Button variant="ghost" className="mb-4">
                 <ArrowLeft className="h-4 w-4 mr-2" />
