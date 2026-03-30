@@ -486,28 +486,6 @@ const StudentDashboard = () => {
       </main>
     </div>
   );
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" className="mb-4">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you leaving?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  For your security, would you like to sign out before leaving the dashboard, or just return to the home page?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <Button variant="outline" onClick={() => navigate("/")}>Just Go Home</Button>
-                <AlertDialogAction onClick={() => signOut()} className="bg-primary hover:bg-primary/90">
-                  Sign Out & Leave
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-primary">
