@@ -208,12 +208,22 @@ export default function SupervisorStudentChatDrawer({
                 )}
               <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group relative`}>
                 {/* Action buttons on hover */}
-                <div className="chat-action-btns">
-                  {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Reply"><Reply className="w-3.5 h-3.5" /></button>}
-                  {isMine && !isEditing && (
-                    <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
-                  )}
-                </div>
+                {isMine ? (
+                  <div className="chat-action-btns">
+                    {!isEditing && (
+                      <button onClick={() => setReplyingTo(msg)} title="Reply"><Reply className="w-4 h-4" /></button>
+                    )}
+                    {isMine && !isEditing && (
+                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} title="Edit"><Pencil className="w-4 h-4" /></button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="chat-action-btns-left">
+                    {!isEditing && (
+                      <button onClick={() => setReplyingTo(msg)} title="Reply"><Reply className="w-4 h-4" /></button>
+                    )}
+                  </div>
+                )}
 
                 <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm relative ${isMine ? 'chat-bubble-mine rounded-tr-sm' : 'bg-card border rounded-tl-sm text-foreground'}`}>
 
