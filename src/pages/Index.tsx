@@ -172,7 +172,7 @@ export default function Index() {
         </div>
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
           {/* Learn More Card */}
-          <ScrollFadeIn y={60} duration={1.2} backgroundClassName="absolute inset-0 bg-white/60 rounded-3xl z-0">
+          <ScrollFadeIn y={60} duration={1.2}>
             <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-700">
               <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
@@ -194,7 +194,7 @@ export default function Index() {
           </ScrollFadeIn>
 
           {/* Chat System Card */}
-          <ScrollFadeIn y={60} duration={1.2} delay={0.15} backgroundClassName="absolute inset-0 bg-white/60 rounded-3xl z-0">
+          <ScrollFadeIn y={60} duration={1.2} delay={0.15}>
             <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-700">
               <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
