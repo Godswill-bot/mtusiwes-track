@@ -5,25 +5,8 @@
 }
 
 /* Action buttons: modern, beside text, not overlapping */
-.chat-action-btns {
-  position: absolute;
-  top: 50%;
-  right: -2.5rem;
-  left: auto;
-  transform: translateY(-50%);
-  display: flex;
-  gap: 0.5rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s cubic-bezier(.4,1,.4,1), right 0.25s cubic-bezier(.4,1,.4,1);
-  z-index: 10;
-}
-.group:hover .chat-action-btns {
-  opacity: 1;
-  right: -0.5rem;
-  pointer-events: auto;
-}
-.chat-action-btns button {
+/* Chat action button (beside bubble, not overlapping) */
+.chat-action-btn {
   background: #fff;
   border: 1.5px solid #e5e7eb;
   box-shadow: 0 2px 8px 0 rgba(80,80,120,0.07);
@@ -37,48 +20,9 @@
   transition: background 0.18s, box-shadow 0.18s, color 0.18s;
   font-size: 1.1rem;
   outline: none;
+  margin: 0 0.1rem;
 }
-.chat-action-btns button:hover {
-  background: #f3f0ff;
-  color: #4b3bb3;
-  box-shadow: 0 4px 16px 0 rgba(80,80,120,0.13);
-  border-color: #c7bfff;
-}
-/* For left-aligned (other user) reply button */
-.chat-action-btns-left {
-  position: absolute;
-  top: 50%;
-  left: -2.5rem;
-  right: auto;
-  transform: translateY(-50%);
-  display: flex;
-  gap: 0.5rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s cubic-bezier(.4,1,.4,1), left 0.25s cubic-bezier(.4,1,.4,1);
-  z-index: 10;
-}
-.group:hover .chat-action-btns-left {
-  opacity: 1;
-  left: -0.5rem;
-  pointer-events: auto;
-}
-.chat-action-btns-left button {
-  background: #fff;
-  border: 1.5px solid #e5e7eb;
-  box-shadow: 0 2px 8px 0 rgba(80,80,120,0.07);
-  color: #6d5dd3;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.18s, box-shadow 0.18s, color 0.18s;
-  font-size: 1.1rem;
-  outline: none;
-}
-.chat-action-btns-left button:hover {
+.chat-action-btn:hover {
   background: #f3f0ff;
   color: #4b3bb3;
   box-shadow: 0 4px 16px 0 rgba(80,80,120,0.13);

@@ -206,26 +206,16 @@ export default function SupervisorStudentChatDrawer({
                     </span>
                   </div>
                 )}
-              <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group relative`}>
-                {/* Action buttons on hover */}
-                {isMine ? (
-                  <div className="chat-action-btns">
+              <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
+                {/* Flex row: [left action] [bubble] [right action] */}
+                {!isMine && (
+                  <div className="flex items-center mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!isEditing && (
-                      <button onClick={() => setReplyingTo(msg)} title="Reply"><Reply className="w-4 h-4" /></button>
-                    )}
-                    {isMine && !isEditing && (
-                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} title="Edit"><Pencil className="w-4 h-4" /></button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="chat-action-btns-left">
-                    {!isEditing && (
-                      <button onClick={() => setReplyingTo(msg)} title="Reply"><Reply className="w-4 h-4" /></button>
+                      <button onClick={() => setReplyingTo(msg)} title="Reply" className="chat-action-btn"><Reply className="w-4 h-4" /></button>
                     )}
                   </div>
                 )}
-
-                <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm relative ${isMine ? 'chat-bubble-mine rounded-tr-sm' : 'bg-card border rounded-tl-sm text-foreground'}`}>
+                <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm relative ${isMine ? 'chat-bubble-mine rounded-tr-sm' : 'bg-card border rounded-tl-sm text-foreground'}`}> 
 
                   <div className={`text-[10px] ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'} mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
                     {isMine ? 'You' : theirName} • {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -283,6 +273,16 @@ export default function SupervisorStudentChatDrawer({
                     </div>
                   )}
                 </div>
+                {isMine && (
+                  <div className="flex items-center ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!isEditing && (
+                      <button onClick={() => setReplyingTo(msg)} title="Reply" className="chat-action-btn"><Reply className="w-4 h-4" /></button>
+                    )}
+                    {!isEditing && (
+                      <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} title="Edit" className="chat-action-btn"><Pencil className="w-4 h-4" /></button>
+                    )}
+                  </div>
+                )}
       {/* Fullscreen Image Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onClick={() => setSelectedImage(null)}>
