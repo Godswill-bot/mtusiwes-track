@@ -208,14 +208,14 @@ export default function SupervisorStudentChatDrawer({
                 )}
               <div className={`mb-4 flex ${isMine ? 'justify-end' : 'justify-start'} group relative`}>
                 {/* Action buttons on hover */}
-                <div className={`hidden sm:flex absolute top-1/2 -translate-y-1/2 ${isMine ? 'right-[100%] mr-1' : 'left-[100%] ml-1'} items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 ease-in-out scale-95 group-hover:scale-100 z-10`}>
+                <div className="chat-action-btns">
                   {!isEditing && <button onClick={() => setReplyingTo(msg)} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Reply"><Reply className="w-3.5 h-3.5" /></button>}
                   {isMine && !isEditing && (
                     <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content || ''); }} className="p-1.5 bg-background border shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-muted transition" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
                   )}
                 </div>
 
-                <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm relative ${isMine ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-card border rounded-tl-sm text-foreground'}`}>
+                <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm relative ${isMine ? 'chat-bubble-mine rounded-tr-sm' : 'bg-card border rounded-tl-sm text-foreground'}`}>
 
                   <div className={`text-[10px] ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'} mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
                     {isMine ? 'You' : theirName} • {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

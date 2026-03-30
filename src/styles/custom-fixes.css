@@ -1,3 +1,25 @@
+/* Chat bubble: less bright purple */
+.chat-bubble-mine {
+  background-color: #6d5dd3 !important; /* softer, less bright purple */
+  color: #fff !important;
+}
+
+/* Action buttons: very close to bubble */
+.chat-action-btns {
+  position: absolute;
+  top: 50%;
+  right: 0.25rem;
+  left: auto;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.18s, right 0.18s;
+  z-index: 10;
+}
+.group:hover .chat-action-btns {
+  opacity: 1;
+}
 /* External styles for Index.tsx and SupervisorStudentChatDrawer.tsx */
 
 .hero-slideshow-img {
