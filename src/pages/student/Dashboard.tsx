@@ -485,39 +485,6 @@ const StudentDashboard = () => {
       </main>
     </div>
   );
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-                Welcome back, {profile?.full_name || "Student"}!
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                {siwesLocked 
-                  ? "Your SIWES has been completed and graded. View your final results below."
-                  : "Track your SIWES progress and manage your weekly logbook"
-                }
-              </p>
-            </div>
-            {!siwesLocked && (
-              <div className="flex gap-2 self-start sm:self-auto">
-                <Button variant="outline" size="sm" className="sm:size-default" onClick={() => navigate("/student/profile/edit")}>
-                  Edit Profile
-                </Button>
-                <Button variant="outline" onClick={() => navigate("/student/pre-siwes/edit")}>
-                  Edit Registration
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Student Notifications */}
-          <StudentNotifications />
-
-          {!hasRegistration ? (
-            <Card className="shadow-card border-2 border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <FileText className="h-6 w-6 text-primary" />
-                  <span>Complete Pre-SIWES Registration</span>
                 </CardTitle>
                 <CardDescription>
                   You must complete the Pre-SIWES registration form before accessing your logbook
