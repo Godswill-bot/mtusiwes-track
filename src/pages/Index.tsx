@@ -8,7 +8,7 @@ import itfBuilding from "@/assets/itf-building.png";
 import studentLogbook from "@/assets/student-logbook.jpg";
 import chatImage from "@/assets/chat pic.png";
 import { ArrowRight, LogIn, Users, BookOpen, GraduationCap, Briefcase, Library, Laptop, PenTool, Lightbulb, FileText, Globe } from "lucide-react";
-import ScrollFadeIn from "@/components/ScrollFadeIn";
+// import ScrollFadeIn from "@/components/ScrollFadeIn";
 import "@/styles/custom-fixes.css";
 
 const slideshowImages = [siwesStudents, itfBuilding, studentLogbook];
@@ -172,8 +172,8 @@ export default function Index() {
         </div>
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
           {/* Learn More Card */}
-          <ScrollFadeIn y={60} duration={1.2}>
-            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-700">
+          {/* No transition: direct render */}
+            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl">
               <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
@@ -191,11 +191,11 @@ export default function Index() {
                 </div>
               </section>
             </div>
-          </ScrollFadeIn>
+          {/* End no transition */}
 
           {/* Chat System Card */}
-          <ScrollFadeIn y={60} duration={1.2} delay={0.15}>
-            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-700">
+          {/* No transition: direct render */}
+            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl">
               <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
@@ -213,7 +213,7 @@ export default function Index() {
                 </div>
               </section>
             </div>
-          </ScrollFadeIn>
+          {/* End no transition */}
         </div>
       </div>
 
@@ -235,9 +235,8 @@ export default function Index() {
            Copyright © Mountain Top University SIWES Track 2026. All Rights Reserved.
         </div>
       </footer>
-      <ScrollFadeIn y={40} duration={0.7} delay={0.3}>
-        <div />
-      </ScrollFadeIn>
+      {/* No transition for footer */}
+      <div />
     </div>
   );
 }
