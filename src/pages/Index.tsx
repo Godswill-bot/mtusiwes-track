@@ -172,8 +172,8 @@ export default function Index() {
         </div>
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
           {/* Learn More Card */}
-          <ScrollFadeIn y={60} duration={0.8}>
-            <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+          <ScrollFadeIn y={60} duration={1.2} backgroundClassName="absolute inset-0 bg-white/60 rounded-3xl z-0">
+            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-700">
               <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
@@ -194,8 +194,8 @@ export default function Index() {
           </ScrollFadeIn>
 
           {/* Chat System Card */}
-          <ScrollFadeIn y={60} duration={0.8} delay={0.15}>
-            <div className="bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-500">
+          <ScrollFadeIn y={60} duration={1.2} delay={0.15} backgroundClassName="absolute inset-0 bg-white/60 rounded-3xl z-0">
+            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transition-shadow duration-700">
               <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>

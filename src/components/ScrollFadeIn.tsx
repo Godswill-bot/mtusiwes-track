@@ -7,15 +7,17 @@ interface ScrollFadeInProps {
   y?: number;
   duration?: number;
   delay?: number;
+  backgroundClassName?: string; // Optional: for solid bg to prevent flash
   className?: string;
 }
 
 export default function ScrollFadeIn({
   children,
   y = 40,
-  duration = 0.7,
+  duration = 1.2, // much smoother
   delay = 0,
-  className = ""
+  className = "",
+  backgroundClassName = ""
 }: ScrollFadeInProps) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -26,7 +28,7 @@ export default function ScrollFadeIn({
       controls.start({
         opacity: 1,
         y: 0,
-        transition: { duration, delay, ease: [0.22, 1, 0.36, 1] }
+        transition: { duration, delay, ease: [0.25, 1, 0.5, 1] } // even smoother
       });
     }
   }, [inView, controls, duration, delay]);
@@ -36,8 +38,10 @@ export default function ScrollFadeIn({
       ref={ref}
       initial={{ opacity: 0, y }}
       animate={controls}
+      style={{ opacity: 0 }} // Prevent flash: always start hidden
       className={className}
     >
+      {backgroundClassName ? <div className={backgroundClassName} /> : null}
       {children}
     </motion.div>
   );
