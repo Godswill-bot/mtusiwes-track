@@ -482,7 +482,6 @@ const StudentDashboard = () => {
               />
             </DialogContent>
           </Dialog>
-        </div>
       </main>
     </div>
   );
