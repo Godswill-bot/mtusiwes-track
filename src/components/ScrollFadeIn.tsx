@@ -38,11 +38,15 @@ export default function ScrollFadeIn({
       ref={ref}
       initial={{ opacity: 0, y }}
       animate={controls}
-      style={{ opacity: 0 }} // Prevent flash: always start hidden
+      style={{ opacity: 0 }}
       className={className}
     >
-      {backgroundClassName ? <div className={backgroundClassName} /> : null}
-      {children}
+      {inView && (
+        <>
+          {backgroundClassName ? <div className={backgroundClassName} /> : null}
+          {children}
+        </>
+      )}
     </motion.div>
   );
 }
