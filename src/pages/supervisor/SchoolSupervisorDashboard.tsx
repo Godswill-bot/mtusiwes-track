@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, Calendar, ShieldCheck, FileSearch, Notebook, Eye, Network, BookOpenCheck } from "lucide-react";
+import { FileCheck, Clock, CheckCircle, ArrowLeft, Users, Calendar, ShieldCheck, FileSearch, Notebook, Eye, Network, BookOpenCheck, Sparkles, BarChart3, FolderSearch, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PrintableStudentsTable } from "@/components/supervisor/PrintableStudentsTable";
@@ -341,62 +341,72 @@ const SchoolSupervisorDashboard = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">School Supervisor Dashboard</h1>
-            <p className="text-muted-foreground">
-              Review student submissions forwarded by industry supervisors
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleManualRefresh} variant="outline" disabled={isRefreshing}>
+        <div className="mb-8 rounded-2xl border border-primary/10 bg-gradient-to-r from-primary/10 via-card to-accent/10 p-5 shadow-elevated dark:border-primary/20 dark:from-primary/20 dark:via-slate-900/80 dark:to-accent/10">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary mb-3">
+                <Sparkles className="h-4 w-4" />
+                Supervisor Overview
+              </div>
+              <h1 className="text-3xl font-bold mb-2 text-foreground">School Supervisor Dashboard</h1>
+              <p className="max-w-2xl text-muted-foreground">
+                Review student submissions forwarded by industry supervisors and track approvals in one place.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+            <Button onClick={handleManualRefresh} variant="outline" disabled={isRefreshing} className="border-primary/20 bg-background/80 dark:bg-slate-900/70 dark:border-primary/30">
               {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/profile/edit")}>
+            <Button variant="outline" onClick={() => navigate("/profile/edit")} className="border-primary/20 bg-background/80 dark:bg-slate-900/70 dark:border-primary/30">
               Edit Profile
             </Button>
+            </div>
           </div>
         </div>
 
         {/* Statistics Cards */}
         <div className="grid gap-4 md:grid-cols-4 mb-8">
-          <Card>
+          <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-primary/10 to-background shadow-card dark:border-primary/20 dark:from-primary/20 dark:to-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <FileCheck className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-slate-200">Total Students</CardTitle>
+              <div className="rounded-full bg-primary/15 p-2 text-primary"><Users className="h-4 w-4" /></div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStudents}</div>
+              <div className="text-2xl font-bold text-primary">{stats.totalStudents}</div>
+              <p className="text-xs text-muted-foreground mt-1">Currently assigned</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="overflow-hidden border-amber-200 bg-gradient-to-br from-amber-50 to-background shadow-card dark:border-amber-900/50 dark:from-amber-500/10 dark:to-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-slate-200">Pending Reviews</CardTitle>
+              <div className="rounded-full bg-amber-100 p-2 text-amber-600"><Clock className="h-4 w-4" /></div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingReviews}</div>
+              <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.pendingReviews}</div>
+              <p className="text-xs text-muted-foreground mt-1">Need attention</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="overflow-hidden border-emerald-200 bg-gradient-to-br from-emerald-50 to-background shadow-card dark:border-emerald-900/50 dark:from-emerald-500/10 dark:to-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-slate-200">Approved</CardTitle>
+              <div className="rounded-full bg-emerald-100 p-2 text-emerald-600"><CheckCircle className="h-4 w-4" /></div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.approved}</div>
+              <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.approved}</div>
+              <p className="text-xs text-muted-foreground mt-1">Completed submissions</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="overflow-hidden border-sky-200 bg-gradient-to-br from-sky-50 to-background shadow-card dark:border-sky-900/50 dark:from-sky-500/10 dark:to-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Week</CardTitle>
-              <FileCheck className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-slate-200">This Week</CardTitle>
+              <div className="rounded-full bg-sky-100 p-2 text-sky-600"><BarChart3 className="h-4 w-4" /></div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.thisWeek}</div>
+              <div className="text-2xl font-bold text-sky-700 dark:text-sky-300">{stats.thisWeek}</div>
+              <p className="text-xs text-muted-foreground mt-1">Submitted this week</p>
             </CardContent>
           </Card>
         </div>
@@ -414,15 +424,15 @@ const SchoolSupervisorDashboard = () => {
 
         {/* Quick Actions */}
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <Button onClick={() => navigate("/supervisor/students")} variant="outline" className="w-full sm:w-auto">
-            <Users className="h-4 w-4 mr-2" />
+          <Button onClick={() => navigate("/supervisor/students")} variant="outline" className="w-full sm:w-auto border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 dark:bg-primary/10 dark:border-primary/30 dark:text-primary-foreground dark:hover:bg-primary/20">
+            <FolderSearch className="h-4 w-4 mr-2" />
             View All Students
           </Button>
-          <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline" className="w-full sm:w-auto relative">
-            <FileCheck className="h-4 w-4 mr-2" />
+          <Button onClick={() => navigate("/supervisor/pending-registrations")} variant="outline" className="w-full sm:w-auto relative border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20">
+            <ClipboardCheck className="h-4 w-4 mr-2" />
             Manage Registrations
             {stats.pendingRegistrations > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+              <span className="absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1 rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
                 {stats.pendingRegistrations > 99 ? '99+' : stats.pendingRegistrations}
               </span>
             )}

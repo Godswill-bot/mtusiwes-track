@@ -499,11 +499,11 @@ export const FullScreenReportModal = ({
                             <img
                               src={stamp.image_path}
                               alt={stamp.method === 'signature' ? 'Signature' : 'Stamp'}
-                              className="max-h-24 max-w-full object-contain border border-green-300 rounded-md bg-card p-2 cursor-pointer hover:opacity-80"
+                              className="max-h-24 max-w-full object-contain border border-green-300 dark:border-green-700 rounded-md bg-card dark:bg-slate-900/70 p-2 cursor-pointer hover:opacity-80"
                               onClick={() => setExpandedImage(stamp.image_path!)}
                             />
                           ) : (
-                            <div className="h-20 border border-dashed border-green-300 rounded-md flex items-center justify-center text-sm text-muted-foreground">
+                            <div className="h-20 border border-dashed border-green-300 dark:border-green-700 rounded-md flex items-center justify-center text-sm text-muted-foreground dark:text-slate-300">
                               No image
                             </div>
                           )}
@@ -528,10 +528,10 @@ export const FullScreenReportModal = ({
 
                 {/* Existing Score/Approval Info */}
                 {weekData.status === "approved" && (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                    <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg space-y-2">
                     <div className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-green-600" />
-                      <span className="font-semibold text-green-800">Approved</span>
+                      <span className="font-semibold text-green-800 dark:text-green-200">Approved</span>
                     </div>
                     {weekData.score !== null && weekData.score !== undefined && (
                       <p className="text-sm">Score: <strong>{weekData.score}/100</strong></p>
@@ -542,24 +542,24 @@ export const FullScreenReportModal = ({
                       </p>
                     )}
                     {weekData.school_supervisor_comments && (
-                      <div className="mt-2 p-2 bg-card rounded border">
-                        <p className="text-xs text-muted-foreground mb-1">Supervisor Comments:</p>
-                        <p className="text-sm">{weekData.school_supervisor_comments}</p>
+                        <div className="mt-2 p-2 bg-card dark:bg-slate-900/70 rounded border dark:border-slate-700">
+                          <p className="text-xs text-muted-foreground dark:text-slate-400 mb-1">Supervisor Comments:</p>
+                          <p className="text-sm text-foreground dark:text-slate-100">{weekData.school_supervisor_comments}</p>
                       </div>
                     )}
                   </div>
                 )}
 
                 {weekData.status === "rejected" && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg space-y-2">
+                  <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg space-y-2">
                     <div className="flex items-center gap-2">
                       <X className="h-5 w-5 text-red-600" />
-                      <span className="font-semibold text-red-800">Rejected</span>
+                      <span className="font-semibold text-red-800 dark:text-red-200">Rejected</span>
                     </div>
                     {weekData.rejection_reason && (
-                      <div className="mt-2 p-2 bg-card rounded border">
-                        <p className="text-xs text-muted-foreground mb-1">Rejection Reason:</p>
-                        <p className="text-sm">{weekData.rejection_reason}</p>
+                      <div className="mt-2 p-2 bg-card dark:bg-slate-900/70 rounded border dark:border-slate-700">
+                        <p className="text-xs text-muted-foreground dark:text-slate-400 mb-1">Rejection Reason:</p>
+                        <p className="text-sm text-foreground dark:text-slate-100">{weekData.rejection_reason}</p>
                       </div>
                     )}
                   </div>

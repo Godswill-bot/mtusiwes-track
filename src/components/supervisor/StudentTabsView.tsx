@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Eye, Clock, CheckCircle, XCircle, User, 
-  Maximize2, BookOpen, Loader2, GraduationCap 
+  Maximize2, BookOpen, Loader2, GraduationCap, MessageCircle, Sparkles 
 } from "lucide-react";
 import { format } from "date-fns";
 import { FullScreenReportModal } from "./FullScreenReportModal";
@@ -121,7 +121,7 @@ export const StudentTabsView = ({
   const renderWeekCard = (week: WeekInfo, student: StudentWithWeeks, colorClass: string) => (
     <div
       key={week.id}
-      className={`flex items-center justify-between p-3 bg-card rounded-md border ${colorClass} cursor-pointer hover:shadow-md transition-shadow`}
+      className={`flex items-center justify-between p-3 bg-card dark:bg-slate-900/70 rounded-md border ${colorClass} cursor-pointer hover:shadow-md transition-shadow`}
       onClick={() => handleOpenReport(week.id, student)}
     >
       <div className="flex-1">
@@ -134,16 +134,16 @@ export const StudentTabsView = ({
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground dark:text-slate-300">
           {format(new Date(week.start_date), "MMM d")} - {format(new Date(week.end_date), "MMM d, yyyy")}
         </p>
         {week.submitted_at && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground dark:text-slate-400">
             Submitted: {format(new Date(week.submitted_at), "MMM d, yyyy h:mm a")}
           </p>
         )}
         {week.school_supervisor_approved_at && (
-          <p className="text-xs text-green-600">
+          <p className="text-xs text-green-600 dark:text-green-300">
             Approved: {format(new Date(week.school_supervisor_approved_at), "MMM d, yyyy h:mm a")}
           </p>
         )}
@@ -168,10 +168,10 @@ export const StudentTabsView = ({
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
+      <Card className="overflow-hidden border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 shadow-elevated dark:border-primary/20 dark:from-slate-950 dark:via-slate-900 dark:to-primary/10">
+        <CardHeader className="border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent dark:border-primary/20 dark:from-primary/10 dark:to-transparent">
+          <CardTitle className="flex items-center gap-2 text-primary">
+            <Sparkles className="h-5 w-5" />
             Student Reports
           </CardTitle>
           <CardDescription>
@@ -181,14 +181,14 @@ export const StudentTabsView = ({
         <CardContent>
           <Tabs value={activeStudentId} onValueChange={setActiveStudentId}>
             {/* Student Tabs */}
-            <TabsList className="flex flex-wrap h-auto gap-1 mb-4 bg-muted/50 p-1">
+            <TabsList className="flex flex-wrap h-auto gap-1 mb-4 bg-primary/5 p-1 border border-primary/10 rounded-xl dark:bg-slate-900/70 dark:border-primary/20">
               {sortedStudents.map((student) => {
                 const pendingCount = student.weeks.filter(w => w.status === "submitted").length;
                 return (
                   <TabsTrigger
                     key={student.id}
                     value={student.id}
-                    className="relative data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2"
+                    className="relative px-4 py-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
                   >
                     <div className="flex items-center gap-2">
                       <span className="truncate max-w-[150px]">{student.profile.full_name}</span>
@@ -207,13 +207,13 @@ export const StudentTabsView = ({
             {sortedStudents.map((student) => (
               <TabsContent key={student.id} value={student.id} className="mt-0">
                 {/* Student Header */}
-                <div className="flex flex-col md:flex-row md:items-start justify-between p-4 bg-muted/30 rounded-lg mb-4 gap-4">
+                <div className="flex flex-col md:flex-row md:items-start justify-between p-4 bg-gradient-to-r from-primary/5 via-card to-accent/5 rounded-xl mb-4 gap-4 border border-primary/10 dark:border-primary/20 dark:from-primary/10 dark:via-slate-900/80 dark:to-accent/10">
                   <div>
-                    <h3 className="font-semibold text-lg">{student.profile.full_name}</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="font-semibold text-lg text-primary">{student.profile.full_name}</h3>
+                    <p className="text-sm text-muted-foreground dark:text-slate-300">
                       {student.matric_no} • {student.department}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground dark:text-slate-300">
                       {student.organisation_name}
                     </p>
                   </div>
@@ -231,8 +231,9 @@ export const StudentTabsView = ({
                       size="sm"
                       onClick={() => { setChatOpen(true); setChatStudent(student); }}
                       title="Chat with student"
+                      className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 dark:bg-primary/10 dark:border-primary/30 dark:hover:bg-primary/20"
                     >
-                      <span className="mr-2">💬</span>
+                      <MessageCircle className="mr-2 h-4 w-4" />
                       Chat
                     </Button>
                     <StudentGradingModal 
@@ -271,7 +272,7 @@ export const StudentTabsView = ({
                   {/* Approved Dropdown */}
                   <AccordionItem value="approved">
                     <AccordionTrigger>
-                      <div className="flex items-center gap-2 text-green-700">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                         <CheckCircle className="h-4 w-4" />
                         <span className="font-medium">Approved ({categorizedWeeks.approved.length})</span>
                       </div>
@@ -281,7 +282,7 @@ export const StudentTabsView = ({
                         {categorizedWeeks.approved.length === 0 ? (
                           <p className="text-center text-muted-foreground py-4">No approved reports</p>
                         ) : (
-                          categorizedWeeks.approved.map((week) => renderWeekCard(week, currentStudent, "border-green-200"))
+                          categorizedWeeks.approved.map((week) => renderWeekCard(week, currentStudent, "border-green-200 dark:border-green-900/60"))
                         )}
                       </div>
                     </AccordionContent>
@@ -289,7 +290,7 @@ export const StudentTabsView = ({
                   {/* Rejected Dropdown */}
                   <AccordionItem value="rejected">
                     <AccordionTrigger>
-                      <div className="flex items-center gap-2 text-red-700">
+                      <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
                         <XCircle className="h-4 w-4" />
                         <span className="font-medium">Rejected ({categorizedWeeks.rejected.length})</span>
                       </div>
@@ -299,7 +300,7 @@ export const StudentTabsView = ({
                         {categorizedWeeks.rejected.length === 0 ? (
                           <p className="text-center text-muted-foreground py-4">No rejected reports</p>
                         ) : (
-                          categorizedWeeks.rejected.map((week) => renderWeekCard(week, currentStudent, "border-red-200"))
+                          categorizedWeeks.rejected.map((week) => renderWeekCard(week, currentStudent, "border-red-200 dark:border-red-900/60"))
                         )}
                       </div>
                     </AccordionContent>
