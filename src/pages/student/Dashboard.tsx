@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, Lock, Award, Bell, Briefcase, GraduationCap, Laptop, Route, Map, FileSignature } from "lucide-react";
+import { FileText, BookOpen, Calendar, CheckCircle, XCircle, Clock, Building, ArrowLeft, Lock, Award, Bell, Briefcase, GraduationCap, Laptop, Route, Map, FileSignature, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
@@ -28,6 +28,20 @@ import { Badge } from "@/components/ui/badge";
 import { StudentNotifications } from "@/components/student/StudentNotifications";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SignaturePad } from "@/components/SignaturePad";
+
+type StudentInfo = {
+  id?: string;
+  pre_registration?: Array<{ status?: string; remark?: string }> | { status?: string; remark?: string };
+  siwes_locked?: boolean;
+  school_supervisor_id?: string;
+  school_supervisor_name?: string;
+  school_supervisor_email?: string;
+  school_supervisor_photo_url?: string;
+  supervisor_id?: string;
+  supervisor_assignments?: Array<{ supervisor_id?: string }>;
+  industry_supervisor_signature_url?: string;
+  [key: string]: any;
+};
 
 const StudentBackgroundIcons = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.04] text-primary">
@@ -51,7 +65,7 @@ const StudentDashboard = () => {
   const [isRejected, setIsRejected] = useState(false);
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [studentInfo, setStudentInfo] = useState<Record<string, unknown> | null>(null);
+  const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
   const [siwesLocked, setSiwesLocked] = useState(false);
   const [gradeInfo, setGradeInfo] = useState<{
     grade: string;
@@ -71,9 +85,6 @@ const StudentDashboard = () => {
   const [allWeeksCompleted, setAllWeeksCompleted] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showIndustrySignaturePad, setShowIndustrySignaturePad] = useState(false);
-  // Tab state: 0=Logbook, 1=Chat, 2=Announcements, 3=Registration
-  const [activeTab, setActiveTab] = useState(0);
-
   // Fetch unread announcements count
   const { data: unreadAnnouncementsCount = 0 } = useQuery({
     queryKey: ["student", "unread-announcements", user?.id],
@@ -82,7 +93,7 @@ const StudentDashboard = () => {
       
       const lastReadISO = localStorage.getItem(`lastReadAnnouncementTime_${user.id}`);
       
-      let query = supabase
+      let query = (supabase as any)
         .from("announcements")
         .select("id", { count: "exact", head: true });
         
@@ -147,7 +158,7 @@ const StudentDashboard = () => {
 
       setHasRegistration(!!studentData);
       
-      let enrichedStudentData = studentData;
+      let enrichedStudentData: StudentInfo | null = studentData as StudentInfo | null;
       if (studentData) {
         // ALWAYS try to get the supervisor assignment to ensure we have the ID for chat
         const { data: assignment } = await supabase
@@ -156,13 +167,14 @@ const StudentDashboard = () => {
           .eq("student_id", studentData.id)
           .eq("assignment_type", "school_supervisor")
           .maybeSingle();
-        
-        if (assignment && assignment.supervisor_id) {
+
+        const typedAssignment = assignment as any;
+        if (typedAssignment && typedAssignment.supervisor_id) {
           enrichedStudentData = {
-            ...studentData,
-            school_supervisor_id: assignment.supervisor_id,
-            school_supervisor_name: assignment.supervisors?.name || studentData.school_supervisor_name,
-            school_supervisor_email: assignment.supervisors?.email || studentData.school_supervisor_email,
+            ...(studentData as StudentInfo),
+            school_supervisor_id: typedAssignment.supervisor_id,
+            school_supervisor_name: typedAssignment.supervisors?.name || (studentData as StudentInfo).school_supervisor_name,
+            school_supervisor_email: typedAssignment.supervisors?.email || (studentData as StudentInfo).school_supervisor_email,
           };
         }
       }
@@ -189,7 +201,7 @@ const StudentDashboard = () => {
 
         // If locked, fetch grade information
         if (studentData.siwes_locked === true) {
-          const { data: gradeData } = await supabase
+          const { data: gradeData } = await (supabase as any)
             .from("supervisor_grades")
             .select("*")
             .eq("student_id", studentData.id)
@@ -274,7 +286,7 @@ const StudentDashboard = () => {
         .getPublicUrl(`signatures/${fileName}`);
 
       // Update student table with URL
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('students')
         .update({ industry_supervisor_signature_url: publicUrl })
         .eq('id', studentInfo.id);
@@ -316,175 +328,39 @@ const StudentDashboard = () => {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 relative z-10">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {/* Modern Tab Bar */}
-          <div className="flex w-full rounded-xl overflow-hidden shadow border mb-6 bg-card">
-            {[
-              { label: 'Logbook', icon: <BookOpen className='w-5 h-5 mr-1' /> },
-              { label: 'Chat', icon: <span className='text-lg mr-1'>💬</span> },
-              { label: 'Announcements', icon: <Bell className='w-5 h-5 mr-1' /> },
-              { label: 'Registration', icon: <FileText className='w-5 h-5 mr-1' /> },
-            ].map((tab, idx) => (
-              <button
-                key={tab.label}
-                className={`flex-1 flex items-center justify-center gap-1 py-3 text-sm font-semibold transition-all focus:outline-none border-b-2 ${
-                  activeTab === idx
-                    ? 'bg-primary/10 text-primary border-primary'
-                    : 'bg-card text-muted-foreground border-transparent hover:bg-muted/30'
-                }`}
-                onClick={() => setActiveTab(idx)}
-                style={{ minWidth: 0 }}
-              >
-                {tab.icon}
-                {tab.label}
-                {/* Badge for Announcements */}
-                {tab.label === 'Announcements' && unreadAnnouncementsCount > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-destructive text-white text-[10px] font-bold">
-                    {unreadAnnouncementsCount > 9 ? '9+' : unreadAnnouncementsCount}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Panels */}
-          <div className="rounded-xl bg-card shadow p-4 min-h-[300px] transition-all">
-            {activeTab === 0 && (
-              // Logbook Tab
-              <div className="flex flex-col items-center justify-center gap-6">
-                <Button 
-                  onClick={() => navigate("/student/logbook")} 
-                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
-                  size="lg"
-                  disabled={!isApproved || siwesLocked}
-                  variant={siwesLocked ? "outline" : "default"}
-                >
-                  {siwesLocked ? <Lock className="h-6 w-6" /> : <BookOpen className="h-6 w-6" />}
-                  <span>{siwesLocked ? "View Logbook (Read-Only)" : "My Logbook"}</span>
-                  {!isApproved && !siwesLocked && (
-                    <span className="text-xs text-muted-foreground">(Awaiting approval)</span>
-                  )}
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary">
+                Welcome back, {profile?.full_name || "Student"}!
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                {siwesLocked
+                  ? "Your SIWES has been completed and graded. View your final results below."
+                  : "Track your SIWES progress and manage your weekly logbook"}
+              </p>
+            </div>
+            {!siwesLocked && (
+              <div className="flex gap-2 self-start sm:self-auto">
+                <Button variant="outline" size="sm" className="sm:size-default" onClick={() => navigate("/student/profile/edit")}>
+                  Edit Profile
                 </Button>
-                <Card className="w-full max-w-xl mt-4">
-                  <CardHeader>
-                    <CardTitle>Weekly Progress</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">Overall Completion</span>
-                        <span className="font-bold text-primary">{completionPercentage}%</span>
-                      </div>
-                      <Progress value={completionPercentage} className="h-3" />
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-                      <Card className="border-2 border-blue-200 bg-primary/10"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-primary/80">{stats.submitted}</p><p className="text-sm text-primary/80 mt-1">Submitted</p></div><Clock className="h-8 w-8 text-primary/80" /></div></CardContent></Card>
-                      <Card className="border-2 border-green-200 bg-green-50"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-success">{stats.approved}</p><p className="text-sm text-success mt-1">Approved</p></div><CheckCircle className="h-8 w-8 text-success" /></div></CardContent></Card>
-                      <Card className="border-2 border-destructive/20 bg-destructive/10"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-destructive">{stats.rejected}</p><p className="text-sm text-destructive mt-1">Rejected</p></div><XCircle className="h-8 w-8 text-destructive" /></div></CardContent></Card>
-                      <Card className="border-2 border-border bg-muted"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-muted-foreground">{stats.pending}</p><p className="text-sm text-muted-foreground mt-1">Pending</p></div><Calendar className="h-8 w-8 text-muted-foreground" /></div></CardContent></Card>
-                    </div>
-                  </CardContent>
-                </Card>
-                {allWeeksCompleted && studentInfo && (
-                  <Card className="shadow-elevated border-2 border-green-200 bg-green-50 w-full max-w-xl mt-4">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-success"><CheckCircle className="h-6 w-6" />All 24 Weeks Completed!</CardTitle>
-                      <CardDescription>Download your SIWES summary PDF to take to ITF</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <PDFDownloadButton studentId={studentInfo.id} type="student" />
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-            {activeTab === 1 && (
-              // Chat Tab
-              <div className="flex flex-col items-center justify-center gap-6">
-                <Button
-                  onClick={() => setChatOpen(true)}
-                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
-                  size="lg"
-                  disabled={!isApproved || siwesLocked || !studentInfo?.school_supervisor_name}
-                  variant="outline"
-                  title="Chat with your assigned supervisor"
-                >
-                  <span className="text-2xl">💬</span>
-                  <span>Chat with Supervisor</span>
-                  {!studentInfo?.school_supervisor_name && (
-                    <span className="text-xs text-muted-foreground">(No supervisor assigned)</span>
-                  )}
-                </Button>
-                <SupervisorStudentChatDrawer
-                  open={chatOpen}
-                  onClose={() => setChatOpen(false)}
-                  supervisorId={
-                    studentInfo?.school_supervisor_id
-                    || studentInfo?.supervisor_id
-                    || (studentInfo?.supervisor_assignments && Array.isArray(studentInfo.supervisor_assignments)
-                          ? studentInfo.supervisor_assignments[0]?.supervisor_id
-                          : undefined)
-                  }
-                  student={{
-                    id: studentInfo?.id,
-                    name: profile?.full_name,
-                    matric_number: studentInfo?.matric_no,
-                  }}
-                  supervisorInfo={{
-                    name: studentInfo?.school_supervisor_name,
-                    email: studentInfo?.school_supervisor_email,
-                    photo: studentInfo?.school_supervisor_photo_url || undefined,
-                  }}
-                />
-              </div>
-            )}
-            {activeTab === 2 && (
-              // Announcements Tab
-              <div className="flex flex-col items-center justify-center gap-6">
-                <Button 
-                  onClick={() => navigate("/student/announcements")}
-                  variant="outline"
-                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
-                  size="lg"
-                >
-                  <Bell className="h-6 w-6" />
-                  <span>View Announcements</span>
-                </Button>
-                <StudentNotifications />
-              </div>
-            )}
-            {activeTab === 3 && (
-              // Registration Tab
-              <div className="flex flex-col items-center justify-center gap-6">
-                <Button 
-                  onClick={() => navigate("/student/pre-siwes")}
-                  variant="outline"
-                  className="h-20 w-full max-w-xs flex-col gap-2 text-lg"
-                  size="lg"
-                  disabled={siwesLocked}
-                >
-                  <FileText className="h-6 w-6" />
-                  <span>View Registration</span>
+                <Button variant="outline" onClick={() => navigate("/student/pre-siwes/edit")}>
+                  Edit Registration
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Dialog for Industry Signature Pad (unchanged) */}
-          <Dialog open={showIndustrySignaturePad} onOpenChange={setShowIndustrySignaturePad}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Industry Supervisor Signature</DialogTitle>
-              </DialogHeader>
-              <SignaturePad 
-                onSignatureComplete={handleUploadIndustrySignature}
-                onCancel={() => setShowIndustrySignaturePad(false)}
-              />
-            </DialogContent>
-          </Dialog>
-      </main>
-    </div>
-  );
+          {/* Student Notifications */}
+          <StudentNotifications />
+
+          {!hasRegistration ? (
+            <Card className="shadow-card border-2 border-primary/20 transition-all duration-300 ease-out hover:shadow-elevated">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-6 w-6 text-primary" />
+                  <span>Complete Pre-SIWES Registration</span>
                 </CardTitle>
                 <CardDescription>
                   You must complete the Pre-SIWES registration form before accessing your logbook
@@ -497,7 +373,7 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
           ) : isRejected ? (
-            <Card className="shadow-card border-2 border-destructive/20 bg-destructive/10">
+            <Card className="shadow-card border-2 border-destructive/20 bg-destructive/10 transition-all duration-300 ease-out hover:shadow-elevated">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 text-destructive">
                   <XCircle className="h-6 w-6" />
@@ -523,14 +399,14 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
           ) : !isApproved ? (
-            <Card className="shadow-card border-2 border-accent/20 bg-accent/10">
+            <Card className="shadow-card border-2 border-accent/20 bg-accent/10 transition-all duration-300 ease-out hover:shadow-elevated">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 text-muted-foreground">
                   <Clock className="h-6 w-6" />
                   <span>Pre-Registration Pending Approval</span>
                 </CardTitle>
                 <CardDescription>
-                  Your pre-registration form has been submitted and is awaiting school supervisor approval. 
+                  Your pre-registration form has been submitted and is awaiting school supervisor approval.
                   You will be able to start weekly submissions once approved.
                 </CardDescription>
               </CardHeader>
@@ -542,9 +418,8 @@ const StudentDashboard = () => {
             </Card>
           ) : (
             <>
-              {/* SIWES Locked Banner */}
               {siwesLocked && (
-                <Card className="shadow-elevated border-2 border-primary/20 bg-primary/5">
+                <Card className="shadow-elevated border-2 border-primary/20 bg-primary/5 transition-all duration-300 ease-out">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-primary">
                       <Lock className="h-6 w-6" />
@@ -573,7 +448,7 @@ const StudentDashboard = () => {
                             {gradeInfo.grade}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-4 gap-4 text-center">
                           <div className="p-2 bg-primary/10 rounded">
                             <div className="text-2xl font-bold text-primary/80">{gradeInfo.attendanceScore.toFixed(1)}</div>
@@ -601,10 +476,7 @@ const StudentDashboard = () => {
                         )}
 
                         <div className="pt-2">
-                          <PDFDownloadButton 
-                            studentId={studentInfo?.id as string} 
-                            type="student"
-                          />
+                          <PDFDownloadButton studentId={studentInfo?.id as string} type="student" />
                         </div>
                       </div>
                     </CardContent>
@@ -612,12 +484,8 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              {/* System Information Cards */}
-              <div className="grid md:grid-cols-2 gap-4">
-              </div>
-
               {studentInfo && (
-                <Card className="shadow-elevated">
+                <Card className="shadow-elevated transition-all duration-300 ease-out hover:shadow-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building className="h-5 w-5" />
@@ -645,12 +513,7 @@ const StudentDashboard = () => {
                             <CheckCircle className="w-3 h-3 mr-1" /> Signature Added
                           </Badge>
                         ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-xs"
-                            onClick={() => setShowIndustrySignaturePad(true)}
-                          >
+                          <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowIndustrySignaturePad(true)}>
                             Add Signature
                           </Button>
                         )}
@@ -669,7 +532,7 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              <Card className="shadow-elevated">
+              <Card className="shadow-elevated transition-all duration-300 ease-out hover:shadow-card">
                 <CardHeader>
                   <CardTitle>Weekly Progress</CardTitle>
                 </CardHeader>
@@ -683,138 +546,71 @@ const StudentDashboard = () => {
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-                    <Card className="border-2 border-blue-200 bg-primary/10">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-2xl font-bold text-primary/80">{stats.submitted}</p>
-                            <p className="text-sm text-primary/80 mt-1">Submitted</p>
-                          </div>
-                          <Clock className="h-8 w-8 text-primary/80" />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2 border-green-200 bg-green-50">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-2xl font-bold text-success">{stats.approved}</p>
-                            <p className="text-sm text-success mt-1">Approved</p>
-                          </div>
-                          <CheckCircle className="h-8 w-8 text-success" />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2 border-destructive/20 bg-destructive/10">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-2xl font-bold text-destructive">{stats.rejected}</p>
-                            <p className="text-sm text-destructive mt-1">Rejected</p>
-                          </div>
-                          <XCircle className="h-8 w-8 text-destructive" />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-2 border-border bg-muted">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-2xl font-bold text-muted-foreground">{stats.pending}</p>
-                            <p className="text-sm text-muted-foreground mt-1">Pending</p>
-                          </div>
-                          <Calendar className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <Card className="border-2 border-blue-200 bg-primary/10 transition-all duration-300 ease-out hover:-translate-y-0.5"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-primary/80">{stats.submitted}</p><p className="text-sm text-primary/80 mt-1">Submitted</p></div><Clock className="h-8 w-8 text-primary/80" /></div></CardContent></Card>
+                    <Card className="border-2 border-green-200 bg-green-50 transition-all duration-300 ease-out hover:-translate-y-0.5"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-success">{stats.approved}</p><p className="text-sm text-success mt-1">Approved</p></div><CheckCircle className="h-8 w-8 text-success" /></div></CardContent></Card>
+                    <Card className="border-2 border-destructive/20 bg-destructive/10 transition-all duration-300 ease-out hover:-translate-y-0.5"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-destructive">{stats.rejected}</p><p className="text-sm text-destructive mt-1">Rejected</p></div><XCircle className="h-8 w-8 text-destructive" /></div></CardContent></Card>
+                    <Card className="border-2 border-border bg-muted transition-all duration-300 ease-out hover:-translate-y-0.5"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-muted-foreground">{stats.pending}</p><p className="text-sm text-muted-foreground mt-1">Pending</p></div><Calendar className="h-8 w-8 text-muted-foreground" /></div></CardContent></Card>
                   </div>
                 </CardContent>
               </Card>
 
               {allWeeksCompleted && studentInfo && (
-                <Card className="shadow-elevated border-2 border-green-200 bg-green-50">
+                <Card className="shadow-elevated border-2 border-green-200 bg-green-50 transition-all duration-300 ease-out hover:shadow-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-success">
                       <CheckCircle className="h-6 w-6" />
                       All 24 Weeks Completed!
                     </CardTitle>
-                    <CardDescription>
-                      Download your SIWES summary PDF to take to ITF
-                    </CardDescription>
+                    <CardDescription>Download your SIWES summary PDF to take to ITF</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <PDFDownloadButton 
-                      studentId={studentInfo.id} 
-                      type="student"
-                    />
+                    <PDFDownloadButton studentId={studentInfo.id} type="student" />
                   </CardContent>
                 </Card>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Button 
-                  onClick={() => navigate("/student/logbook")} 
-                  className="h-24 flex-col gap-2"
-                  size="lg"
-                  disabled={!isApproved || siwesLocked}
-                  variant={siwesLocked ? "outline" : "default"}
-                >
+                <Button onClick={() => navigate("/student/logbook")} className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={!isApproved || siwesLocked} variant={siwesLocked ? "outline" : "default"}>
                   {siwesLocked ? <Lock className="h-6 w-6" /> : <BookOpen className="h-6 w-6" />}
                   <span>{siwesLocked ? "View Logbook (Read-Only)" : "My Logbook"}</span>
-                  {!isApproved && !siwesLocked && (
-                    <span className="text-xs text-muted-foreground">(Awaiting approval)</span>
-                  )}
+                  {!isApproved && !siwesLocked && <span className="text-xs text-muted-foreground">(Awaiting approval)</span>}
                 </Button>
 
-                {/* Chat Button for Supervisor ↔ Student */}
                 <Button
                   onClick={() => setChatOpen(true)}
-                  className="h-24 flex-col gap-2"
+                  className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5"
                   size="lg"
                   disabled={!isApproved || siwesLocked || !studentInfo?.school_supervisor_name}
                   variant="outline"
                   title="Chat with your assigned supervisor"
                 >
-                  <span className="text-2xl">💬</span>
+                  <div className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center">
+                    <MessageCircle className="h-4 w-4 text-primary" />
+                  </div>
                   <span>Chat with Supervisor</span>
                   {!studentInfo?.school_supervisor_name && (
                     <span className="text-xs text-muted-foreground">(No supervisor assigned)</span>
                   )}
                 </Button>
-                <Button 
-                  onClick={() => navigate("/student/announcements")}
-                  variant="outline"
-                    className="relative h-24 flex-col gap-2"
-                    size="lg"
-                  >
-                    <div className="relative">
-                      <Bell className="h-6 w-6" />
-                      {unreadAnnouncementsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                          {unreadAnnouncementsCount > 9 ? "9+" : unreadAnnouncementsCount}
-                        </span>
-                      )}
-                    </div>
-                    <span>Announcements</span>
-                  </Button>
 
-                <Button 
-                  onClick={() => navigate("/student/pre-siwes")} 
-                  variant="outline"
-                  className="h-24 flex-col gap-2"
-                  size="lg"
-                  disabled={siwesLocked}
-                >
+                <Button onClick={() => navigate("/student/notifications")} variant="outline" className="relative h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg">
+                  <div className="relative">
+                    <Bell className="h-6 w-6" />
+                    {unreadAnnouncementsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                        {unreadAnnouncementsCount > 9 ? "9+" : unreadAnnouncementsCount}
+                      </span>
+                    )}
+                  </div>
+                  <span>Notifications</span>
+                </Button>
+
+                <Button onClick={() => navigate("/student/pre-siwes")} variant="outline" className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={siwesLocked}>
                   <FileText className="h-6 w-6" />
                   <span>View Registration</span>
                 </Button>
-
               </div>
 
-              {/* Supervisor ↔ Student Chat Drawer */}
               <SupervisorStudentChatDrawer
                 open={chatOpen}
                 onClose={() => setChatOpen(false)}
@@ -839,6 +635,7 @@ const StudentDashboard = () => {
             </>
           )}
 
+          {/* Dialog for Industry Signature Pad (unchanged) */}
           <Dialog open={showIndustrySignaturePad} onOpenChange={setShowIndustrySignaturePad}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>

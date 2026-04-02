@@ -1,50 +1,61 @@
-/* Chat bubble: less bright purple */
-.chat-bubble-mine {
-  background-color: #6d5dd3 !important; /* softer, less bright purple */
-  color: #fff !important;
-}
-
-/* Action buttons: modern, beside text, not overlapping */
-/* Chat action button (beside bubble, not overlapping) */
-.chat-action-btn {
-  background: #fff;
-  border: 1.5px solid #e5e7eb;
-  box-shadow: 0 2px 8px 0 rgba(80,80,120,0.07);
-  color: #6d5dd3;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.18s, box-shadow 0.18s, color 0.18s;
-  font-size: 1.1rem;
-  outline: none;
-  margin: 0 0.1rem;
-}
-.chat-action-btn:hover {
-  background: #f3f0ff;
-  color: #4b3bb3;
-  box-shadow: 0 4px 16px 0 rgba(80,80,120,0.13);
-  border-color: #c7bfff;
-}
-/* External styles for Index.tsx and SupervisorStudentChatDrawer.tsx */
-
-.hero-slideshow-img {
-  transition: opacity 1s ease-in-out, transform 7s linear;
-}
-
-.hero-slideshow-img--active {
-  opacity: 1 !important;
-  transform: scale(1.15) !important;
-}
-
-.hero-slideshow-img--inactive {
-  opacity: 0 !important;
-  transform: scale(1) !important;
-}
-
 .supervisor-chat-bg {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%236366f1' fill-opacity='0.04'%3E%3Cpath d='M20 20h12v16H20z'/%3E%3Cpath d='M22 22h8v2h-8zm0 4h8v2h-8zm0 4h8v2h-8z'/%3E%3Cpath d='M80 30l10-5 10 5-10 5zm-6 2v6l6 3 6-3v-6'/%3E%3Cpath d='M30 80l2-2 6 6-2 2h-4v-4l-2-2z'/%3E%3Cpath d='M85 80l3-7 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5z'/%3E%3Ccircle cx='60' cy='50' r='3'/%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: repeat;
+	background-color: #f8f8fb;
+	background-image:
+		radial-gradient(circle at 20% 20%, rgba(122, 90, 248, 0.06) 0, rgba(122, 90, 248, 0.06) 2px, transparent 2px),
+		radial-gradient(circle at 80% 60%, rgba(122, 90, 248, 0.05) 0, rgba(122, 90, 248, 0.05) 2px, transparent 2px);
+	background-size: 42px 42px, 48px 48px;
+}
+
+.chat-bubble-mine {
+	background: linear-gradient(135deg, #6f57d9 0%, #7f66f0 100%);
+	color: #ffffff;
+	border: 1px solid rgba(111, 87, 217, 0.35);
+}
+
+.chat-bubble-theirs {
+	background: #ffffff;
+	border: 1px solid rgba(122, 90, 248, 0.2);
+}
+
+.chat-action-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 9999px;
+	color: rgba(84, 66, 158, 0.8);
+	background: rgba(122, 90, 248, 0.08);
+	border: 1px solid rgba(122, 90, 248, 0.2);
+	transition: all 0.2s ease;
+}
+
+.chat-action-btn:hover {
+	background: rgba(122, 90, 248, 0.16);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: rgba(122, 90, 248, 0.35);
+	border-radius: 9999px;
+}
+
+@media (max-width: 1024px) {
+	.supervisor-chat-bg {
+		background-size: 36px 36px, 42px 42px;
+	}
+}
+
+@media (max-width: 640px) {
+	.supervisor-chat-bg {
+		background-size: 28px 28px, 34px 34px;
+	}
 }

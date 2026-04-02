@@ -28,6 +28,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminAnnouncementPage from "./pages/admin/AdminAnnouncementPage";
 import StudentAnnouncementViewer from "./pages/student/StudentAnnouncementViewer";
 import StudentAnnouncements from "./pages/student/Announcements";
+import StudentNotificationsPage from "./pages/student/Notifications";
 import SiwesInfo from "./pages/SiwesInfo";
 import EmailVerification from "./pages/EmailVerification";
 import EmailVerificationOTP from "./pages/student/EmailVerificationOTP";
@@ -238,6 +239,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
                   <StudentAnnouncements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/notifications"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentNotificationsPage />
                 </ProtectedRoute>
               }
             />

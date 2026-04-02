@@ -18,20 +18,28 @@ interface Notification {
   is_read: boolean;
   link?: string;
   created_at: string;
+  source?: "personal" | "announcement";
 }
 
-export const StudentNotifications = () => {
+type StudentNotificationsProps = {
+  fullView?: boolean;
+};
+
+export const StudentNotifications = ({ fullView = false }: StudentNotificationsProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [showAll, setShowAll] = useState(false);
-  const [expanded, setExpanded] = useState(false); // For dropdown/collapse
+  const [showAll, setShowAll] = useState(fullView);
+  const [expanded, setExpanded] = useState(fullView);
   const [openAnnouncement, setOpenAnnouncement] = useState<null | Notification>(null);
   const navigate = useNavigate();
 
   const { data: notifications = [], isPending } = useQuery({
     queryKey: ["student", "notifications", user?.id],
-        queryFn: async (): Promise<Notification[]> => {
+    queryFn: async (): Promise<Notification[]> => {
       if (!user?.id) return [];
+
+      const personalLimit = fullView ? 100 : 10;
+      const announcementsLimit = fullView ? 100 : 5;
 
       // 1. Query personal notifications
       const { data: personalNotes, error: notifError } = await (supabase as any)
@@ -39,7 +47,7 @@ export const StudentNotifications = () => {
         .select('id, title, message, type, is_read, link, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(personalLimit);
 
       if (notifError) console.error('Failed to fetch notifications:', notifError);
 
@@ -48,19 +56,23 @@ export const StudentNotifications = () => {
         .from('announcements')
         .select('id, title, body, created_at')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(announcementsLimit);
 
       if (annError) console.error('Failed to fetch announcements:', annError);
 
-      const parsedPersonal = (personalNotes as unknown as Notification[]) || [];
+      const parsedPersonal = ((personalNotes as unknown as Notification[]) || []).map((note) => ({
+        ...note,
+        source: "personal" as const,
+      }));
       
       const parsedGlobal = (globalAnnouncements || []).map((ann: any) => ({
-        id: `ann-${ann.id}`,
-        title: `?? Global: ${ann.title}`,
+        id: ann.id,
+        title: `Global: ${ann.title}`,
         message: ann.body,
         type: 'announcement',
         is_read: false, // Announcements are treated as unread or stateless
-        created_at: ann.created_at
+        created_at: ann.created_at,
+        source: "announcement" as const,
       }));
 
       // Merge and sort
@@ -75,8 +87,8 @@ export const StudentNotifications = () => {
 
   const markReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-        const { error } = await (supabase as any)
-          .from('notifications')
+      const { error } = await (supabase as any)
+        .from('notifications')
         .update({ is_read: true })
         .eq('id', notificationId);
 
@@ -140,15 +152,35 @@ export const StudentNotifications = () => {
     }
   };
 
+  const handleNotificationClick = (notification: Notification) => {
+    if (notification.source === "announcement" || notification.type === "announcement") {
+      if (user?.id) {
+        localStorage.setItem(`lastReadAnnouncementTime_${user.id}`, new Date().toISOString());
+      }
+      setOpenAnnouncement(notification);
+      return;
+    }
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
-  const displayNotifications = showAll ? notifications : notifications.filter(n => !n.is_read);
+    if (!notification.is_read) {
+      markReadMutation.mutate(notification.id);
+    }
+
+    if (notification.link) {
+      navigate(notification.link);
+      return;
+    }
+
+    setOpenAnnouncement(notification);
+  };
+
+  const unreadCount = notifications.filter((n) => !n.is_read && n.source !== "announcement").length;
+  const displayNotifications = showAll ? notifications : notifications.filter((n) => !n.is_read && n.source !== "announcement");
   // For dropdown: show only a few notifications unless expanded
   const COLLAPSED_COUNT = 3;
-  const visibleNotifications = expanded ? displayNotifications : displayNotifications.slice(0, COLLAPSED_COUNT);
+  const visibleNotifications = fullView || expanded ? displayNotifications : displayNotifications.slice(0, COLLAPSED_COUNT);
 
   // Don't render if no notifications
-  if (notifications.length === 0) {
+  if (!fullView && notifications.length === 0) {
     return null;
   }
 
@@ -167,14 +199,24 @@ export const StudentNotifications = () => {
           </CardTitle>
           {notifications.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAll(!showAll)}
-              >
-                {showAll ? "Show unread only" : "Show all"}
-              </Button>
-              {displayNotifications.length > COLLAPSED_COUNT && (
+              {!fullView ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/student/notifications")}
+                >
+                  Show all
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAll((prev) => !prev)}
+                >
+                  {showAll ? "Show unread only" : "Show all"}
+                </Button>
+              )}
+              {!fullView && displayNotifications.length > COLLAPSED_COUNT && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -201,13 +243,8 @@ export const StudentNotifications = () => {
                 key={notification.id}
                 className={`flex items-start gap-3 p-3 rounded-lg border ${
                   notification.is_read ? "bg-muted/30" : "bg-primary/10 border-blue-200"
-                } cursor-pointer`}
-                  // Remove ref_id usage, fallback to notification.id for navigation if needed
-                  onClick={() => {
-                    if (notification.type === "announcement") {
-                      navigate(`/announcements/${notification.id}`);
-                    }
-                  }}
+                } cursor-pointer transition-colors hover:bg-accent/50`}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="mt-1">
                   {getNotificationIcon(notification.type)}
@@ -228,16 +265,6 @@ export const StudentNotifications = () => {
                     {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                   </p>
                 </div>
-                  {"ref_id" in notification && notification.ref_id && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="ml-2"
-                      onClick={() => navigate(`/announcement/${notification.ref_id}`)}
-                    >
-                      View
-                    </Button>
-                  )}
               </div>
             ))}
             {/* Announcement Fullscreen Modal */}

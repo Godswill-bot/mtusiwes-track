@@ -28,14 +28,19 @@ export default function SupervisorStudentChatDrawer({
 
   // Get or create conversation
   useEffect(() => {
-    // Only disable chat if supervisorId or student.id is missing
-    if (open && supervisorId && student?.id) {
-      getOrCreateConversation(supervisorId, student.id).then(setConversation);
-      setChatDisabled(false);
-    } else {
-      setConversation(null);
-      setChatDisabled(true);
+    if (!open) {
+      return;
     }
+
+    // Only disable chat if supervisorId or student.id is missing while drawer is open
+    if (supervisorId && student?.id) {
+      setChatDisabled(false);
+      getOrCreateConversation(supervisorId, student.id).then(setConversation);
+      return;
+    }
+
+    setConversation(null);
+    setChatDisabled(true);
   }, [open, supervisorId, student?.id]);
 
   // Fetch messages
@@ -143,7 +148,13 @@ export default function SupervisorStudentChatDrawer({
 
   // Render
   return (
-    <div className={`fixed inset-y-0 right-0 w-96 bg-card shadow-lg z-50 flex flex-col transition-transform ${open ? 'translate-x-0' : 'translate-x-full'}`} aria-modal="true" role="dialog">
+    <>
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px] transition-opacity md:hidden ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      aria-hidden="true"
+    />
+    <div className={`fixed inset-y-0 right-0 w-full sm:w-[420px] md:w-[460px] max-w-full bg-card shadow-lg z-50 flex flex-col transition-transform duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`} aria-modal="true" role="dialog">
       <div className="flex-none flex items-center justify-between p-4 border-b bg-card relative z-10">
         <div className="flex items-center gap-3">
           {isStudent ? (
@@ -174,15 +185,14 @@ export default function SupervisorStudentChatDrawer({
         </div>
         <button onClick={onClose} className="text-muted-foreground/70 hover:text-primary transition z-10" aria-label="Close chat">✕</button>
       </div>
-      <div 
-        className="flex-1 overflow-y-auto p-4 custom-scrollbar supervisor-chat-bg"
+      <div
+        className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar supervisor-chat-bg"
       >
         {isLoading ? (
           <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-4 border-primary/40 border-t-transparent"></div></div>
-        ) : chatDisabled ? (
-          <div className="text-center text-red-500">
-            Chat is disabled. Please ensure you are assigned to a supervisor and SIWES is active.<br/>
-            <span className="text-xs text-muted-foreground/70">Debug: supervisorId={String(supervisorId)}, studentId={String(student?.id)}</span>
+        ) : chatDisabled && open ? (
+          <div className="text-center text-muted-foreground text-sm">
+            Chat is currently unavailable. Please ensure a supervisor is assigned.
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-muted-foreground/70">No messages yet</div>
@@ -215,7 +225,7 @@ export default function SupervisorStudentChatDrawer({
                     )}
                   </div>
                 )}
-                <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm relative ${isMine ? 'chat-bubble-mine rounded-tr-sm' : 'bg-card border rounded-tl-sm text-foreground'}`}> 
+                <div className={`max-w-[88%] sm:max-w-[85%] rounded-2xl p-3 shadow-sm relative transition-all duration-200 ${isMine ? 'chat-bubble-mine rounded-tr-sm' : 'chat-bubble-theirs rounded-tl-sm text-foreground'}`}>
 
                   <div className={`text-[10px] ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'} mb-1 ${isMine ? 'text-right' : 'text-left'}`}>
                     {isMine ? 'You' : theirName} • {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -361,7 +371,7 @@ export default function SupervisorStudentChatDrawer({
             </div>
           )}
 
-          <form className="p-4 flex gap-2 items-center" onSubmit={e => { e.preventDefault(); mutation.mutate({ content: message, attachment, parentId: replyingTo?.id }); }} aria-label="Send message">
+          <form className="p-3 sm:p-4 flex gap-2 items-center" onSubmit={e => { e.preventDefault(); mutation.mutate({ content: message, attachment, parentId: replyingTo?.id }); }} aria-label="Send message">
             <label htmlFor="drawer-chat-upload" className="cursor-pointer p-2 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-full transition" title="Attach file">
               <Paperclip className="h-5 w-5" />
             </label>
@@ -396,11 +406,12 @@ export default function SupervisorStudentChatDrawer({
               <Send className="h-5 w-5 ml-1" />
             </button>
           </form>
-          <div className="px-4 pb-2 text-xs text-muted-foreground">Max file size: 5MB. Allowed: images, PDF, DOC, DOCX.</div>
+          <div className="px-3 sm:px-4 pb-2 text-xs text-muted-foreground">Max file size: 5MB. Allowed: images, PDF, DOC, DOCX.</div>
           {uploadError && <div className="text-red-500 text-xs px-4 pb-2">{uploadError}</div>}
         </div>
       )}
     </div>
+    </>
   );
 }
 
