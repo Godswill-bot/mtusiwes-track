@@ -33,6 +33,13 @@ export const StudentNotifications = ({ fullView = false }: StudentNotificationsP
   const [openAnnouncement, setOpenAnnouncement] = useState<null | Notification>(null);
   const navigate = useNavigate();
 
+  const markAnnouncementsViewed = () => {
+    if (!user?.id) return;
+    const nowIso = new Date().toISOString();
+    localStorage.setItem(`lastReadNotificationTime_${user.id}`, nowIso);
+    localStorage.setItem(`lastReadAnnouncementTime_${user.id}`, nowIso);
+  };
+
   const { data: notifications = [], isPending } = useQuery({
     queryKey: ["student", "notifications", user?.id],
     queryFn: async (): Promise<Notification[]> => {
@@ -124,6 +131,26 @@ export const StudentNotifications = ({ fullView = false }: StudentNotificationsP
     };
   }, [user?.id, queryClient]);
 
+  // Full notifications page means all currently listed notifications were viewed.
+  useEffect(() => {
+    if (!fullView || !user?.id) return;
+
+    const markAllViewed = async () => {
+      markAnnouncementsViewed();
+
+      await (supabase as any)
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      queryClient.invalidateQueries({ queryKey: ["student", "notifications", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["student", "unread-notifications", user?.id] });
+    };
+
+    markAllViewed();
+  }, [fullView, user?.id, queryClient]);
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "supervisor_assignment":
@@ -154,15 +181,15 @@ export const StudentNotifications = ({ fullView = false }: StudentNotificationsP
 
   const handleNotificationClick = (notification: Notification) => {
     if (notification.source === "announcement" || notification.type === "announcement") {
-      if (user?.id) {
-        localStorage.setItem(`lastReadAnnouncementTime_${user.id}`, new Date().toISOString());
-      }
+      markAnnouncementsViewed();
+      queryClient.invalidateQueries({ queryKey: ["student", "unread-notifications", user?.id] });
       setOpenAnnouncement(notification);
       return;
     }
 
     if (!notification.is_read) {
       markReadMutation.mutate(notification.id);
+      queryClient.invalidateQueries({ queryKey: ["student", "unread-notifications", user?.id] });
     }
 
     if (notification.link) {

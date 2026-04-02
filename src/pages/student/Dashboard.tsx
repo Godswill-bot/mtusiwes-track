@@ -85,29 +85,41 @@ const StudentDashboard = () => {
   const [allWeeksCompleted, setAllWeeksCompleted] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showIndustrySignaturePad, setShowIndustrySignaturePad] = useState(false);
-  // Fetch unread announcements count
-  const { data: unreadAnnouncementsCount = 0 } = useQuery({
-    queryKey: ["student", "unread-announcements", user?.id],
+  // Fetch unread notifications count (personal unread + new announcements)
+  const { data: unreadNotificationsCount = 0 } = useQuery({
+    queryKey: ["student", "unread-notifications", user?.id],
     queryFn: async () => {
       if (!user?.id) return 0;
-      
-      const lastReadISO = localStorage.getItem(`lastReadAnnouncementTime_${user.id}`);
-      
-      let query = (supabase as any)
+
+      const lastReadISO =
+        localStorage.getItem(`lastReadNotificationTime_${user.id}`)
+        || localStorage.getItem(`lastReadAnnouncementTime_${user.id}`);
+
+      const personalUnreadQuery = (supabase as any)
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+
+      let announcementsQuery = (supabase as any)
         .from("announcements")
         .select("id", { count: "exact", head: true });
-        
+
       if (lastReadISO) {
-        query = query.gt("created_at", lastReadISO);
+        announcementsQuery = announcementsQuery.gt("created_at", lastReadISO);
       }
-      
-      const { count, error } = await query;
-      if (error) {
-        console.error("Error fetching unread announcements count:", error);
+
+      const [{ count: personalCount, error: personalError }, { count: annCount, error: annError }] = await Promise.all([
+        personalUnreadQuery,
+        announcementsQuery,
+      ]);
+
+      if (personalError || annError) {
+        console.error("Error fetching unread notifications count:", personalError || annError);
         return 0;
       }
-      
-      return count || 0;
+
+      return (personalCount || 0) + (annCount || 0);
     },
     enabled: !!user?.id,
   });
@@ -571,7 +583,7 @@ const StudentDashboard = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Button onClick={() => navigate("/student/logbook")} className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={!isApproved || siwesLocked} variant={siwesLocked ? "outline" : "default"}>
-                  {siwesLocked ? <Lock className="h-6 w-6" /> : <BookOpen className="h-6 w-6" />}
+                  {siwesLocked ? <Lock className="h-7 w-7" /> : <BookOpen className="h-7 w-7" />}
                   <span>{siwesLocked ? "View Logbook (Read-Only)" : "My Logbook"}</span>
                   {!isApproved && !siwesLocked && <span className="text-xs text-muted-foreground">(Awaiting approval)</span>}
                 </Button>
@@ -584,8 +596,8 @@ const StudentDashboard = () => {
                   variant="outline"
                   title="Chat with your assigned supervisor"
                 >
-                  <div className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center">
-                    <MessageCircle className="h-4 w-4 text-primary" />
+                  <div className="relative h-8 w-8 flex items-center justify-center">
+                    <MessageCircle className="h-7 w-7 text-primary" />
                   </div>
                   <span>Chat with Supervisor</span>
                   {!studentInfo?.school_supervisor_name && (
@@ -595,10 +607,10 @@ const StudentDashboard = () => {
 
                 <Button onClick={() => navigate("/student/notifications")} variant="outline" className="relative h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg">
                   <div className="relative">
-                    <Bell className="h-6 w-6" />
-                    {unreadAnnouncementsCount > 0 && (
+                    <Bell className="h-7 w-7" />
+                    {unreadNotificationsCount > 0 && (
                       <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                        {unreadAnnouncementsCount > 9 ? "9+" : unreadAnnouncementsCount}
+                        {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
                       </span>
                     )}
                   </div>
@@ -606,7 +618,7 @@ const StudentDashboard = () => {
                 </Button>
 
                 <Button onClick={() => navigate("/student/pre-siwes")} variant="outline" className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={siwesLocked}>
-                  <FileText className="h-6 w-6" />
+                  <FileText className="h-7 w-7" />
                   <span>View Registration</span>
                 </Button>
               </div>
