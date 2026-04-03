@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, UserCheck, AlertCircle, FileText } from "lucide-react";
+import { Bell, Check, UserCheck, AlertCircle, FileText, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Notification {
@@ -103,6 +103,25 @@ export const StudentNotifications = ({ fullView = false }: StudentNotificationsP
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student", "notifications", user?.id] });
+    },
+  });
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await (supabase as any)
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student", "notifications", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["student", "unread-notifications", user?.id] });
+      if (openAnnouncement) {
+        setOpenAnnouncement(null);
+      }
     },
   });
 
@@ -228,15 +247,16 @@ export const StudentNotifications = ({ fullView = false }: StudentNotificationsP
             <div className="flex flex-wrap gap-2">
               {!fullView ? (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => navigate("/student/notifications")}
+                  className="bg-background"
                 >
                   Show all
                 </Button>
               ) : (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowAll((prev) => !prev)}
                 >
@@ -277,13 +297,32 @@ export const StudentNotifications = ({ fullView = false }: StudentNotificationsP
                   {getNotificationIcon(notification.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className={`font-medium text-sm ${!notification.is_read ? "text-blue-900" : ""}`}>
-                      {notification.title}
-                    </h4>
-                    <Badge variant="outline" className={`text-xs ${getTypeBadgeColor(notification.type)}`}>
-                      {notification.type.replace(/_/g, " ")}
-                    </Badge>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h4 className={`font-medium text-sm truncate ${!notification.is_read ? "text-blue-900" : ""}`}>
+                        {notification.title}
+                      </h4>
+                      <Badge variant="outline" className={`text-xs ${getTypeBadgeColor(notification.type)}`}>
+                        {notification.type.replace(/_/g, " ")}
+                      </Badge>
+                    </div>
+                    {notification.source === "personal" && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          deleteNotificationMutation.mutate(notification.id);
+                        }}
+                        aria-label="Delete notification"
+                        title="Delete notification"
+                        disabled={deleteNotificationMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                   <p className={`text-sm ${notification.is_read ? "text-muted-foreground" : "text-blue-800"}`}>
                     {notification.message}
