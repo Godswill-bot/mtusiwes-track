@@ -133,7 +133,7 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col font-sans overflow-x-hidden bg-white text-slate-900 relative">
       {/* Navigation Bar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 md:px-12 flex justify-between items-center ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center border-b transition-[background-color,backdrop-filter,border-color,box-shadow] duration-500 ease-out will-change-[background-color,backdrop-filter,border-color,box-shadow] ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-gray-100' : 'bg-white/0 backdrop-blur-0 shadow-none border-transparent'}`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <img src={mtuLogo} alt="MTU Logo" className="h-10 w-auto" />
           <span className={`font-bold text-lg md:text-xl tracking-tight hidden md:block transition-colors duration-300 ${isScrolled ? 'text-primary' : 'text-white drop-shadow-md'}`}>MTU SIWES</span>
