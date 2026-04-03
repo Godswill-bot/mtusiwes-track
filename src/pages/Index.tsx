@@ -41,9 +41,13 @@ export default function Index() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [learnMoreVisible, setLearnMoreVisible] = useState(false);
+  const [chatSystemVisible, setChatSystemVisible] = useState(false);
 
   const learnMoreRef = useRef<HTMLElement>(null);
   const chatSystemRef = useRef<HTMLElement>(null);
+  const learnMoreCardRef = useRef<HTMLDivElement>(null);
+  const chatSystemCardRef = useRef<HTMLDivElement>(null);
 
   const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
     ref.current?.scrollIntoView({ behavior: "smooth" });
@@ -68,6 +72,31 @@ export default function Index() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const revealOnScroll = () => {
+      const triggerLine = window.innerHeight * 0.88;
+
+      if (!learnMoreVisible && learnMoreCardRef.current) {
+        const top = learnMoreCardRef.current.getBoundingClientRect().top;
+        if (top <= triggerLine) setLearnMoreVisible(true);
+      }
+
+      if (!chatSystemVisible && chatSystemCardRef.current) {
+        const top = chatSystemCardRef.current.getBoundingClientRect().top;
+        if (top <= triggerLine) setChatSystemVisible(true);
+      }
+    };
+
+    revealOnScroll();
+    window.addEventListener("scroll", revealOnScroll, { passive: true });
+    window.addEventListener("resize", revealOnScroll);
+
+    return () => {
+      window.removeEventListener("scroll", revealOnScroll);
+      window.removeEventListener("resize", revealOnScroll);
+    };
+  }, [learnMoreVisible, chatSystemVisible]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -177,7 +206,10 @@ export default function Index() {
         <div className="relative z-10 max-w-[90rem] mx-auto px-4 md:px-8 flex flex-col gap-16">
           {/* Learn More Card */}
           {/* No transition: direct render */}
-            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl">
+            <div
+              ref={learnMoreCardRef}
+              className={`relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transform-gpu transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${learnMoreVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-[0.985]"}`}
+            >
               <section ref={learnMoreRef} className="p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-success pb-4 inline-block">Learn More: The Portal</h2>
@@ -199,7 +231,10 @@ export default function Index() {
 
           {/* Chat System Card */}
           {/* No transition: direct render */}
-            <div className="relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl">
+            <div
+              ref={chatSystemCardRef}
+              className={`relative bg-white/40 backdrop-blur-2xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden hover:shadow-3xl transform-gpu transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] delay-100 ${chatSystemVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-[0.985]"}`}
+            >
               <section ref={chatSystemRef} className="p-8 md:p-16 flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
                 <div className="flex-1 space-y-6">
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900 border-b-4 border-primary pb-4 inline-block">Direct Chat System</h2>
@@ -237,6 +272,7 @@ export default function Index() {
         </div>
         <div className="relative z-10 bg-black/50 text-white/60 text-xs py-4 text-center">
            Copyright © Mountain Top University SIWES Track 2026. All Rights Reserved.
+            <div className="mt-1 text-[10px] text-white/70">Made by Godswill (Serenity) ♥</div>
         </div>
       </footer>
       {/* No transition for footer */}
