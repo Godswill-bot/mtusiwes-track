@@ -140,7 +140,7 @@ export default function Index() {
             Welcome to the <span className="text-primary">MTU SIWES</span>
             <span className="relative inline-block ml-3 text-white">
               PLATFORM
-              <span className="absolute left-1/2 -translate-x-1/2 -bottom-2 h-1 w-3/4 rounded-full bg-primary" />
+              <span className="absolute left-1/2 -translate-x-1/2 -bottom-2 h-1 w-3/4 rounded-full bg-success" />
             </span>
           </h1>
           <h2 className="text-lg md:text-2xl text-white/90 max-w-3xl mx-auto font-light drop-shadow">
