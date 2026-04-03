@@ -272,7 +272,7 @@ export default function Index() {
         </div>
         <div className="relative z-10 bg-black/50 text-white/60 text-xs py-4 text-center">
            Copyright © Mountain Top University SIWES Track 2026. All Rights Reserved.
-            <div className="mt-1 text-[10px] text-white/70">Made by Godswill (Serenity) ♥</div>
+              <div className="mt-1 text-[10px] text-white/70">Made by Godswill (Serenity) and Ebunoluwa (Ebunda) ♥</div>
         </div>
       </footer>
       {/* No transition for footer */}
