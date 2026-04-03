@@ -66,7 +66,7 @@ export const StudentTabsView = ({
   const [selectedStudent, setSelectedStudent] = useState<StudentWithWeeks | null>(null);
   const [showFullScreenStudent, setShowFullScreenStudent] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatStudent, setChatStudent] = useState(null);
+  const [chatStudent, setChatStudent] = useState<StudentWithWeeks | null>(null);
   const [activeStudentId, setActiveStudentId] = useState<string>(students[0]?.id || "");
 
   // Get sorted students by name
@@ -229,7 +229,7 @@ export const StudentTabsView = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => { setChatOpen(true); setChatStudent(student); }}
+                      onClick={() => { setChatOpen(true); setChatStudent(student as StudentWithWeeks); }}
                       title="Chat with student"
                       className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 dark:bg-primary/10 dark:border-primary/30 dark:hover:bg-primary/20"
                     >

@@ -152,9 +152,13 @@ const StudentDashboard = () => {
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       
       // 1. Fetch Student Data & Pre-Registration in ONE query
-      const { data: studentData, error: studentError } = await supabase
+      const { data: studentData, error: studentError } = await (supabase as any)
         .from("students")
         .select(`
           *,
@@ -163,7 +167,7 @@ const StudentDashboard = () => {
             remark
           )
         `)
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (studentError && studentError.code !== 'PGRST116') throw studentError;
@@ -199,11 +203,11 @@ const StudentDashboard = () => {
         // but we know it's unique per session. We should take the latest or filter by session if needed.
         // For now, assuming the latest or single active one is what we get or we can sort.
         // Actually, let's just take the first one if it exists.
-        const preReg = Array.isArray(studentData.pre_registration) 
-          ? studentData.pre_registration[0] 
-          : studentData.pre_registration;
+        const preReg = Array.isArray((studentData as any).pre_registration) 
+          ? (studentData as any).pre_registration[0] 
+          : (studentData as any).pre_registration;
 
-        const status = preReg?.status || 'pending';
+        const status = (preReg as any)?.status || 'pending';
         setIsApproved(status === 'approved');
         setIsRejected(status === 'rejected');
         setRejectionReason(preReg?.remark || null);
@@ -576,7 +580,7 @@ const StudentDashboard = () => {
                     <CardDescription>Download your SIWES summary PDF to take to ITF</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <PDFDownloadButton studentId={studentInfo.id} type="student" />
+                    {studentInfo.id && <PDFDownloadButton studentId={studentInfo.id as string} type="student" />}
                   </CardContent>
                 </Card>
               )}

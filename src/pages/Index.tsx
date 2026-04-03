@@ -136,8 +136,12 @@ export default function Index() {
 
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 animate-fade-in-up">
             <img src={mtuLogo} alt="MTU Logo" className="w-32 md:w-48 h-auto mx-auto drop-shadow-2xl mb-6" />
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg tracking-tight">
-            Welcome to the MTU SIWES Platform
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg tracking-tight leading-tight">
+            Welcome to the <span className="text-primary">MTU SIWES</span>
+            <span className="relative inline-block ml-3 text-white">
+              PLATFORM
+              <span className="absolute left-1/2 -translate-x-1/2 -bottom-2 h-1 w-3/4 rounded-full bg-primary" />
+            </span>
           </h1>
           <h2 className="text-lg md:text-2xl text-white/90 max-w-3xl mx-auto font-light drop-shadow">
             Official Students Industrial Work Experience Scheme Portal for Mountain Top University.

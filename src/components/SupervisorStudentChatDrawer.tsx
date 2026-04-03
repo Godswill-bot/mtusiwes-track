@@ -11,20 +11,20 @@ export default function SupervisorStudentChatDrawer({
 }) {
   const { userRole } = useAuth();
   const isStudent = userRole === 'student';
-  const [conversation, setConversation] = useState(null);
-  const [message, setMessage] = useState('');
+  const [conversation, setConversation] = useState<any>(null);
+  const [message, setMessage] = useState<string>('');
   const [attachment, setAttachment] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<{url: string, name: string} | null>(null);
-  const [uploadError, setUploadError] = useState('');
+  const [uploadError, setUploadError] = useState<string>('');
   const [chatDisabled, setChatDisabled] = useState(false);
   
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
+  const [editContent, setEditContent] = useState<string>('');
   const [replyingTo, setReplyingTo] = useState<any>(null);
 
   const queryClient = useQueryClient();
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<any>(null);
 
   // Get or create conversation
   useEffect(() => {
@@ -59,16 +59,14 @@ export default function SupervisorStudentChatDrawer({
 
   // Auto-scroll to latest message
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   // Send message
   const mutation = useMutation({
     mutationFn: async (args: { content: string; attachment: any; parentId?: string }) => {
-      let attachmentUrl = null;
-      let attachmentName = null;
+      let attachmentUrl: string | null = null;
+      let attachmentName: string | null = null;
           if (args.attachment) {
         // Validate file
         if (args.attachment.size > 5 * 1024 * 1024) {
@@ -81,6 +79,10 @@ export default function SupervisorStudentChatDrawer({
           throw new Error('Invalid file type');
         }
         // Upload to Supabase Storage
+        if (!conversation?.id) {
+          throw new Error('Conversation not ready');
+        }
+
         const filePath = `chat/${conversation.id}/${Date.now()}_${args.attachment.name}`;
         const { data, error } = await supabase.storage.from('chat-attachments').upload(filePath, args.attachment);
         if (error) {
@@ -88,10 +90,13 @@ export default function SupervisorStudentChatDrawer({
           throw new Error('Upload failed');
         }
         const { data: publicData } = supabase.storage.from('chat-attachments').getPublicUrl(filePath);
-        attachmentUrl = publicData?.publicUrl;
+        attachmentUrl = publicData?.publicUrl ?? null;
         attachmentName = args.attachment.name;
       }
       setUploadError('');
+      if (!conversation?.id) {
+        throw new Error('Conversation not ready');
+      }
       await sendMessage({
         conversationId: conversation.id,
         senderId: isStudent ? student?.id : supervisorId,

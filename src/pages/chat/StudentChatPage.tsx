@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 
 // Custom hook to simulate long press for touch devices
 function useLongPress(onLongPress: (e: any) => void, ms = 500) {
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const start = useCallback((e: any) => {
     e.persist?.();
@@ -29,6 +29,7 @@ function useLongPress(onLongPress: (e: any) => void, ms = 500) {
   const stop = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
   }, []);
 
@@ -53,10 +54,10 @@ export default function StudentChatPage() {
   const navigate = useNavigate();
   const [conversation, setConversation] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
   const [myAvatar, setMyAvatar] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [uploadError, setUploadError] = useState('');
+  const [uploadError, setUploadError] = useState<string>('');
   const [supervisor, setSupervisor] = useState<any>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,15 +120,21 @@ export default function StudentChatPage() {
   useEffect(() => {
     async function fetchChat() {
       setLoading(true);
-      let supervisorId = null;
-      let supervisorName = null;
-      let supervisorEmail = null;
-      let stuId = null;
+      const userId = user?.id;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
 
-      const { data: studentData } = await supabase
+      let supervisorId: string | null = null;
+      let supervisorName: string | null = null;
+      let supervisorEmail: string | null = null;
+      let stuId: string | null = null;
+
+      const { data: studentData } = await (supabase as any)
         .from('students')
         .select('id, supervisor_id, school_supervisor_name, school_supervisor_email, profile_image_url')
-        .eq('user_id', user?.id)
+        .eq('user_id', userId)
         .maybeSingle();
 
       if (studentData) {
@@ -140,7 +147,7 @@ export default function StudentChatPage() {
         }
       }
       if (stuId) {
-        const { data: assignment } = await supabase
+        const { data: assignment } = await (supabase as any)
           .from('supervisor_assignments')
           .select('supervisor_id, supervisors(name, email)')
           .eq('student_id', stuId)
@@ -204,8 +211,8 @@ export default function StudentChatPage() {
       return;
     }
 
-    let attachmentUrl = null;
-    let attachmentName = null;
+    let attachmentUrl: string | null = null;
+    let attachmentName: string | null = null;
 
     if (attachment) {
       if (attachment.size > 5 * 1024 * 1024) {
@@ -227,7 +234,7 @@ export default function StudentChatPage() {
       }
 
       const { data: publicData } = supabase.storage.from('chat-attachments').getPublicUrl(filePath);
-      attachmentUrl = publicData?.publicUrl;
+      attachmentUrl = publicData?.publicUrl ?? null;
       attachmentName = attachment.name;
     }
 
