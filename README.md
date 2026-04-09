@@ -4,7 +4,7 @@ A comprehensive Student Industrial Work Experience Scheme (SIWES) management pla
 
 ## 🌐 Live Demo
 
-**Production URL**: [https://mtusiwesplatform.me(https://mtusiwesplatform.me)]
+**Production URL**: https://mtusiwesplatform.me
 
 ## 📋 About
 
