@@ -317,6 +317,89 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    if (!user || userRole !== "student") return;
+
+    let disposed = false;
+    const HEARTBEAT_INTERVAL_MS = 30 * 1000;
+
+    const touchStudentPresence = async () => {
+      // Presence is only refreshed while the tab is visible and focused.
+      if (document.visibilityState !== "visible" || !document.hasFocus()) return;
+
+      const { error } = await supabase
+        .from("students")
+        .update({ last_active_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+
+      if (error && !disposed) return;
+    };
+
+    void touchStudentPresence();
+    const intervalId = window.setInterval(() => {
+      void touchStudentPresence();
+    }, HEARTBEAT_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void touchStudentPresence();
+      }
+    };
+
+    const handleFocus = () => {
+      void touchStudentPresence();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      disposed = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [user, userRole]);
+
+  useEffect(() => {
+    if (!user || (userRole !== "school_supervisor" && userRole !== "industry_supervisor")) return;
+
+    const HEARTBEAT_INTERVAL_MS = 30 * 1000;
+
+    const touchSupervisorPresence = async () => {
+      if (document.visibilityState !== "visible" || !document.hasFocus()) return;
+
+      await supabase
+        .from("supervisors")
+        .update({ last_active_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+    };
+
+    void touchSupervisorPresence();
+    const intervalId = window.setInterval(() => {
+      void touchSupervisorPresence();
+    }, HEARTBEAT_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void touchSupervisorPresence();
+      }
+    };
+
+    const handleFocus = () => {
+      void touchSupervisorPresence();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [user, userRole]);
+
   return (
     <AuthContext.Provider
       value={{

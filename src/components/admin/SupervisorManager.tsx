@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import { Loader2, UserCog, Search } from "lucide-react";
 
 type SupervisorRecord = Database["public"]["Tables"]["supervisors"]["Row"];
 type StudentRecord = Database["public"]["Tables"]["students"]["Row"];
+type SupervisorAssignmentRecord = Database["public"]["Tables"]["supervisor_assignments"]["Row"];
 
 import { apiRequest } from "@/utils/api";
 
@@ -30,6 +32,13 @@ type CombinedSupervisor = SupervisorRecord & {
   _students?: StudentRecord[];
   // Virtual entries won't have a hashed password; keep it optional to satisfy the type
   hashed_password?: string | null;
+};
+
+const SUPERVISOR_ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
+const isSupervisorOnline = (supervisor: CombinedSupervisor) => {
+  if (!supervisor.is_active || !supervisor.last_active_at) return false;
+  return Date.now() - new Date(supervisor.last_active_at).getTime() < SUPERVISOR_ONLINE_WINDOW_MS;
 };
 
 // Fetch supervisors - try backend API first, fallback to direct Supabase
@@ -62,6 +71,16 @@ const fetchStudents = async () => {
   return (data || []) as StudentRecord[];
 };
 
+const fetchSchoolSupervisorAssignments = async () => {
+  const { data, error } = await supabase
+    .from("supervisor_assignments")
+    .select("supervisor_id, student_id, assignment_type")
+    .eq("assignment_type", "school_supervisor");
+
+  if (error) throw error;
+  return (data || []) as Pick<SupervisorAssignmentRecord, "supervisor_id" | "student_id" | "assignment_type">[];
+};
+
 const defaultSupervisorForm = {
   name: "",
   email: "",
@@ -88,11 +107,18 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
   const supervisorsQuery = useQuery({
     queryKey: ["admin", "supervisors"],
     queryFn: fetchSupervisors,
+    refetchInterval: 20000,
   });
 
   const studentsQuery = useQuery({
     queryKey: ["admin", "students-basic"],
     queryFn: fetchStudents,
+  });
+
+  const schoolAssignmentsQuery = useQuery({
+    queryKey: ["admin", "school-supervisor-assignments"],
+    queryFn: fetchSchoolSupervisorAssignments,
+    refetchInterval: 20000,
   });
 
   const createSupervisorMutation = useMutation({
@@ -196,7 +222,21 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
       setSelectedStudents([]);
       setSelectedSupervisor(null);
       queryClient.invalidateQueries({ queryKey: ["admin", "students"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "students-basic"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "school-supervisor-assignments"] });
     }
+  };
+
+  const getSchoolAssignedStudentIds = (supervisorId: string) => {
+    const idsFromStudents = studentPool
+      .filter((student) => student.supervisor_id === supervisorId)
+      .map((student) => student.id);
+
+    const idsFromAssignments = (schoolAssignmentsQuery.data || [])
+      .filter((assignment) => assignment.supervisor_id === supervisorId)
+      .map((assignment) => assignment.student_id);
+
+    return Array.from(new Set([...idsFromStudents, ...idsFromAssignments]));
   };
 
   const filteredSupervisors = useMemo(
@@ -258,13 +298,14 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
     // Convert to array of "virtual" supervisor records
     return Array.from(supervisorMap.values()).map((sup, index) => ({
       id: `virtual-${index}-${sup.name.toLowerCase().replace(/\s+/g, '-')}`,
-      user_id: null,
+      user_id: `virtual-user-${index}`,
       name: sup.name,
-      email: sup.email,
+      email: sup.email || `virtual-${index}@example.local`,
       phone: sup.phone,
       supervisor_type: "industry_supervisor" as const,
       is_active: true,
       created_at: new Date().toISOString(),
+      last_active_at: null,
       hashed_password: null,
       _isVirtual: true, // Flag to identify virtual records
       _students: sup.students, // Attached students
@@ -332,17 +373,14 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
               onToggleStatus={(sup) => toggleStatusMutation.mutate(sup)}
               onDelete={deleteSupervisor}
               onAssign={(sup) => {
-                const assigned = studentPool
-                  .filter((student) =>
-                    student.supervisor_id === sup.id
-                  )
-                  .map((student) => student.id);
+                const assigned = getSchoolAssignedStudentIds(sup.id);
                 setSelectedStudents(assigned);
                 setSelectedSupervisor(sup);
                 setAssignOpen(true);
               }}
               compact={compact}
               isIndustry={false}
+              schoolAssignments={schoolAssignmentsQuery.data || []}
             />
           </TabsContent>
         </Tabs>
@@ -481,17 +519,14 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
               onToggleStatus={(sup) => toggleStatusMutation.mutate(sup)}
               onDelete={deleteSupervisor}
               onAssign={(sup) => {
-                const assigned = studentPool
-                  .filter((student) =>
-                    student.supervisor_id === sup.id
-                  )
-                  .map((student) => student.id);
+                const assigned = getSchoolAssignedStudentIds(sup.id);
                 setSelectedStudents(assigned);
                 setSelectedSupervisor(sup);
                 setAssignOpen(true);
               }}
               compact={compact}
               isIndustry={false}
+              schoolAssignments={schoolAssignmentsQuery.data || []}
             />
           </TabsContent>
         </Tabs>
@@ -546,6 +581,7 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
 interface SupervisorTableProps {
   supervisors: CombinedSupervisor[];
   students: StudentRecord[];
+  schoolAssignments?: Pick<SupervisorAssignmentRecord, "supervisor_id" | "student_id" | "assignment_type">[];
   loading: boolean;
   onResetPassword: (sup: SupervisorRecord) => void;
   onToggleStatus: (sup: SupervisorRecord) => void;
@@ -558,6 +594,7 @@ interface SupervisorTableProps {
 const SupervisorTable = ({
   supervisors,
   students,
+  schoolAssignments = [],
   loading,
   onResetPassword,
   onToggleStatus,
@@ -580,8 +617,24 @@ const SupervisorTable = ({
         (s.industry_supervisor_name && s.industry_supervisor_name.toLowerCase() === supervisor.name?.toLowerCase())
       );
     }
-    // For school supervisors - match by supervisor_id
-    return students.filter(s => s.supervisor_id === supervisor.id);
+    // For school supervisors, merge direct student links with assignment-table links.
+    const assignedIds = new Set<string>();
+    students
+      .filter((s) => s.supervisor_id === supervisor.id)
+      .forEach((s) => assignedIds.add(s.id));
+
+    schoolAssignments
+      .filter((assignment) => assignment.supervisor_id === supervisor.id)
+      .forEach((assignment) => assignedIds.add(assignment.student_id));
+
+    return students.filter((s) => assignedIds.has(s.id));
+  };
+
+  const getEmptyStateColSpan = () => {
+    if (isIndustry) {
+      return compact ? 7 : 9;
+    }
+    return compact ? 6 : 8;
   };
 
   return (
@@ -592,8 +645,11 @@ const SupervisorTable = ({
             <TableHead className="min-w-[120px]">Name</TableHead>
             <TableHead className="min-w-[150px]">Email</TableHead>
             <TableHead className="min-w-[100px]">Phone</TableHead>
-            {isIndustry && (<><TableHead className="min-w-[150px]">Organisation</TableHead><TableHead className="min-w-[150px]">Assigned Students</TableHead></>)}
+            {isIndustry && <TableHead className="min-w-[150px]">Organisation</TableHead>}
+            <TableHead className="min-w-[170px]">Assigned Students</TableHead>
             <TableHead className="min-w-[80px]">Status</TableHead>
+            <TableHead className="min-w-[90px]">Presence</TableHead>
+            {!compact && <TableHead className="min-w-[120px]">Last Active</TableHead>}
             {!compact && <TableHead className="text-right min-w-[180px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
@@ -602,6 +658,10 @@ const SupervisorTable = ({
             supervisors.map((sup) => {
               const assignedStudents = getAssignedStudents(sup);
               const isVirtual = (sup as { _isVirtual?: boolean })._isVirtual;
+              const online = isSupervisorOnline(sup);
+              const lastActive = sup.last_active_at
+                ? formatDistanceToNow(new Date(sup.last_active_at), { addSuffix: true })
+                : "Never";
               return (
                 <TableRow key={sup.id} className={isVirtual ? "bg-primary/10/50" : ""}>
                   <TableCell className="font-medium break-words max-w-[120px]">
@@ -617,11 +677,11 @@ const SupervisorTable = ({
                   <TableCell className="break-all max-w-[150px] text-sm">{sup.email || "—"}</TableCell>
                   <TableCell className="break-words text-sm">{sup.phone ?? "—"}</TableCell>
                   {isIndustry && (
-                    <>
-                      <TableCell className="max-w-[150px] text-sm break-words">
-                        {assignedStudents.length > 0 ? ((assignedStudents[0] as any).company_name || (assignedStudents[0] as any).organisation_name || (assignedStudents[0] as any).organization_name || "—") : "—"}
-                      </TableCell>
-                      <TableCell className="max-w-[150px]">
+                    <TableCell className="max-w-[150px] text-sm break-words">
+                      {assignedStudents.length > 0 ? ((assignedStudents[0] as any).company_name || (assignedStudents[0] as any).organisation_name || (assignedStudents[0] as any).organization_name || "—") : "—"}
+                    </TableCell>
+                  )}
+                  <TableCell className="max-w-[170px]">
                       {assignedStudents.length > 0 ? (
                         <div className="space-y-0.5">
                           {assignedStudents.slice(0, 3).map(student => (
@@ -637,14 +697,18 @@ const SupervisorTable = ({
                       ) : (
                         <span className="text-xs text-muted-foreground">No students</span>
                       )}
-                    </TableCell>
-                    </>
-                  )}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={sup.is_active ? "default" : "secondary"} className="whitespace-nowrap text-xs">
                       {sup.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <Badge variant={online ? "default" : "outline"} className={online ? "bg-emerald-600" : ""}>
+                      {online ? "Online" : "Offline"}
+                    </Badge>
+                  </TableCell>
+                  {!compact && <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{lastActive}</TableCell>}
                   {!compact && (
                     <TableCell className="text-right">
                       {isVirtual ? (
@@ -672,7 +736,7 @@ const SupervisorTable = ({
             })
           ) : (
             <TableRow>
-              <TableCell colSpan={isIndustry ? (compact ? 6 : 7) : (compact ? 4 : 5)} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={getEmptyStateColSpan()} className="text-center py-8 text-muted-foreground">
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

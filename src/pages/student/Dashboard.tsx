@@ -25,6 +25,7 @@ import { usePortalStatus } from "@/hooks/usePortalStatus";
 import PortalClosed from "./PortalClosed";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StudentNotifications } from "@/components/student/StudentNotifications";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SignaturePad } from "@/components/SignaturePad";
@@ -261,8 +262,7 @@ const StudentDashboard = () => {
           pending,
         });
 
-        const approvedWeeks = weeksData?.filter(w => w.status === "approved").length || 0;
-        setAllWeeksCompleted(approvedWeeks >= 24);
+        setAllWeeksCompleted(totalSubmitted >= 24 || studentData.siwes_locked === true);
       } else {
         setIsApproved(false);
         setIsRejected(false);
@@ -351,6 +351,45 @@ const StudentDashboard = () => {
       : isRejected
         ? "destructive"
         : "outline";
+  const phaseLabel = !hasRegistration
+    ? "Registration Not Started"
+    : siwesLocked
+      ? "SIWES Completed"
+      : isApproved
+        ? "Active SIWES"
+        : isRejected
+          ? "Needs Correction"
+          : "Awaiting Approval";
+  const reviewedItems = stats.approved + stats.rejected;
+  const approvalRate = reviewedItems > 0 ? Math.round((stats.approved / reviewedItems) * 100) : 0;
+
+  const reminders: Array<{ title: string; action: string; path?: string; onClick?: () => void }> = [];
+  if (!hasRegistration) {
+    reminders.push({ title: "Complete your Pre-SIWES registration", action: "Open form", path: "/student/pre-siwes" });
+  }
+  if (hasRegistration && isRejected) {
+    reminders.push({ title: "Registration was rejected. Correct and resubmit", action: "Edit registration", path: "/student/pre-siwes/edit" });
+  }
+  if (hasRegistration && !isApproved && !isRejected) {
+    reminders.push({ title: "Registration submitted and waiting for supervisor approval", action: "View registration", path: "/student/pre-siwes" });
+  }
+  if (isApproved && !siwesLocked && stats.pending > 0) {
+    reminders.push({ title: `You still have ${stats.pending} pending week(s) to submit`, action: "Go to logbook", path: "/student/logbook" });
+  }
+  if (studentInfo && !studentInfo.industry_supervisor_signature_url) {
+    reminders.push({ title: "Industry supervisor signature is missing", action: "Add signature", onClick: () => setShowIndustrySignaturePad(true) });
+  }
+  if (unreadNotificationsCount > 0) {
+    reminders.push({ title: `You have ${unreadNotificationsCount} unread notification(s)`, action: "View notifications", path: "/student/notifications" });
+  }
+
+  const timeline = [
+    { label: "Pre-SIWES registration", done: hasRegistration, note: hasRegistration ? "Submitted" : "Not submitted" },
+    { label: "Supervisor approval", done: isApproved, note: isApproved ? "Approved" : isRejected ? "Rejected" : "Pending" },
+    { label: "Logbook started", done: stats.submitted > 0, note: `${stats.submitted} week(s) submitted` },
+    { label: "All weeks completed", done: allWeeksCompleted, note: allWeeksCompleted ? "Completed" : "In progress" },
+    { label: "Final lock & grading", done: siwesLocked, note: siwesLocked ? "Locked" : "Not yet" },
+  ];
 
   return (
     <div className="min-h-screen bg-background relative z-0">
@@ -381,6 +420,148 @@ const StudentDashboard = () => {
 
           {/* Student Notifications */}
           <StudentNotifications />
+
+          <Card className="border-primary/20 shadow-card bg-gradient-to-r from-primary/10 via-card to-accent/10">
+            <CardContent className="py-5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Today</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline">{new Date().toLocaleDateString()}</Badge>
+                  <Badge variant={siwesLocked ? "secondary" : "default"}>{phaseLabel}</Badge>
+                  <Badge variant={registrationStatusTone as any}>{registrationStatusLabel}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {currentSession?.name ? `Session: ${currentSession.name}` : "Current session active"}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => navigate("/student/pre-siwes")}>Registration</Button>
+                <Button variant="outline" onClick={() => navigate("/student/logbook")} disabled={!isApproved || siwesLocked}>Logbook</Button>
+                <Button variant="outline" onClick={() => navigate("/student/notifications")}>Notifications</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card border-border/60">
+            <CardHeader>
+              <CardTitle>Student Workspace</CardTitle>
+              <CardDescription>Everything important in one place</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto gap-1">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                  <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                  <TabsTrigger value="support">Support</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview" className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <Card className="border-border/60">
+                    <CardHeader>
+                      <CardTitle className="text-base">What To Do Next</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {reminders.length > 0 ? reminders.slice(0, 4).map((item, idx) => (
+                        <div key={`${item.title}-${idx}`} className="flex items-start justify-between gap-3 p-3 rounded-lg border bg-muted/30">
+                          <p className="text-sm">{item.title}</p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              if (item.onClick) {
+                                item.onClick();
+                                return;
+                              }
+                              if (item.path) {
+                                navigate(item.path);
+                              }
+                            }}
+                          >
+                            {item.action}
+                          </Button>
+                        </div>
+                      )) : (
+                        <p className="text-sm text-muted-foreground">No pending actions right now. Great job.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-border/60">
+                    <CardHeader>
+                      <CardTitle className="text-base">Quick Insights</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg border bg-muted/20">
+                        <p className="text-xs text-muted-foreground">Completion Pace</p>
+                        <p className="text-xl font-semibold">{stats.submitted}/24</p>
+                      </div>
+                      <div className="p-3 rounded-lg border bg-muted/20">
+                        <p className="text-xs text-muted-foreground">Approval Rate</p>
+                        <p className="text-xl font-semibold">{approvalRate}%</p>
+                      </div>
+                      <div className="p-3 rounded-lg border bg-muted/20">
+                        <p className="text-xs text-muted-foreground">Pending Weeks</p>
+                        <p className="text-xl font-semibold">{stats.pending}</p>
+                      </div>
+                      <div className="p-3 rounded-lg border bg-muted/20">
+                        <p className="text-xs text-muted-foreground">Unread Alerts</p>
+                        <p className="text-xl font-semibold">{unreadNotificationsCount}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="documents" className="mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <Button variant="outline" className="justify-start" onClick={() => navigate("/student/pre-siwes")}>Pre-SIWES Form</Button>
+                    <Button variant="outline" className="justify-start" onClick={() => navigate("/student/notifications")}>Announcements & Notices</Button>
+                    {allWeeksCompleted && studentInfo?.id ? (
+                      <PDFDownloadButton studentId={studentInfo.id as string} type="student" />
+                    ) : (
+                      <Button variant="outline" className="justify-start" disabled>Summary PDF (after week 24)</Button>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="timeline" className="mt-4">
+                  <div className="space-y-3">
+                    {timeline.map((item) => (
+                      <div key={item.label} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                        <div className="flex items-center gap-3">
+                          {item.done ? <CheckCircle className="h-4 w-4 text-success" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
+                          <p className="text-sm font-medium">{item.label}</p>
+                        </div>
+                        <Badge variant={item.done ? "default" : "outline"}>{item.note}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="support" className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <Card className="border-border/60">
+                    <CardHeader>
+                      <CardTitle className="text-base">Supervisor Contact</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <p><span className="text-muted-foreground">Name:</span> {studentInfo?.school_supervisor_name || "Not assigned"}</p>
+                      <p><span className="text-muted-foreground">Email:</span> {studentInfo?.school_supervisor_email || "Not available"}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/60">
+                    <CardHeader>
+                      <CardTitle className="text-base">Help Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                      <Button variant="outline" onClick={() => setChatOpen(true)} disabled={!studentInfo?.school_supervisor_name || !isApproved || siwesLocked}>Chat Supervisor</Button>
+                      <Button variant="outline" onClick={() => navigate("/student/profile/edit")}>Edit Profile</Button>
+                      <Button variant="outline" onClick={() => navigate("/student/notifications")}>Open Notifications</Button>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
 
           {hasRegistration && (
             <Card className="border-border/60 bg-card/80 shadow-card">

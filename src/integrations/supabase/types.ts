@@ -197,6 +197,7 @@ export type Database = {
           industry_supervisor_name: string
           industry_supervisor_phone: string | null
           is_active: boolean
+          last_active_at: string | null
           level: string | null
           location_size: Database["public"]["Enums"]["location_size"]
           matric_no: string
@@ -231,6 +232,7 @@ export type Database = {
           industry_supervisor_name: string
           industry_supervisor_phone?: string | null
           is_active?: boolean
+          last_active_at?: string | null
           level?: string | null
           location_size: Database["public"]["Enums"]["location_size"]
           matric_no: string
@@ -265,6 +267,7 @@ export type Database = {
           industry_supervisor_name?: string
           industry_supervisor_phone?: string | null
           is_active?: boolean
+          last_active_at?: string | null
           level?: string | null
           location_size?: Database["public"]["Enums"]["location_size"]
           matric_no?: string
@@ -295,6 +298,7 @@ export type Database = {
           hashed_password: string | null
           id: string
           is_active: boolean
+          last_active_at: string | null
           name: string
           phone: string | null
           supervisor_type: Database["public"]["Enums"]["app_role"]
@@ -306,6 +310,7 @@ export type Database = {
           hashed_password?: string | null
           id?: string
           is_active?: boolean
+          last_active_at?: string | null
           name: string
           phone?: string | null
           supervisor_type: Database["public"]["Enums"]["app_role"]
@@ -317,6 +322,7 @@ export type Database = {
           hashed_password?: string | null
           id?: string
           is_active?: boolean
+          last_active_at?: string | null
           name?: string
           phone?: string | null
           supervisor_type?: Database["public"]["Enums"]["app_role"]

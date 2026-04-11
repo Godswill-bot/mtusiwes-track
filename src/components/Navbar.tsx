@@ -57,10 +57,10 @@ export const Navbar = () => {
 
   return (
     <nav className="bg-background border-b border-border shadow-sm">
-      <div className="container mx-auto px-4">
+      <div className="w-full px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-3">
-            <img src={mtuLogo} alt="MTU Logo" className="h-10 w-10" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src={mtuLogo} alt="MTU Logo" className="h-11 sm:h-12 w-auto object-contain shrink-0" />
             <div>
               <h1 className="text-lg font-bold text-primary">MTU SIWES</h1>
               <p className="text-xs text-muted-foreground">Logbook System</p>

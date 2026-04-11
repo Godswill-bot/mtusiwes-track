@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,6 +77,13 @@ const defaultForm = {
   other_info: "",
 };
 
+const STUDENT_ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
+const isStudentOnline = (student: StudentRecord) => {
+  if (!student.is_active || !student.last_active_at) return false;
+  return Date.now() - new Date(student.last_active_at).getTime() < STUDENT_ONLINE_WINDOW_MS;
+};
+
 interface StudentManagerProps {
   compact?: boolean;
 }
@@ -98,6 +106,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
   const studentsQuery = useQuery({
     queryKey: ["admin", "students"],
     queryFn: fetchStudents,
+    refetchInterval: 20000,
   });
 
   const supervisorsQuery = useQuery({
@@ -411,6 +420,7 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                 <TableHead className="min-w-[100px]">Department</TableHead>
                 <TableHead className="min-w-[150px]">Industry Supervisor</TableHead>
                 <TableHead className="min-w-[70px]">Status</TableHead>
+                <TableHead className="min-w-[90px]">Presence</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -434,6 +444,11 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                     <TableCell>
                       <Badge variant={student.is_active ? "default" : "secondary"} className="whitespace-nowrap text-xs">
                         {student.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={isStudentOnline(student) ? "default" : "outline"} className={isStudentOnline(student) ? "bg-emerald-600" : ""}>
+                        {isStudentOnline(student) ? "Online" : "Offline"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -751,6 +766,8 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                 <TableHead className="min-w-[180px]">Industry Supervisor</TableHead>
                 <TableHead className="min-w-[180px]">Organisation</TableHead>
                 <TableHead className="min-w-[70px]">Status</TableHead>
+                <TableHead className="min-w-[90px]">Presence</TableHead>
+                <TableHead className="min-w-[130px]">Last Active</TableHead>
                 {!compact && <TableHead className="text-right min-w-[180px]">Actions</TableHead>}
               </TableRow>
             </TableHeader>
@@ -758,6 +775,13 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
               {filteredStudents && filteredStudents.length > 0 ? (
                 filteredStudents.map((student) => (
                     <Fragment key={student.id}>
+                      {(() => {
+                        const online = isStudentOnline(student);
+                        const lastActive = student.last_active_at
+                          ? formatDistanceToNow(new Date(student.last_active_at), { addSuffix: true })
+                          : "Never";
+
+                        return (
                       <TableRow key={student.id}>
                     <TableCell className="max-w-[140px]">
                       <div className="font-semibold break-words text-sm">{student.full_name ?? "—"}</div>
@@ -791,6 +815,12 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                         {student.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant={online ? "default" : "outline"} className={online ? "bg-emerald-600" : ""}>
+                        {online ? "Online" : "Offline"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{lastActive}</TableCell>
                     {!compact && (
                       <TableCell className="text-right">
                         <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-end">
@@ -839,11 +869,13 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                       </TableCell>
                     )}
                   </TableRow>
+                        );
+                      })()}
                   </Fragment>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={compact ? 8 : 10} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={compact ? 9 : 12} className="text-center py-8 text-muted-foreground">
                     {studentsQuery.isPending ? "Loading students..." : "No students found"}
                   </TableCell>
                 </TableRow>
