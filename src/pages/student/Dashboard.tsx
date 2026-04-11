@@ -515,6 +515,7 @@ const StudentDashboard = () => {
                 <TabsContent value="documents" className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <Button variant="outline" className="justify-start" onClick={() => navigate("/student/pre-siwes")}>Pre-SIWES Form</Button>
+                    <Button variant="outline" className="justify-start" onClick={() => navigate("/student/logbook")}>Weekly Logbook</Button>
                     <Button variant="outline" className="justify-start" onClick={() => navigate("/student/notifications")}>Announcements & Notices</Button>
                     {allWeeksCompleted && studentInfo?.id ? (
                       <PDFDownloadButton studentId={studentInfo.id as string} type="student" />
