@@ -17,6 +17,10 @@ const PreSiwes = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [registrationState, setRegistrationState] = useState<{
+    status: string;
+    remark: string | null;
+  } | null>(null);
   const [formData, setFormData] = useState({
     matric_no: "",
     faculty: "" as "CBAS" | "CHMS" | "",
@@ -68,7 +72,15 @@ const PreSiwes = () => {
     try {
       const { data, error } = await supabase
         .from("students")
-        .select("*")
+        .select(`
+          *,
+          pre_registration (
+            session_id,
+            status,
+            remark,
+            approved_at
+          )
+        `)
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -76,6 +88,11 @@ const PreSiwes = () => {
 
       // Pre-fill form with any existing data if available
       if (data) {
+        const preRegs = Array.isArray((data as any).pre_registration)
+          ? (data as any).pre_registration
+          : [(data as any).pre_registration].filter(Boolean);
+        const currentPreReg = preRegs[0] || null;
+
         setFormData((prev) => ({
           ...prev,
           matric_no: data.matric_no || "",
@@ -93,6 +110,11 @@ const PreSiwes = () => {
           end_date: data.end_date || "",
           other_info: data.other_info || "",
         }));
+
+        setRegistrationState(currentPreReg ? {
+          status: currentPreReg.status || "pending",
+          remark: currentPreReg.remark || null,
+        } : null);
       }
     } catch (error) {
       console.error("Error loading existing data:", error);
@@ -307,6 +329,7 @@ const PreSiwes = () => {
               session_id: currentSession.id,
               status: 'pending',
               remark: null, // Clear rejection remark
+              approved_at: null,
             }, {
               onConflict: 'student_id, session_id'
             });
@@ -351,8 +374,8 @@ const PreSiwes = () => {
 
       // Automatically assign student to an available school supervisor (Robust Fallback)
       try {
-        let assignedId = null;
-        let assignmentError = null;
+        let assignedId: string | null = null;
+        let assignmentError: { message: string } | null = null;
         
         // 1. Attempt using RPC
         const { data: rpcData, error: rpcError } = await supabase.rpc(
@@ -394,7 +417,7 @@ const PreSiwes = () => {
                  
                  assignedId = randSup.id;
                } else {
-                 assignmentError = upsertErr;
+                 assignmentError = { message: upsertErr.message };
                }
             } else {
                assignmentError = { message: 'No active school supervisors available' };
@@ -478,7 +501,7 @@ const PreSiwes = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto space-y-6">
           <Button
             variant="ghost"
             onClick={() => navigate("/student/dashboard")}
@@ -487,11 +510,21 @@ const PreSiwes = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
+          {registrationState && (
+            <Alert className="border-primary/20 bg-primary/5">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Your registration is currently {registrationState.status === "approved" ? "approved" : registrationState.status === "rejected" ? "rejected" : "submitted"}. Any updates here will resubmit it for supervisor review.
+              </AlertDescription>
+            </Alert>
+          )}
           <Card className="shadow-elevated">
             <CardHeader>
               <CardTitle className="text-2xl">Pre-SIWES Registration Form</CardTitle>
               <CardDescription>
-                Complete this form before starting your industrial training
+                {registrationState
+                  ? "Review your details, make corrections, and resubmit if needed."
+                  : "Complete this form before starting your industrial training"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -719,7 +752,7 @@ const PreSiwes = () => {
 
                 <div className="flex space-x-4">
                   <Button type="submit" disabled={loading} size="lg">
-                    {loading ? "Submitting..." : "Submit Registration"}
+                    {loading ? "Submitting..." : registrationState ? "Resubmit Registration" : "Submit Registration"}
                   </Button>
                   <Button
                     type="button"

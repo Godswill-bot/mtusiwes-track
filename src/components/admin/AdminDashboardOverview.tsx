@@ -1,24 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, UserCog, CheckCircle, AlertCircle, TrendingUp, Presentation, ArrowUpRight, Activity, CalendarDays } from "lucide-react";
+import { Users, UserCog, CheckCircle, AlertCircle, TrendingUp, Presentation, ArrowUpRight, Activity, CalendarDays, Shield } from "lucide-react";
 import { PortalToggle } from "@/components/admin/PortalToggle";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, Legend, PieChart, Pie, Cell } from "recharts";
 
 import { format, subMonths, eachMonthOfInterval, startOfMonth, subDays, eachDayOfInterval, startOfDay } from "date-fns";
 
 const fetchDashboardStats = async () => {
-  const [studentsRes, supervisorsRes, logsRes] = await Promise.all([
+  const [studentsRes, supervisorsRes, adminsRes, logsRes] = await Promise.all([
     supabase.from("students").select("id, supervisor_id, created_at, is_active"),
     supabase.from("supervisors").select("id, supervisor_type, created_at"),
+    supabase.from("admins").select("id, is_active, last_active_at"),
     supabase.from("audit_logs").select("id, action_type, created_at, table_name").order("created_at", { ascending: false }).limit(200)
   ]);
 
   const students = studentsRes.data || [];
   const supervisors = supervisorsRes.data || [];
+  const admins = adminsRes.data || [];
   const logs = logsRes.data || [];
 
-  return { students, supervisors, recentActivity: logs };
+  return { students, supervisors, admins, recentActivity: logs };
 };
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f43f5e'];
@@ -47,6 +49,7 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
 
   const students = data?.students || [];
   const supervisors = data?.supervisors || [];
+  const admins = data?.admins || [];
   const recentActivity = data?.recentActivity || [];
 
   const unassignedStudents = students.filter(s => !s.supervisor_id).length;
@@ -118,6 +121,11 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
 
   // Calculate active students using precisely the student's is_active status in the db
   const usersActiveToday = students.filter(s => s.is_active).length;
+  const activeAdmins = admins.filter((a) => a.is_active).length;
+  const onlineAdmins = admins.filter((a) => {
+    if (!a.is_active || !a.last_active_at) return false;
+    return Date.now() - new Date(a.last_active_at).getTime() < 5 * 60 * 1000;
+  }).length;
 
   return (
     <div className="space-y-6 pb-10">
@@ -130,7 +138,7 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
       </div>
 
       {/* Top KPI Cards - Highly Detailed */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card className="border-none shadow-sm bg-gradient-to-br from-purple-50 via-white to-purple-50/50 dark:from-purple-950/20 dark:via-background dark:to-purple-900/10 hover:shadow-md transition-all overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Users className="w-16 h-16" />
@@ -198,6 +206,24 @@ export const AdminDashboardOverview = ({ onViewAllActivity }: AdminDashboardOver
               <span className="flex items-center text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full font-medium">
                 Action Required
               </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-50 via-white to-indigo-50/50 dark:from-indigo-950/20 dark:via-background dark:to-indigo-900/10 hover:shadow-md transition-all overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Shield className="w-16 h-16" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardDescription className="font-medium text-indigo-600 dark:text-indigo-400">Admin Presence</CardDescription>
+            <CardTitle className="text-4xl text-foreground">{admins.length}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-sm mt-2">
+              <span className="flex items-center text-indigo-600 dark:text-indigo-300 bg-indigo-100/70 dark:bg-indigo-500/20 px-2 py-0.5 rounded-full font-medium">
+                {onlineAdmins} Online
+              </span>
+              <span className="text-muted-foreground">{activeAdmins} Active</span>
             </div>
           </CardContent>
         </Card>

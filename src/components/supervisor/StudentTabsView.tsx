@@ -9,13 +9,13 @@ import {
   Maximize2, BookOpen, Loader2, GraduationCap, MessageCircle, Sparkles 
 } from "lucide-react";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { FullScreenReportModal } from "./FullScreenReportModal";
 import { FullScreenStudentModal } from "./FullScreenStudentModal";
 import { StudentGradingModal } from "./StudentGradingModal";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
 import SupervisorStudentChatDrawer from "../SupervisorStudentChatDrawer";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface WeekInfo {
   id: string;
@@ -35,6 +35,9 @@ interface StudentWithWeeks {
   matric_no: string;
   department: string;
   faculty?: string;
+  organisation_address?: string;
+  industry_supervisor_name?: string;
+  school_supervisor_name?: string;
   level?: string;
   period_of_training: string;
   organisation_name: string;
@@ -116,6 +119,70 @@ export const StudentTabsView = ({
   const handleOpenStudentFullScreen = (student: StudentWithWeeks) => {
     setSelectedStudent(student);
     setShowFullScreenStudent(true);
+  };
+
+  const downloadPreRegistrationForm = (student: StudentWithWeeks) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(22);
+    doc.setTextColor(0, 0, 128);
+    doc.text("Mountain Top University", 105, 20, { align: "center" });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Pre-SIWES Registration Form", 105, 30, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text(`Exported: ${new Date().toLocaleDateString()}`, 14, 45);
+
+    doc.setFontSize(14);
+    doc.text("1. Student Information", 14, 55);
+
+    autoTable(doc, {
+      startY: 60,
+      theme: "grid",
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Full Name", student.profile?.full_name || student.full_name || "N/A"],
+        ["Matriculation Number", student.matric_no || "N/A"],
+        ["Department", student.department || "N/A"],
+        ["Faculty", student.faculty || "N/A"],
+      ],
+    });
+
+    const currentYOrg = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.text("2. Placement Organization Details", 14, currentYOrg);
+
+    autoTable(doc, {
+      startY: currentYOrg + 5,
+      theme: "grid",
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Organization Name", student.organisation_name || "N/A"],
+        ["Organization Address", student.organisation_address || "N/A"],
+      ],
+    });
+
+    const currentYSup = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.text("3. Supervisors", 14, currentYSup);
+
+    autoTable(doc, {
+      startY: currentYSup + 5,
+      theme: "grid",
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Industry Supervisor", student.industry_supervisor_name || "N/A"],
+        ["School Supervisor", student.school_supervisor_name || "N/A"],
+      ],
+    });
+
+    doc.setFontSize(10);
+    doc.text("Official MTU SIWES Unit Documentation", 105, 280, { align: "center" });
+
+    const safeName = (student.matric_no || student.profile?.full_name || "student").replace(/\s+/g, "_");
+    doc.save(`${safeName}_Pre_SIWES_Form.pdf`);
   };
 
   const renderWeekCard = (week: WeekInfo, student: StudentWithWeeks, colorClass: string) => (
@@ -245,6 +312,14 @@ export const StudentTabsView = ({
                       studentId={student.id}
                       type="supervisor"
                     />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => downloadPreRegistrationForm(student)}
+                    >
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Form PDF
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

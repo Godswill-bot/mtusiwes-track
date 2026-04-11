@@ -12,12 +12,15 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface AuditLog {
   id: string;
+  admin_id: string | null;
   action_type: string;
   table_name: string;
   record_id: string | null;
   created_at: string;
   user_type: string | null;
   user_email: string | null;
+  description: string | null;
+  admin_name: string | null;
   new_value: Record<string, unknown> | null;
   old_value: Record<string, unknown> | null;
 }
@@ -26,7 +29,13 @@ const fetchAuditLogs = async (): Promise<AuditLog[]> => {
   try {
     const { data, error } = await supabase
       .from("audit_logs")
-      .select("*")
+      .select(`
+        *,
+        admins:admin_id (
+          full_name,
+          email
+        )
+      `)
       .order("created_at", { ascending: false })
       .limit(200);
     
@@ -37,12 +46,15 @@ const fetchAuditLogs = async (): Promise<AuditLog[]> => {
     
     return (data ?? []).map((log) => ({
       id: log.id,
+      admin_id: (log as any).admin_id || null,
       action_type: log.action_type,
       table_name: log.table_name,
       record_id: log.record_id,
       created_at: log.created_at,
       user_type: (log as any).user_type || null,
       user_email: (log as any).user_email || null,
+      description: (log as any).description || null,
+      admin_name: (log as any).admins?.full_name || null,
       new_value: log.new_value as Record<string, unknown> | null,
       old_value: log.old_value as Record<string, unknown> | null,
     }));
@@ -189,6 +201,7 @@ export const AuditLogPanel = () => {
                 <TableHead className="min-w-[100px]">Action</TableHead>
                 <TableHead className="min-w-[120px]">Table</TableHead>
                 <TableHead className="min-w-[100px]">User Type</TableHead>
+                <TableHead className="min-w-[160px]">Actor</TableHead>
                 <TableHead className="min-w-[150px]">User Email</TableHead>
                 <TableHead className="min-w-[100px]">Record</TableHead>
                 <TableHead className="min-w-[150px]">Timestamp</TableHead>
@@ -207,6 +220,9 @@ export const AuditLogPanel = () => {
                       <Badge variant="outline" className="whitespace-nowrap">
                         {log.user_type || "admin"}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm break-words max-w-[180px]">
+                      {log.admin_name || (log.admin_id ? `Admin ${log.admin_id.slice(0, 8)}` : "System")}
                     </TableCell>
                     <TableCell className="text-sm break-all max-w-[150px]">
                       {log.user_email || "—"}
@@ -231,6 +247,11 @@ export const AuditLogPanel = () => {
                                 <DialogTitle>Audit Record Details</DialogTitle>
                               </DialogHeader>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                {log.description && (
+                                  <div className="md:col-span-2 rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+                                    {log.description}
+                                  </div>
+                                )}
                                 <div>
                                   <h4 className="font-semibold mb-2 text-sm">Previous Values</h4>
                                   {renderRecord(log.old_value, log.new_value)}
@@ -265,7 +286,7 @@ export const AuditLogPanel = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     {auditQuery.isPending ? (
                       <div className="flex items-center justify-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

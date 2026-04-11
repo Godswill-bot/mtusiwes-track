@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Download, Users, Mail, Phone, Building } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Student {
   id: string;
@@ -242,6 +244,72 @@ const StudentsList = () => {
     );
   }, [students, searchTerm]);
 
+  const downloadPreRegistrationForm = (student: Student) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(22);
+    doc.setTextColor(0, 0, 128);
+    doc.text("Mountain Top University", 105, 20, { align: "center" });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Pre-SIWES Registration Form", 105, 30, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text(`Exported: ${new Date().toLocaleDateString()}`, 14, 45);
+
+    doc.setFontSize(14);
+    doc.text("1. Student Information", 14, 55);
+
+    autoTable(doc, {
+      startY: 60,
+      theme: "grid",
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Full Name", student.full_name || student.profile?.full_name || "N/A"],
+        ["Matriculation Number", student.matric_no || "N/A"],
+        ["Email", student.email || "N/A"],
+        ["Phone", student.phone || "N/A"],
+        ["Department", student.department || "N/A"],
+        ["Faculty", student.faculty || "N/A"],
+      ],
+    });
+
+    const currentYOrg = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.text("2. Placement Organization Details", 14, currentYOrg);
+
+    autoTable(doc, {
+      startY: currentYOrg + 5,
+      theme: "grid",
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Organization Name", student.organisation_name || "N/A"],
+        ["Organization Address", student.organisation_address || "N/A"],
+      ],
+    });
+
+    const currentYSup = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.text("3. Supervisors", 14, currentYSup);
+
+    autoTable(doc, {
+      startY: currentYSup + 5,
+      theme: "grid",
+      headStyles: { fillColor: [0, 51, 102] },
+      body: [
+        ["Industry Supervisor", student.industry_supervisor_name || "N/A"],
+        ["School Supervisor", student.school_supervisor_name || "N/A"],
+      ],
+    });
+
+    doc.setFontSize(10);
+    doc.text("Official MTU SIWES Unit Documentation", 105, 280, { align: "center" });
+
+    const safeName = (student.matric_no || student.profile?.full_name || "student").replace(/\s+/g, "_");
+    doc.save(`${safeName}_Pre_SIWES_Form.pdf`);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -340,6 +408,18 @@ const StudentsList = () => {
                         <p className="text-sm font-medium">{student.industry_supervisor_name}</p>
                       </div>
                     )}
+
+                    <div className="pt-2 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadPreRegistrationForm(student)}
+                        className="w-full"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Registration Form
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

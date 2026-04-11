@@ -140,6 +140,9 @@ const SchoolSupervisorDashboard = () => {
           full_name,
           period_of_training,
           organisation_name,
+          organisation_address,
+          industry_supervisor_name,
+          school_supervisor_name,
           school_supervisor_email,
           user_id,
           profile_image_url

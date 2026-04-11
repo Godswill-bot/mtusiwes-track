@@ -332,6 +332,7 @@ export type Database = {
           hashed_password: string
           id: string
           is_active: boolean
+          last_active_at: string | null
           updated_at: string
           user_id: string
         }
@@ -342,6 +343,7 @@ export type Database = {
           hashed_password: string
           id?: string
           is_active?: boolean
+          last_active_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -352,6 +354,7 @@ export type Database = {
           hashed_password?: string
           id?: string
           is_active?: boolean
+          last_active_at?: string | null
           updated_at?: string
           user_id?: string
         }

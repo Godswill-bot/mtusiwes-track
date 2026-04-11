@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { StudentManager } from "@/components/admin/StudentManager";
 import { SupervisorManager } from "@/components/admin/SupervisorManager";
+import { AdminManager } from "@/components/admin/AdminManager";
 // AttendanceControlPanel removed - Admin should only view PDFs saved by supervisors
 import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
 import { PortalToggle } from "@/components/admin/PortalToggle";
@@ -14,7 +15,7 @@ import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOvervie
 // SupervisorAssignment removed - assignments are now automatic
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Users, UserCog, History, Bell, Settings, LayoutDashboard, Menu, X } from "lucide-react";
+import { AlertCircle, Users, UserCog, History, Bell, Settings, LayoutDashboard, Menu, X, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -63,12 +64,14 @@ const tableKeyMap: Record<string, Array<[string, string]>> = {
     ["admin", "students-basic"],
   ],
   supervisors: [["admin", "supervisors"]],
+  admins: [["admin", "admins"]],
   weeks: [["admin", "weeks"]],
   audit_logs: [["admin", "audit"]],
 };
 
 type ActiveTab = 
   | "dashboard" 
+  | "admins"
   | "students" 
   | "supervisors" 
   | "audit" 
@@ -151,6 +154,7 @@ const AdminDashboard = () => {
   // Tab configuration - Attendance removed per Phase 1 requirements
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "admins", label: "Admins", icon: Shield },
     { id: "students", label: "Students", icon: Users },
     { id: "supervisors", label: "Supervisors", icon: UserCog },
     { id: "audit", label: "Audit Trail", icon: History },
@@ -160,6 +164,8 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "admins":
+        return <AdminManager />;
       case "students":
         return <StudentManager />;
       case "supervisors":

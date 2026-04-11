@@ -337,14 +337,28 @@ const StudentDashboard = () => {
   const completionPercentage = stats.totalWeeks > 0
     ? Math.min(100, Math.round((stats.submitted / stats.totalWeeks) * 100))
     : 0;
+  const registrationStatusLabel = !hasRegistration
+    ? "Not Submitted"
+    : isApproved
+      ? "Submitted & Approved"
+      : isRejected
+        ? "Submitted & Rejected"
+        : "Submitted";
+  const registrationStatusTone = !hasRegistration
+    ? "secondary"
+    : isApproved
+      ? "default"
+      : isRejected
+        ? "destructive"
+        : "outline";
 
   return (
     <div className="min-h-screen bg-background relative z-0">
       <StudentBackgroundIcons />
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8 relative z-10">
-        <div className="max-w-6xl mx-auto space-y-6">
+      <main className="w-full px-4 sm:px-7 lg:px-12 py-8 relative z-10">
+        <div className="max-w-[1760px] mx-auto space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-primary">
@@ -361,15 +375,44 @@ const StudentDashboard = () => {
                 <Button variant="outline" size="sm" className="sm:size-default" onClick={() => navigate("/student/profile/edit")}>
                   Edit Profile
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/student/pre-siwes/edit")}>
-                  Edit Registration
-                </Button>
               </div>
             )}
           </div>
 
           {/* Student Notifications */}
           <StudentNotifications />
+
+          {hasRegistration && (
+            <Card className="border-border/60 bg-card/80 shadow-card">
+              <CardContent className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 py-5">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Pre-SIWES Registration</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge variant={registrationStatusTone as any} className="px-3 py-1 text-sm">
+                      {registrationStatusLabel}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground">
+                      {isApproved
+                        ? "Your supervisor has approved the form."
+                        : isRejected
+                          ? "Review the remarks, make corrections, and resubmit."
+                          : "Your submission is waiting for supervisor review."}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={() => navigate("/student/pre-siwes")}>
+                    View Registration
+                  </Button>
+                  {!siwesLocked && (
+                    <Button variant="outline" onClick={() => navigate("/student/pre-siwes/edit")}>
+                      Edit Registration
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {!hasRegistration ? (
             <Card className="shadow-card border-2 border-primary/20 transition-all duration-300 ease-out hover:shadow-elevated">
@@ -419,7 +462,7 @@ const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 text-muted-foreground">
                   <Clock className="h-6 w-6" />
-                  <span>Pre-Registration Pending Approval</span>
+                  <span>Pre-Registration Submitted</span>
                 </CardTitle>
                 <CardDescription>
                   Your pre-registration form has been submitted and is awaiting school supervisor approval.
@@ -500,8 +543,9 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               {studentInfo && (
-                <Card className="shadow-elevated transition-all duration-300 ease-out hover:shadow-card">
+                <Card className="shadow-elevated transition-all duration-300 ease-out hover:shadow-card xl:col-span-5">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building className="h-5 w-5" />
@@ -548,7 +592,7 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              <Card className="shadow-elevated transition-all duration-300 ease-out hover:shadow-card">
+              <Card className="shadow-elevated transition-all duration-300 ease-out hover:shadow-card xl:col-span-7">
                 <CardHeader>
                   <CardTitle>Weekly Progress</CardTitle>
                 </CardHeader>
@@ -571,7 +615,7 @@ const StudentDashboard = () => {
               </Card>
 
               {allWeeksCompleted && studentInfo && (
-                <Card className="shadow-elevated border-2 border-green-200 bg-green-50 transition-all duration-300 ease-out hover:shadow-card">
+                <Card className="shadow-elevated border-2 border-green-200 bg-green-50 transition-all duration-300 ease-out hover:shadow-card xl:col-span-12">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-success">
                       <CheckCircle className="h-6 w-6" />
@@ -585,8 +629,8 @@ const StudentDashboard = () => {
                 </Card>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Button onClick={() => navigate("/student/logbook")} className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={!isApproved || siwesLocked} variant={siwesLocked ? "outline" : "default"}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 xl:col-span-12">
+                <Button onClick={() => navigate("/student/logbook")} className="h-28 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={!isApproved || siwesLocked} variant={siwesLocked ? "outline" : "default"}>
                   {siwesLocked ? <Lock className="h-7 w-7" /> : <BookOpen className="h-7 w-7" />}
                   <span>{siwesLocked ? "View Logbook (Read-Only)" : "My Logbook"}</span>
                   {!isApproved && !siwesLocked && <span className="text-xs text-muted-foreground">(Awaiting approval)</span>}
@@ -594,7 +638,7 @@ const StudentDashboard = () => {
 
                 <Button
                   onClick={() => setChatOpen(true)}
-                  className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5"
+                  className="h-28 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5"
                   size="lg"
                   disabled={!isApproved || siwesLocked || !studentInfo?.school_supervisor_name}
                   variant="outline"
@@ -609,7 +653,7 @@ const StudentDashboard = () => {
                   )}
                 </Button>
 
-                <Button onClick={() => navigate("/student/notifications")} variant="outline" className="relative h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg">
+                <Button onClick={() => navigate("/student/notifications")} variant="outline" className="relative h-28 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg">
                   <div className="relative">
                     <Bell className="h-7 w-7" />
                     {unreadNotificationsCount > 0 && (
@@ -621,10 +665,11 @@ const StudentDashboard = () => {
                   <span>Notifications</span>
                 </Button>
 
-                <Button onClick={() => navigate("/student/pre-siwes")} variant="outline" className="h-24 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={siwesLocked}>
+                <Button onClick={() => navigate("/student/pre-siwes")} variant="outline" className="h-28 flex-col gap-2 transition-all duration-300 ease-out hover:-translate-y-0.5" size="lg" disabled={siwesLocked}>
                   <FileText className="h-7 w-7" />
                   <span>View Registration</span>
                 </Button>
+              </div>
               </div>
 
               <SupervisorStudentChatDrawer

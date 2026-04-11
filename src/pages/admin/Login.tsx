@@ -117,7 +117,7 @@ const AdminLogin = () => {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</Button>
           </form>
-          <p className="text-sm text-muted-foreground text-center mt-4">Admin accounts are created manually by system administrators</p>
+          <p className="text-sm text-muted-foreground text-center mt-4">Authenticated admins can create additional admin accounts from the Admins tab.</p>
         </CardContent>
       </Card>
     </div>

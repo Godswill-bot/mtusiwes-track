@@ -12,11 +12,17 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logProfileUpdate } from "@/utils/audit";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const PreSiwesEdit = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [registrationState, setRegistrationState] = useState<{
+    status: string;
+    remark: string | null;
+  } | null>(null);
   const [formData, setFormData] = useState({
     matric_no: "",
     department: "",
@@ -40,13 +46,32 @@ const PreSiwesEdit = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("students")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      const [studentResult, sessionResult] = await Promise.all([
+        supabase
+          .from("students")
+          .select("*")
+          .eq("user_id", user.id)
+          .single(),
+        supabase
+          .from("academic_sessions")
+          .select("id")
+          .eq("is_current", true)
+          .maybeSingle(),
+      ]);
+
+      const { data, error } = studentResult;
 
       if (error) throw error;
+
+      const currentSession = sessionResult.data;
+      const currentPreReg = currentSession
+        ? await supabase
+            .from("pre_registration")
+            .select("status, remark, approved_at")
+            .eq("student_id", data.id)
+            .eq("session_id", currentSession.id)
+            .maybeSingle()
+        : { data: null };
 
       if (data) {
         setFormData({
@@ -67,6 +92,11 @@ const PreSiwesEdit = () => {
           period_of_training: data.period_of_training,
           other_info: data.other_info || "",
         });
+
+        setRegistrationState(currentPreReg.data ? {
+          status: (currentPreReg.data as any).status || "pending",
+          remark: (currentPreReg.data as any).remark || null,
+        } : null);
       }
     } catch (error: unknown) {
       toast.error("Error loading data");
@@ -126,7 +156,31 @@ const PreSiwesEdit = () => {
         });
       }
 
-      toast.success("Information updated successfully");
+      const { data: currentSession } = await supabase
+        .from("academic_sessions")
+        .select("id")
+        .eq("is_current", true)
+        .maybeSingle();
+
+      if (currentSession && newData?.id) {
+        const { error: preRegError } = await supabase
+          .from("pre_registration")
+          .upsert({
+            student_id: newData.id,
+            session_id: currentSession.id,
+            status: "pending",
+            remark: null,
+            approved_at: null,
+          }, {
+            onConflict: "student_id, session_id",
+          });
+
+        if (preRegError) {
+          console.error("Failed to resubmit pre-registration:", preRegError);
+        }
+      }
+
+      toast.success("Information updated and resubmitted for supervisor review");
       navigate("/student/dashboard");
     } catch (error: unknown) {
       toast.error("Error updating information");
@@ -140,16 +194,25 @@ const PreSiwesEdit = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
 
+          {registrationState && (
+            <Alert className="border-primary/20 bg-primary/5">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Current status: {registrationState.status}. Saving changes here will push the updated registration back to your supervisor.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Edit Pre-SIWES Information</CardTitle>
-              <CardDescription>Update your registration details</CardDescription>
+              <CardDescription>Update your registration details and resubmit them for approval</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -323,7 +386,7 @@ const PreSiwesEdit = () => {
                 </div>
 
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Save Changes"}
+                  {loading ? "Saving..." : "Save & Resubmit"}
                 </Button>
               </form>
             </CardContent>
