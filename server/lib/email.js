@@ -88,16 +88,22 @@ export const sendEmail = async (to, subject, text, html = null) => {
 export const sendOTPEmail = async (to, otp, type = 'verification') => {
   const subject = type === 'verification'
     ? 'MTU SIWES Email Verification Code'
-    : 'Your SIWES Password Reset Code';
+    : type === 'reset'
+      ? 'Your SIWES Password Reset Code'
+      : 'MTU SIWES Admin Profile Verification Code';
 
   const text = type === 'verification'
     ? `Your MTU SIWES email verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this code, please ignore this email.`
-    : `Your MTU SIWES password reset code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request a password reset, please ignore this email.`;
+    : type === 'reset'
+      ? `Your MTU SIWES password reset code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request a password reset, please ignore this email.`
+      : `Your MTU SIWES admin profile verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this update, please ignore this email.`;
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
   const verificationUrl = type === 'verification' 
     ? `${frontendUrl}/student/verify-email?email=${encodeURIComponent(to)}`
-    : `${frontendUrl}/forgot-password?email=${encodeURIComponent(to)}`;
+    : type === 'reset'
+      ? `${frontendUrl}/forgot-password?email=${encodeURIComponent(to)}`
+      : `${frontendUrl}/admin/profile?email=${encodeURIComponent(to)}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -105,11 +111,13 @@ export const sendOTPEmail = async (to, otp, type = 'verification') => {
         <h1 style="margin: 0;">MTU SIWES Platform</h1>
       </div>
       <div style="background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #1f2937; margin-top: 0;">${type === 'verification' ? 'Email Verification' : 'Password Reset'}</h2>
+        <h2 style="color: #1f2937; margin-top: 0;">${type === 'verification' ? 'Email Verification' : type === 'reset' ? 'Password Reset' : 'Admin Profile Verification'}</h2>
         <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
           ${type === 'verification' 
             ? 'Thank you for registering with MTU SIWES Platform. Please verify your email address using the code below:'
-            : 'You have requested to reset your password. Use the code below to proceed:'}
+            : type === 'reset'
+              ? 'You have requested to reset your password. Use the code below to proceed:'
+              : 'You have requested to update your admin profile. Please verify the new email address using the code below:'}
         </p>
         <div style="background-color: white; border: 2px dashed #7c3aed; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
           <p style="font-size: 32px; font-weight: bold; color: #7c3aed; letter-spacing: 8px; margin: 0;">
@@ -118,14 +126,14 @@ export const sendOTPEmail = async (to, otp, type = 'verification') => {
         </div>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${verificationUrl}" style="display: inline-block; background-color: #7c3aed; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
-            Continue to Verification
+            ${type === 'verification' ? 'Continue to Verification' : type === 'reset' ? 'Reset Password' : 'Verify Admin Profile'}
           </a>
         </div>
         <p style="color: #6b7280; font-size: 14px; margin-top: 20px; text-align: center;">
           This code will expire in <strong>10 minutes</strong>.
         </p>
         <p style="color: #6b7280; font-size: 14px; margin-top: 10px; text-align: center;">
-          If you did not request this ${type === 'verification' ? 'verification' : 'password reset'}, please ignore this email.
+          If you did not request this ${type === 'verification' ? 'verification' : type === 'reset' ? 'password reset' : 'profile update'}, please ignore this email.
         </p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
         <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
@@ -136,6 +144,16 @@ export const sendOTPEmail = async (to, otp, type = 'verification') => {
   `;
 
   return await sendEmail(to, subject, text, html);
+};
+
+/**
+ * Send admin profile change verification email
+ * @param {string} to - Recipient email address
+ * @param {string} otp - 6-digit OTP code
+ * @returns {Promise<Object>} - Send result
+ */
+export const sendAdminProfileChangeEmail = async (to, otp) => {
+  return await sendOTPEmail(to, otp, 'admin_profile_change');
 };
 
 /**

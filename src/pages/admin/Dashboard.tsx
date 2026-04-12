@@ -1,5 +1,5 @@
 import { useEffect, useState, Component, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
@@ -12,6 +12,7 @@ import { PortalToggle } from "@/components/admin/PortalToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { OtherServices } from "@/components/admin/OtherServices";
 import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOverview";
+import { AdminProfilePanel } from "@/components/admin/AdminProfilePanel";
 // SupervisorAssignment removed - assignments are now automatic
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -71,6 +72,7 @@ const tableKeyMap: Record<string, Array<[string, string]>> = {
 
 type ActiveTab = 
   | "dashboard" 
+  | "profile"
   | "admins"
   | "students" 
   | "supervisors" 
@@ -81,10 +83,11 @@ type ActiveTab =
 
 const AdminDashboard = () => {
   const { userRole, user, loading } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("dashboard");
+  const [activeTab, setActiveTab] = useState<ActiveTab>(location.pathname === "/admin/profile" ? "profile" : "dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -116,6 +119,14 @@ const AdminDashboard = () => {
 
     testAdminAccess();
   }, [user, userRole]);
+
+  useEffect(() => {
+    if (location.pathname === "/admin/profile") {
+      setActiveTab("profile");
+    } else if (location.pathname === "/admin/dashboard") {
+      setActiveTab((current) => (current === "profile" ? "dashboard" : current));
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const channels = Object.keys(tableKeyMap).map((table) =>
@@ -154,6 +165,7 @@ const AdminDashboard = () => {
   // Tab configuration - Attendance removed per Phase 1 requirements
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "profile", label: "Profile", icon: Shield },
     { id: "admins", label: "Admins", icon: Shield },
     { id: "students", label: "Students", icon: Users },
     { id: "supervisors", label: "Supervisors", icon: UserCog },
@@ -164,6 +176,8 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "profile":
+        return <AdminProfilePanel />;
       case "admins":
         return <AdminManager />;
       case "students":
@@ -217,7 +231,9 @@ const AdminDashboard = () => {
                   <button
                     key={tab.id}
                     onClick={() => {
-                      setActiveTab(tab.id as ActiveTab);
+                      const nextTab = tab.id as ActiveTab;
+                      setActiveTab(nextTab);
+                      navigate(nextTab === "profile" ? "/admin/profile" : "/admin/dashboard", { replace: true });
                       setSidebarOpen(false);
                     }}
                     className={cn(

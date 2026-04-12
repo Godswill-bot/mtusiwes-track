@@ -11,10 +11,13 @@ import {
   forgotPassword,
   verifyResetOTP,
   resetPassword,
+  requestAdminProfileChange,
+  verifyAdminProfileChange,
 } from '../controllers/authController.js';
 
 import { logUserActivity } from '../lib/activityLogger.js';
 import { createAuditLog } from '../lib/audit.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -59,6 +62,20 @@ router.post('/verify-reset-otp', verifyResetOTP);
  * @access  Public
  */
 router.post('/reset-password', resetPassword);
+
+/**
+ * @route   POST /admin/profile/request-change
+ * @desc    Request admin email/password change
+ * @access  Private (Admin)
+ */
+router.post('/admin/profile/request-change', requireAuth, requireRole('admin'), requestAdminProfileChange);
+
+/**
+ * @route   POST /admin/profile/verify-change
+ * @desc    Verify admin profile change OTP and apply update
+ * @access  Private (Admin)
+ */
+router.post('/admin/profile/verify-change', requireAuth, requireRole('admin'), verifyAdminProfileChange);
 
 /**
  * @route   POST /log-activity

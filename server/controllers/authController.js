@@ -11,7 +11,7 @@ import {
   markUserAsVerified,
   updateUserPassword,
 } from '../lib/database.js';
-import { sendOTPEmail, sendPasswordResetEmail } from '../lib/email.js';
+import { sendOTPEmail, sendPasswordResetEmail, sendAdminProfileChangeEmail } from '../lib/email.js';
 import {
   logAccountCreation,
   logEmailVerification,
@@ -27,8 +27,16 @@ import {
   logPasswordResetSuccess,
   logPasswordChange as logPasswordChangeActivity,
 } from '../lib/activityLogger.js';
+import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import {
+  encryptProfileChangeSecret,
+  decryptProfileChangeSecret,
+  replacePendingAdminProfileChange,
+  getPendingAdminProfileChange,
+  completePendingAdminProfileChange,
+} from '../lib/adminProfile.js';
 
 dotenv.config();
 
@@ -48,6 +56,20 @@ const supabase = createClient(
 const validateMTUEmail = (email) => {
   const mtuEmailRegex = /^[a-zA-Z0-9]+@mtu\.edu\.ng$/;
   return mtuEmailRegex.test(email);
+};
+
+const validateAnyEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(String(email || '').trim());
+};
+
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
+const getAuthUserById = async (userId) => {
+  const { data, error } = await supabase.auth.admin.listUsers();
+  if (error) throw error;
+  const users = data?.users || [];
+  return users.find((user) => user.id === userId) || null;
 };
 
 /**
@@ -746,6 +768,349 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Internal server error',
+    });
+  }
+};
+
+/**
+ * Request admin profile change
+ * POST /admin/profile/request-change
+ */
+export const requestAdminProfileChange = async (req, res) => {
+  try {
+    const adminUserId = req.user?.sub || req.user?.id;
+    const { currentPassword, newEmail, newPassword, confirmNewPassword } = req.body;
+
+    if (!adminUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+    }
+
+    if (!currentPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password is required',
+      });
+    }
+
+    if (!newEmail && !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a new email or new password',
+      });
+    }
+
+    if (newPassword && newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 6 characters',
+      });
+    }
+
+    if (newPassword && confirmNewPassword && newPassword !== confirmNewPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'New passwords do not match',
+      });
+    }
+
+    const authUser = await getAuthUserById(adminUserId);
+    if (!authUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'Admin account not found',
+      });
+    }
+
+    const { data: adminRecord, error: adminError } = await supabase
+      .from('admins')
+      .select('id, user_id, full_name, email, hashed_password, is_active')
+      .eq('user_id', adminUserId)
+      .maybeSingle();
+
+    if (adminError) throw adminError;
+    if (!adminRecord) {
+      return res.status(404).json({
+        success: false,
+        error: 'Admin record not found',
+      });
+    }
+
+    const currentEmail = normalizeEmail(authUser.email || adminRecord.email);
+    const passwordMatches = await bcrypt.compare(currentPassword, adminRecord.hashed_password || '');
+    if (!passwordMatches) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password is incorrect',
+      });
+    }
+
+    const normalizedNewEmail = newEmail ? normalizeEmail(newEmail) : currentEmail;
+    const emailChangeRequested = Boolean(newEmail) && normalizedNewEmail !== currentEmail;
+    const passwordChangeRequested = Boolean(newPassword);
+
+    if (!emailChangeRequested && !passwordChangeRequested) {
+      return res.status(400).json({
+        success: false,
+        error: 'No changes detected',
+      });
+    }
+
+    if (emailChangeRequested && !validateAnyEmail(normalizedNewEmail)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid email address',
+      });
+    }
+
+    if (emailChangeRequested) {
+      const { data: authUsers, error: listError } = await supabase.auth.admin.listUsers();
+      if (listError) throw listError;
+
+      const duplicateUser = (authUsers?.users || []).find(
+        (existingUser) => existingUser.email === normalizedNewEmail && existingUser.id !== adminUserId,
+      );
+
+      const { data: duplicateAdmin, error: duplicateAdminError } = await supabase
+        .from('admins')
+        .select('user_id')
+        .eq('email', normalizedNewEmail)
+        .maybeSingle();
+
+      if (duplicateAdminError) throw duplicateAdminError;
+
+      if (duplicateUser || (duplicateAdmin && duplicateAdmin.user_id !== adminUserId)) {
+        return res.status(409).json({
+          success: false,
+          error: 'That email is already in use',
+        });
+      }
+
+      const otp = generateOTP();
+      const encryptedNewPassword = passwordChangeRequested
+        ? encryptProfileChangeSecret(newPassword)
+        : null;
+
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+      const pendingChange = await replacePendingAdminProfileChange({
+        adminUserId,
+        currentEmail,
+        newEmail: normalizedNewEmail,
+        encryptedNewPassword,
+        expiresAt: expiresAt.toISOString(),
+      });
+
+      const otpResult = await saveOTP(normalizedNewEmail, otp, 'admin_profile_change');
+      if (!otpResult.success) {
+        await supabase
+          .from('admin_profile_change_requests')
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('id', pendingChange.id);
+
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to generate verification code',
+        });
+      }
+
+      const emailResult = await sendAdminProfileChangeEmail(normalizedNewEmail, otp);
+      if (!emailResult.success) {
+        await supabase
+          .from('email_otps')
+          .delete()
+          .eq('email', normalizedNewEmail)
+          .eq('type', 'admin_profile_change');
+
+        await supabase
+          .from('admin_profile_change_requests')
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('id', pendingChange.id);
+
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to send verification email',
+        });
+      }
+
+      await logProfileUpdate(req, adminUserId, 'admin', currentEmail, {
+        email_change_requested: true,
+        newEmail: normalizedNewEmail,
+      });
+
+      return res.json({
+        success: true,
+        verificationRequired: true,
+        requestId: pendingChange.id,
+        newEmail: normalizedNewEmail,
+        message: 'Verification code sent to the new email address.',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(adminUserId, {
+      password: newPassword,
+      user_metadata: {
+        ...authUser.user_metadata,
+        email_verified: authUser.email_confirmed_at ? true : Boolean(authUser.user_metadata?.email_verified),
+      },
+    });
+
+    if (authUpdateError) throw authUpdateError;
+
+    const { error: adminUpdateError } = await supabase
+      .from('admins')
+      .update({
+        hashed_password: hashedPassword,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', adminUserId);
+
+    if (adminUpdateError) throw adminUpdateError;
+
+    await logProfileUpdate(req, adminUserId, 'admin', currentEmail, {
+      password_changed: true,
+    });
+    await logPasswordChange(req, adminUserId, 'admin', currentEmail);
+    await logPasswordChangeActivity(req, adminUserId, 'admin', currentEmail);
+
+    return res.json({
+      success: true,
+      verificationRequired: false,
+      message: 'Password updated successfully.',
+    });
+  } catch (error) {
+    console.error('Admin profile change request error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update admin profile',
+    });
+  }
+};
+
+/**
+ * Verify admin profile change OTP and apply the update
+ * POST /admin/profile/verify-change
+ */
+export const verifyAdminProfileChange = async (req, res) => {
+  try {
+    const adminUserId = req.user?.sub || req.user?.id;
+    const { requestId, otp } = req.body;
+
+    if (!adminUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+    }
+
+    if (!requestId || !otp) {
+      return res.status(400).json({
+        success: false,
+        error: 'Verification code and request ID are required',
+      });
+    }
+
+    const pendingChange = await getPendingAdminProfileChange({
+      adminUserId,
+      requestId,
+    });
+
+    if (!pendingChange) {
+      return res.status(404).json({
+        success: false,
+        error: 'No pending admin profile change found',
+      });
+    }
+
+    const verificationResult = await verifyOTP(pendingChange.new_email, otp, 'admin_profile_change');
+    if (!verificationResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: verificationResult.error,
+      });
+    }
+
+    const authUser = await getAuthUserById(adminUserId);
+    if (!authUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'Admin account not found',
+      });
+    }
+
+    const decryptedNewPassword = decryptProfileChangeSecret(pendingChange.encrypted_new_password);
+    const authUpdatePayload = {
+      email: pendingChange.new_email,
+      email_confirm: true,
+      user_metadata: {
+        ...authUser.user_metadata,
+        email_verified: true,
+        verified_at: new Date().toISOString(),
+      },
+    };
+
+    if (decryptedNewPassword) {
+      authUpdatePayload.password = decryptedNewPassword;
+    }
+
+    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(adminUserId, authUpdatePayload);
+    if (authUpdateError) throw authUpdateError;
+
+    const adminUpdate = {
+      email: pendingChange.new_email,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (decryptedNewPassword) {
+      adminUpdate.hashed_password = await bcrypt.hash(decryptedNewPassword, 10);
+    }
+
+    const { error: adminUpdateError } = await supabase
+      .from('admins')
+      .update(adminUpdate)
+      .eq('user_id', adminUserId);
+
+    if (adminUpdateError) throw adminUpdateError;
+
+    const { error: profileUpdateError } = await supabase
+      .from('profiles')
+      .update({ email_verified: true })
+      .eq('id', adminUserId);
+
+    if (profileUpdateError) {
+      console.warn('Profile verification flag update warning:', profileUpdateError.message);
+    }
+
+    await completePendingAdminProfileChange(pendingChange.id);
+
+    await logEmailVerificationActivity(req, adminUserId, 'admin', pendingChange.new_email);
+    await logProfileUpdate(req, adminUserId, 'admin', pendingChange.current_email, {
+      email: {
+        from: pendingChange.current_email,
+        to: pendingChange.new_email,
+      },
+      password_changed: Boolean(decryptedNewPassword),
+    });
+
+    if (decryptedNewPassword) {
+      await logPasswordChange(req, adminUserId, 'admin', pendingChange.new_email);
+      await logPasswordChangeActivity(req, adminUserId, 'admin', pendingChange.new_email);
+    }
+
+    return res.json({
+      success: true,
+      message: 'Admin profile updated successfully. Please sign in again with your new credentials.',
+      newEmail: pendingChange.new_email,
+    });
+  } catch (error) {
+    console.error('Admin profile verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to verify admin profile change',
     });
   }
 };
