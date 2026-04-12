@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +13,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ShieldCheck, ShieldOff, UserPlus, Search, Loader2, Activity, Users, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { buildLastSeenMap, formatLastSeen, isCurrentlyOnline, resolveLastSeenAt } from "@/utils/presence";
 
 type AdminRecord = Database["public"]["Tables"]["admins"]["Row"];
+type UserActivityRecord = Database["public"]["Tables"]["user_activities"]["Row"];
 
 const fetchAdmins = async () => {
   const { data, error } = await supabase
@@ -27,16 +28,22 @@ const fetchAdmins = async () => {
   return (data || []) as AdminRecord[];
 };
 
+const fetchAdminActivities = async () => {
+  const { data, error } = await supabase
+    .from("user_activities")
+    .select("user_id, created_at")
+    .eq("user_type", "admin")
+    .order("created_at", { ascending: false })
+    .limit(1000);
+
+  if (error) throw error;
+  return (data || []) as Pick<UserActivityRecord, "user_id" | "created_at">[];
+};
+
 const defaultForm = {
   full_name: "",
   email: "",
   password: "",
-};
-
-const isOnline = (admin: AdminRecord) => {
-  if (!admin.is_active || !admin.last_active_at) return false;
-  const lastActive = new Date(admin.last_active_at).getTime();
-  return Date.now() - lastActive < 5 * 60 * 1000;
 };
 
 export const AdminManager = () => {
@@ -51,6 +58,17 @@ export const AdminManager = () => {
     queryFn: fetchAdmins,
     refetchInterval: 30000,
   });
+
+  const adminActivitiesQuery = useQuery({
+    queryKey: ["admin", "admin-activities"],
+    queryFn: fetchAdminActivities,
+    refetchInterval: 30000,
+  });
+
+  const adminLastSeenMap = useMemo(
+    () => buildLastSeenMap(adminActivitiesQuery.data || []),
+    [adminActivitiesQuery.data],
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -69,11 +87,13 @@ export const AdminManager = () => {
       }
     };
 
-    touchPresence();
-    const intervalId = window.setInterval(touchPresence, 45000);
+    void touchPresence();
+    const intervalId = window.setInterval(() => {
+      void touchPresence();
+    }, 45000);
 
     const handleFocus = () => {
-      touchPresence();
+      void touchPresence();
     };
 
     window.addEventListener("focus", handleFocus);
@@ -145,7 +165,10 @@ export const AdminManager = () => {
 
   const totalAdmins = adminsQuery.data?.length || 0;
   const activeAdmins = adminsQuery.data?.filter((admin) => admin.is_active).length || 0;
-  const onlineAdmins = adminsQuery.data?.filter((admin) => isOnline(admin)).length || 0;
+  const onlineAdmins = adminsQuery.data?.filter((admin) => {
+    const lastSeenAt = resolveLastSeenAt(admin, adminLastSeenMap);
+    return isCurrentlyOnline(lastSeenAt, admin.is_active);
+  }).length || 0;
   const inactiveAdmins = totalAdmins - activeAdmins;
 
   return (
@@ -307,10 +330,9 @@ export const AdminManager = () => {
                   </TableRow>
                 ) : filteredAdmins.length > 0 ? (
                   filteredAdmins.map((admin) => {
-                    const online = isOnline(admin);
-                    const lastActive = admin.last_active_at
-                      ? formatDistanceToNow(new Date(admin.last_active_at), { addSuffix: true })
-                      : "Never";
+                    const lastSeenAt = resolveLastSeenAt(admin, adminLastSeenMap);
+                    const online = isCurrentlyOnline(lastSeenAt, admin.is_active);
+                    const lastActive = formatLastSeen(lastSeenAt);
 
                     return (
                       <TableRow key={admin.id}>

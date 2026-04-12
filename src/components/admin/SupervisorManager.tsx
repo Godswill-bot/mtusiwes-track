@@ -20,10 +20,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, UserCog, Search } from "lucide-react";
+import { buildLastSeenMap, formatLastSeen, isCurrentlyOnline, resolveLastSeenAt } from "@/utils/presence";
 
 type SupervisorRecord = Database["public"]["Tables"]["supervisors"]["Row"];
 type StudentRecord = Database["public"]["Tables"]["students"]["Row"];
 type SupervisorAssignmentRecord = Database["public"]["Tables"]["supervisor_assignments"]["Row"];
+type UserActivityRecord = Database["public"]["Tables"]["user_activities"]["Row"];
 
 import { apiRequest } from "@/utils/api";
 
@@ -71,6 +73,18 @@ const fetchStudents = async () => {
   return (data || []) as StudentRecord[];
 };
 
+const fetchSchoolSupervisorActivities = async () => {
+  const { data, error } = await supabase
+    .from("user_activities")
+    .select("user_id, created_at")
+    .eq("user_type", "school_supervisor")
+    .order("created_at", { ascending: false })
+    .limit(1000);
+
+  if (error) throw error;
+  return (data || []) as Pick<UserActivityRecord, "user_id" | "created_at">[];
+};
+
 const fetchSchoolSupervisorAssignments = async () => {
   const { data, error } = await supabase
     .from("supervisor_assignments")
@@ -113,6 +127,12 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
   const studentsQuery = useQuery({
     queryKey: ["admin", "students-basic"],
     queryFn: fetchStudents,
+  });
+
+  const schoolSupervisorActivitiesQuery = useQuery({
+    queryKey: ["admin", "school-supervisor-activities"],
+    queryFn: fetchSchoolSupervisorActivities,
+    refetchInterval: 30000,
   });
 
   const schoolAssignmentsQuery = useQuery({
@@ -300,7 +320,7 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
       id: `virtual-${index}-${sup.name.toLowerCase().replace(/\s+/g, '-')}`,
       user_id: `virtual-user-${index}`,
       name: sup.name,
-      email: sup.email || `virtual-${index}@example.local`,
+      email: sup.email || "not filled",
       phone: sup.phone,
       supervisor_type: "industry_supervisor" as const,
       is_active: true,
@@ -324,6 +344,10 @@ export const SupervisorManager = ({ compact = false }: SupervisorManagerProps) =
   );
 
   const studentPool = useMemo(() => studentsQuery.data || [], [studentsQuery.data]);
+  const schoolSupervisorLastSeenMap = useMemo(
+    () => buildLastSeenMap(schoolSupervisorActivitiesQuery.data || []),
+    [schoolSupervisorActivitiesQuery.data],
+  );
 
   if (compact) {
     return (
@@ -582,6 +606,7 @@ interface SupervisorTableProps {
   supervisors: CombinedSupervisor[];
   students: StudentRecord[];
   schoolAssignments?: Pick<SupervisorAssignmentRecord, "supervisor_id" | "student_id" | "assignment_type">[];
+  schoolSupervisorLastSeenMap?: Map<string, string>;
   loading: boolean;
   onResetPassword: (sup: SupervisorRecord) => void;
   onToggleStatus: (sup: SupervisorRecord) => void;
@@ -595,6 +620,7 @@ const SupervisorTable = ({
   supervisors,
   students,
   schoolAssignments = [],
+  schoolSupervisorLastSeenMap,
   loading,
   onResetPassword,
   onToggleStatus,
@@ -630,6 +656,14 @@ const SupervisorTable = ({
     return students.filter((s) => assignedIds.has(s.id));
   };
 
+  const getPresenceLabel = (supervisor: CombinedSupervisor, online: boolean) => {
+    if (isIndustry) {
+      return supervisor._isVirtual ? "N/A" : online ? "Online" : "Offline";
+    }
+
+    return online ? "Online" : "Offline";
+  };
+
   const getEmptyStateColSpan = () => {
     if (isIndustry) {
       return compact ? 7 : 9;
@@ -649,7 +683,7 @@ const SupervisorTable = ({
             <TableHead className="min-w-[170px]">Assigned Students</TableHead>
             <TableHead className="min-w-[80px]">Status</TableHead>
             <TableHead className="min-w-[90px]">Presence</TableHead>
-            {!compact && <TableHead className="min-w-[120px]">Last Active</TableHead>}
+            {!compact && !isIndustry && <TableHead className="min-w-[120px]">Last Active</TableHead>}
             {!compact && <TableHead className="text-right min-w-[180px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
@@ -658,10 +692,10 @@ const SupervisorTable = ({
             supervisors.map((sup) => {
               const assignedStudents = getAssignedStudents(sup);
               const isVirtual = (sup as { _isVirtual?: boolean })._isVirtual;
-              const online = isSupervisorOnline(sup);
-              const lastActive = sup.last_active_at
-                ? formatDistanceToNow(new Date(sup.last_active_at), { addSuffix: true })
-                : "Never";
+              const lastSeenAt = resolveLastSeenAt(sup, schoolSupervisorLastSeenMap);
+              const online = isIndustry && isVirtual ? false : isCurrentlyOnline(lastSeenAt, sup.is_active, SUPERVISOR_ONLINE_WINDOW_MS);
+              const lastActive = isIndustry && isVirtual ? "Not applicable" : formatLastSeen(lastSeenAt);
+              const displayEmail = !sup.email || /^virtual-\d+@example\.local$/i.test(sup.email) ? "not filled" : sup.email;
               return (
                 <TableRow key={sup.id} className={isVirtual ? "bg-primary/10/50" : ""}>
                   <TableCell className="font-medium break-words max-w-[120px]">
@@ -674,7 +708,7 @@ const SupervisorTable = ({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="break-all max-w-[150px] text-sm">{sup.email || "—"}</TableCell>
+                  <TableCell className="break-all max-w-[150px] text-sm">{displayEmail}</TableCell>
                   <TableCell className="break-words text-sm">{sup.phone ?? "—"}</TableCell>
                   {isIndustry && (
                     <TableCell className="max-w-[150px] text-sm break-words">
@@ -705,10 +739,10 @@ const SupervisorTable = ({
                   </TableCell>
                   <TableCell>
                     <Badge variant={online ? "default" : "outline"} className={online ? "bg-emerald-600" : ""}>
-                      {online ? "Online" : "Offline"}
+                      {getPresenceLabel(sup, online)}
                     </Badge>
                   </TableCell>
-                  {!compact && <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{lastActive}</TableCell>}
+                  {!compact && !isIndustry && <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{lastActive}</TableCell>}
                   {!compact && (
                     <TableCell className="text-right">
                       {isVirtual ? (

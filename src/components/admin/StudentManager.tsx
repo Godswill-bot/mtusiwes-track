@@ -21,9 +21,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Download, Loader2, ShieldCheck, ShieldOff, UserPlus, Search, FileText } from "lucide-react";
+import { buildLastSeenMap, formatLastSeen, isCurrentlyOnline, resolveLastSeenAt } from "@/utils/presence";
 
 type StudentRecord = Database["public"]["Tables"]["students"]["Row"];
 type SupervisorRecord = Database["public"]["Tables"]["supervisors"]["Row"];
+type UserActivityRecord = Database["public"]["Tables"]["user_activities"]["Row"];
 
 import { apiRequest } from "@/utils/api";
 import jsPDF from "jspdf";
@@ -52,6 +54,18 @@ const fetchSupervisors = async () => {
 
   if (error) throw error;
   return data as SupervisorRecord[];
+};
+
+const fetchStudentActivities = async () => {
+  const { data, error } = await supabase
+    .from("user_activities")
+    .select("user_id, created_at")
+    .eq("user_type", "student")
+    .order("created_at", { ascending: false })
+    .limit(1000);
+
+  if (error) throw error;
+  return (data || []) as Pick<UserActivityRecord, "user_id" | "created_at">[];
 };
 
 const defaultForm = {
@@ -109,10 +123,21 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
     refetchInterval: 20000,
   });
 
+  const studentActivitiesQuery = useQuery({
+    queryKey: ["admin", "student-activities"],
+    queryFn: fetchStudentActivities,
+    refetchInterval: 30000,
+  });
+
   const supervisorsQuery = useQuery({
     queryKey: ["admin", "supervisors"],
     queryFn: fetchSupervisors,
   });
+
+  const studentLastSeenMap = useMemo(
+    () => buildLastSeenMap(studentActivitiesQuery.data || []),
+    [studentActivitiesQuery.data],
+  );
 
   const createStudentMutation = useMutation({
     mutationFn: async () => {
@@ -293,6 +318,9 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
       return searchText.includes(filter.toLowerCase());
     });
   }, [studentsQuery.data, filter]);
+
+  const getStudentLastSeen = (student: StudentRecord) =>
+    resolveLastSeenAt(student, studentLastSeenMap);
 
   const downloadAsCSV = () => {
     const headers = ["Name", "Matric No.", "Email", "Faculty", "Department", "Phone", "School Supervisor", "Industry Supervisor", "Ind. Supervisor Email", "Ind. Supervisor Phone", "Organisation", "Organisation Address", "Status"];
@@ -776,10 +804,9 @@ export const StudentManager = ({ compact = false }: StudentManagerProps) => {
                 filteredStudents.map((student) => (
                     <Fragment key={student.id}>
                       {(() => {
-                        const online = isStudentOnline(student);
-                        const lastActive = student.last_active_at
-                          ? formatDistanceToNow(new Date(student.last_active_at), { addSuffix: true })
-                          : "Never";
+                        const lastSeenAt = getStudentLastSeen(student);
+                        const online = isCurrentlyOnline(lastSeenAt, student.is_active, STUDENT_ONLINE_WINDOW_MS);
+                        const lastActive = formatLastSeen(lastSeenAt);
 
                         return (
                       <TableRow key={student.id}>
