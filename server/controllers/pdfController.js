@@ -461,11 +461,12 @@ export const compileLogbook = async (req, res) => {
       });
     }
 
-    // Fetch ALL weeks for this student (regardless of status)
+    // Fetch reviewed weeks only (approved + rejected) for this student
     const { data: weeksData, error: weeksError } = await supabase
       .from('weeks')
       .select('*')
       .eq('student_id', studentId)
+      .in('status', ['approved', 'rejected'])
       .order('week_number', { ascending: true });
 
     if (weeksError) {
@@ -478,7 +479,7 @@ export const compileLogbook = async (req, res) => {
     if (!weeksData || weeksData.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'No weekly reports found for this student',
+        error: 'No approved or rejected weekly reports found for this student',
       });
     }
 

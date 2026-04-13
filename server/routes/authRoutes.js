@@ -13,6 +13,8 @@ import {
   resetPassword,
   requestAdminProfileChange,
   verifyAdminProfileChange,
+  createAdminAccount,
+  setAdminAccountStatus,
 } from '../controllers/authController.js';
 
 import { logUserActivity } from '../lib/activityLogger.js';
@@ -76,6 +78,20 @@ router.post('/admin/profile/request-change', requireAuth, requireRole('admin'), 
  * @access  Private (Admin)
  */
 router.post('/admin/profile/verify-change', requireAuth, requireRole('admin'), verifyAdminProfileChange);
+
+/**
+ * @route   POST /admin/accounts
+ * @desc    Create a new admin account
+ * @access  Private (Admin)
+ */
+router.post('/admin/accounts', requireAuth, requireRole('admin'), createAdminAccount);
+
+/**
+ * @route   POST /admin/accounts/status
+ * @desc    Activate/deactivate an admin account
+ * @access  Private (Admin)
+ */
+router.post('/admin/accounts/status', requireAuth, requireRole('admin'), setAdminAccountStatus);
 
 /**
  * @route   POST /log-activity

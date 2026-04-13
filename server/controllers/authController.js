@@ -1136,3 +1136,219 @@ export const verifyAdminProfileChange = async (req, res) => {
   }
 };
 
+/**
+ * Create a new admin account (performed by an authenticated admin)
+ * POST /admin/accounts
+ */
+export const createAdminAccount = async (req, res) => {
+  try {
+    const actorUserId = req.user?.sub || req.user?.id;
+    const { full_name, email, password } = req.body;
+
+    if (!actorUserId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    if (!full_name?.trim() || !email?.trim() || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Full name, email and password are required',
+      });
+    }
+
+    if (!validateAnyEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a valid email address',
+      });
+    }
+
+    if (String(password).length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 8 characters',
+      });
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+
+    const { data: actorAdmin, error: actorAdminError } = await supabase
+      .from('admins')
+      .select('id, user_id, is_active')
+      .eq('user_id', actorUserId)
+      .maybeSingle();
+
+    if (actorAdminError) throw actorAdminError;
+    if (!actorAdmin || actorAdmin.is_active !== true) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only active admins can create admin accounts',
+      });
+    }
+
+    const { data: existingAdmin } = await supabase
+      .from('admins')
+      .select('id, user_id')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (existingAdmin) {
+      return res.status(409).json({
+        success: false,
+        error: 'An admin account with this email already exists',
+      });
+    }
+
+    const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
+    if (usersError) throw usersError;
+
+    const duplicateUser = (usersData?.users || []).find((u) => normalizeEmail(u.email) === normalizedEmail);
+    if (duplicateUser) {
+      return res.status(409).json({
+        success: false,
+        error: 'An account with this email already exists',
+      });
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: normalizedEmail,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: full_name.trim(),
+        role: 'admin',
+      },
+    });
+
+    if (authError || !authData?.user?.id) {
+      throw authError || new Error('Failed to create auth user');
+    }
+
+    const newUserId = authData.user.id;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { data: adminRow, error: adminInsertError } = await supabase
+      .from('admins')
+      .insert({
+        user_id: newUserId,
+        full_name: full_name.trim(),
+        email: normalizedEmail,
+        hashed_password: hashedPassword,
+        is_active: true,
+        last_active_at: new Date().toISOString(),
+      })
+      .select('id, user_id, full_name, email, is_active, last_active_at, created_at, updated_at')
+      .single();
+
+    if (adminInsertError) {
+      await supabase.auth.admin.deleteUser(newUserId).catch(() => undefined);
+      throw adminInsertError;
+    }
+
+    await supabase
+      .from('user_roles')
+      .upsert({ user_id: newUserId, role: 'admin' }, { onConflict: 'user_id' });
+
+    await supabase
+      .from('profiles')
+      .upsert(
+        {
+          id: newUserId,
+          full_name: full_name.trim(),
+          role: 'admin',
+          email_verified: true,
+        },
+        { onConflict: 'id' },
+      );
+
+    await logAccountCreation(newUserId, 'admin', normalizedEmail).catch(() => undefined);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Admin account created successfully',
+      admin: adminRow,
+    });
+  } catch (error) {
+    console.error('Create admin account error:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create admin account',
+    });
+  }
+};
+
+/**
+ * Toggle admin account active status
+ * POST /admin/accounts/status
+ */
+export const setAdminAccountStatus = async (req, res) => {
+  try {
+    const actorUserId = req.user?.sub || req.user?.id;
+    const { adminId, isActive } = req.body;
+
+    if (!actorUserId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    if (!adminId || typeof isActive !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: 'adminId and isActive are required',
+      });
+    }
+
+    const { data: actorAdmin, error: actorAdminError } = await supabase
+      .from('admins')
+      .select('id, user_id, is_active')
+      .eq('user_id', actorUserId)
+      .maybeSingle();
+
+    if (actorAdminError) throw actorAdminError;
+    if (!actorAdmin || actorAdmin.is_active !== true) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only active admins can manage admin accounts',
+      });
+    }
+
+    const { data: targetAdmin, error: targetFetchError } = await supabase
+      .from('admins')
+      .select('id, user_id, is_active')
+      .eq('id', adminId)
+      .maybeSingle();
+
+    if (targetFetchError) throw targetFetchError;
+    if (!targetAdmin) {
+      return res.status(404).json({ success: false, error: 'Admin account not found' });
+    }
+
+    if (targetAdmin.user_id === actorUserId && isActive === false) {
+      return res.status(400).json({
+        success: false,
+        error: 'You cannot deactivate your own admin account',
+      });
+    }
+
+    const { data: updatedAdmin, error: updateError } = await supabase
+      .from('admins')
+      .update({ is_active: isActive })
+      .eq('id', adminId)
+      .select('id, user_id, full_name, email, is_active, last_active_at, created_at, updated_at')
+      .single();
+
+    if (updateError) throw updateError;
+
+    return res.json({
+      success: true,
+      message: 'Admin account status updated successfully',
+      admin: updatedAdmin,
+    });
+  } catch (error) {
+    console.error('Set admin account status error:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update admin account status',
+    });
+  }
+};
+

@@ -126,6 +126,11 @@ const Logbook = () => {
   const fetchWeekData = useCallback(async () => {
     setLoading(true);
     try {
+      if (!studentId) {
+        setLoading(false);
+        return;
+      }
+
       // Optimized: Fetch week and photos in one go
       const { data, error } = await supabase
         .from("weeks")
@@ -155,6 +160,8 @@ const Logbook = () => {
         const photosList = (Array.isArray((data as unknown as WeekWithPhotos).photos) ? (data as unknown as WeekWithPhotos).photos : []) as Photo[];
         
         photosList.forEach((photo) => {
+          if (!photo.day_of_week) return;
+
           if (!photosByDay[photo.day_of_week]) {
             photosByDay[photo.day_of_week] = [];
           }
@@ -270,7 +277,7 @@ const Logbook = () => {
         return;
       }
 
-      // Use compile-logbook endpoint to include all weeks (approved, rejected, submitted)
+      // Use compile-logbook endpoint to include reviewed weeks (approved and rejected)
       const response = await apiRequest("/api/pdf/compile-logbook", {
         method: "POST",
         body: JSON.stringify({ studentId }),

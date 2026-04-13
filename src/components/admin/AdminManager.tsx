@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ShieldCheck, ShieldOff, UserPlus, Search, Loader2, Activity, Users, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest } from "@/utils/api";
 import { buildLastSeenMap, formatLastSeen, isCurrentlyOnline, resolveLastSeenAt } from "@/utils/presence";
 
 type AdminRecord = Database["public"]["Tables"]["admins"]["Row"];
@@ -56,19 +57,43 @@ export const AdminManager = () => {
   const adminsQuery = useQuery({
     queryKey: ["admin", "admins"],
     queryFn: fetchAdmins,
-    refetchInterval: 30000,
+    refetchInterval: 15000, // Fallback poll: 15 seconds for real-time backup
   });
 
   const adminActivitiesQuery = useQuery({
     queryKey: ["admin", "admin-activities"],
     queryFn: fetchAdminActivities,
-    refetchInterval: 30000,
+    refetchInterval: 20000, // Fallback poll: 20 seconds
   });
 
   const adminLastSeenMap = useMemo(
     () => buildLastSeenMap(adminActivitiesQuery.data || []),
     [adminActivitiesQuery.data],
   );
+
+  // Real-time subscription to admin presence changes
+  useEffect(() => {
+    // Subscribe to all admin changes (presence updates from any admin)
+    const subscription = supabase
+      .channel("admins-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "admins",
+        },
+        () => {
+          // Invalidate query to refetch fresh admin data
+          queryClient.invalidateQueries({ queryKey: ["admin", "admins"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
 
   useEffect(() => {
     if (!user) return;
@@ -82,15 +107,15 @@ export const AdminManager = () => {
         .update({ last_active_at: now })
         .eq("user_id", user.id);
 
-      if (!cancelled) {
-        queryClient.invalidateQueries({ queryKey: ["admin", "admins"] });
-      }
+      // Don't invalidate immediately - let the real-time subscription handle it
+      // Only invalidate if subscription fails (fallback to polling)
+      if (cancelled) return;
     };
 
     void touchPresence();
     const intervalId = window.setInterval(() => {
       void touchPresence();
-    }, 45000);
+    }, 30000); // Reduced from 45s to 30s for more responsive updates
 
     const handleFocus = () => {
       void touchPresence();
@@ -107,15 +132,28 @@ export const AdminManager = () => {
 
   const createAdminMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("admin-admins", {
-        body: {
-          action: "create_admin",
-          ...formState,
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      const response = await apiRequest("/api/auth/admin/accounts", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "x-user-role": "admin",
         },
+        body: JSON.stringify(formState),
       });
 
-      if (error && !data) throw new Error(error.message);
-      return data;
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || "Failed to create admin account");
+      }
+
+      return payload;
     },
     onSuccess: () => {
       toast.success("Admin account created. Share credentials securely.");
@@ -131,15 +169,29 @@ export const AdminManager = () => {
 
   const toggleStatusMutation = useMutation({
     mutationFn: async (admin: AdminRecord) => {
-      const { error } = await supabase.functions.invoke("admin-admins", {
-        body: {
-          action: "set_admin_status",
-          admin_id: admin.id,
-          is_active: !admin.is_active,
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      const response = await apiRequest("/api/auth/admin/accounts/status", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "x-user-role": "admin",
         },
+        body: JSON.stringify({
+          adminId: admin.id,
+          isActive: !admin.is_active,
+        }),
       });
 
-      if (error) throw new Error(error.message);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to update admin status");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "admins"] });
