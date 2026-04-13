@@ -93,6 +93,7 @@ export const verifyOTP = async (email, otp, type = 'verification') => {
       .eq('email', email)
       .eq('otp', otp)
       .eq('type', type)
+      .eq('used', false)
       .single();
 
     if (error) {
@@ -119,7 +120,23 @@ export const verifyOTP = async (email, otp, type = 'verification') => {
       };
     }
 
-    // Delete used OTP
+    // Atomically consume OTP once: only one request can flip used=false -> used=true.
+    const { data: consumedOtp, error: consumeError } = await supabase
+      .from('email_otps')
+      .update({ used: true })
+      .eq('id', data.id)
+      .eq('used', false)
+      .select('id')
+      .maybeSingle();
+
+    if (consumeError || !consumedOtp) {
+      return {
+        success: false,
+        error: 'Invalid or expired OTP',
+      };
+    }
+
+    // Best-effort cleanup after successful consumption.
     await supabase
       .from('email_otps')
       .delete()
