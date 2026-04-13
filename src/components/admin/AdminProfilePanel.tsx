@@ -35,7 +35,6 @@ export const AdminProfilePanel = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [verificationRequired, setVerificationRequired] = useState(false);
@@ -80,6 +79,7 @@ export const AdminProfilePanel = () => {
     if (!token) throw new Error("Session expired. Please sign in again.");
     return {
       Authorization: `Bearer ${token}`,
+      "x-user-role": "admin",
     };
   };
 
