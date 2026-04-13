@@ -59,6 +59,9 @@ export const AdminProfilePanel = () => {
       return data;
     },
     enabled: !!user?.id,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const displayEmail = useMemo(() => adminQuery.data?.email || user?.email || "not available", [adminQuery.data?.email, user?.email]);
