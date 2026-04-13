@@ -1,21 +1,43 @@
 import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
-
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
-
 const encryptionSeed = process.env.ADMIN_PROFILE_CHANGE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'admin-profile-change-secret';
 const encryptionKey = crypto.createHash('sha256').update(encryptionSeed).digest();
+const requestSigningKey = crypto.createHash('sha256').update(`${encryptionSeed}:request-token`).digest();
+
+const base64UrlEncode = (value) => Buffer.from(value).toString('base64url');
+const base64UrlDecode = (value) => Buffer.from(value, 'base64url').toString('utf8');
+
+const signPayload = (payloadString) => {
+  return crypto
+    .createHmac('sha256', requestSigningKey)
+    .update(payloadString)
+    .digest('base64url');
+};
+
+const buildRequestToken = (payload) => {
+  const payloadJson = JSON.stringify(payload);
+  const encodedPayload = base64UrlEncode(payloadJson);
+  const signature = signPayload(encodedPayload);
+  return `${encodedPayload}.${signature}`;
+};
+
+const parseRequestToken = (token) => {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  const [encodedPayload, signature] = token.split('.');
+  if (!encodedPayload || !signature) return null;
+
+  const expected = signPayload(encodedPayload);
+  if (expected !== signature) return null;
+
+  try {
+    return JSON.parse(base64UrlDecode(encodedPayload));
+  } catch {
+    return null;
+  }
+};
 
 export const encryptProfileChangeSecret = (value) => {
   if (!value) return null;
@@ -56,55 +78,36 @@ export const replacePendingAdminProfileChange = async ({
   encryptedNewPassword,
   expiresAt,
 }) => {
-  await supabase
-    .from('admin_profile_change_requests')
-    .delete()
-    .eq('admin_user_id', adminUserId)
-    .eq('status', 'pending');
+  const payload = {
+    admin_user_id: adminUserId,
+    current_email: currentEmail,
+    new_email: newEmail,
+    encrypted_new_password: encryptedNewPassword,
+    expires_at: expiresAt,
+    created_at: new Date().toISOString(),
+  };
 
-  const { data, error } = await supabase
-    .from('admin_profile_change_requests')
-    .insert({
-      admin_user_id: adminUserId,
-      current_email: currentEmail,
-      new_email: newEmail,
-      encrypted_new_password: encryptedNewPassword,
-      status: 'pending',
-      expires_at: expiresAt,
-    })
-    .select('*')
-    .single();
-
-  if (error) throw error;
-  return data;
+  const requestToken = buildRequestToken(payload);
+  return {
+    id: requestToken,
+    ...payload,
+  };
 };
 
 export const getPendingAdminProfileChange = async ({ adminUserId, requestId }) => {
-  let query = supabase
-    .from('admin_profile_change_requests')
-    .select('*')
-    .eq('admin_user_id', adminUserId)
-    .eq('status', 'pending')
-    .gte('expires_at', new Date().toISOString());
+  const payload = parseRequestToken(requestId);
+  if (!payload) return null;
+  if (payload.admin_user_id !== adminUserId) return null;
 
-  if (requestId) {
-    query = query.eq('id', requestId);
-  }
+  const expiresAt = new Date(payload.expires_at).getTime();
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
 
-  const { data, error } = await query.maybeSingle();
-  if (error) throw error;
-  return data;
+  return {
+    id: requestId,
+    ...payload,
+  };
 };
 
 export const completePendingAdminProfileChange = async (requestId) => {
-  const { error } = await supabase
-    .from('admin_profile_change_requests')
-    .update({
-      status: 'completed',
-      verified_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', requestId);
-
-  if (error) throw error;
+  return requestId;
 };
