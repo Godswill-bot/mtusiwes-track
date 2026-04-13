@@ -16,7 +16,6 @@ import {
   logAccountCreation,
   logEmailVerification,
   logPasswordChange,
-  logProfileUpdate,
 } from '../lib/audit.js';
 import {
   logRegistration,
@@ -26,6 +25,7 @@ import {
   logPasswordResetRequest,
   logPasswordResetSuccess,
   logPasswordChange as logPasswordChangeActivity,
+  logProfileUpdate as logProfileUpdateActivity,
 } from '../lib/activityLogger.js';
 import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
@@ -953,7 +953,7 @@ export const requestAdminProfileChange = async (req, res) => {
         });
       }
 
-      await logProfileUpdate(req, adminUserId, 'admin', currentEmail, {
+      await logProfileUpdateActivity(req, adminUserId, 'admin', currentEmail, {
         email_change_requested: true,
         newEmail: normalizedNewEmail,
       });
@@ -988,7 +988,7 @@ export const requestAdminProfileChange = async (req, res) => {
 
     if (adminUpdateError) throw adminUpdateError;
 
-    await logProfileUpdate(req, adminUserId, 'admin', currentEmail, {
+    await logProfileUpdateActivity(req, adminUserId, 'admin', currentEmail, {
       password_changed: true,
     });
     await logPasswordChange(req, adminUserId, 'admin', currentEmail);
@@ -1109,7 +1109,7 @@ export const verifyAdminProfileChange = async (req, res) => {
     await completePendingAdminProfileChange(pendingChange.id);
 
     await logEmailVerificationActivity(req, adminUserId, 'admin', pendingChange.new_email);
-    await logProfileUpdate(req, adminUserId, 'admin', pendingChange.current_email, {
+    await logProfileUpdateActivity(req, adminUserId, 'admin', pendingChange.current_email, {
       email: {
         from: pendingChange.current_email,
         to: pendingChange.new_email,
