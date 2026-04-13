@@ -63,6 +63,37 @@ const validateAnyEmail = (email) => {
   return emailRegex.test(String(email || '').trim());
 };
 
+const ADMIN_PROFILE_OTP_TYPES = ['admin_profile_change', 'verification'];
+
+const saveAdminProfileOTP = async (email, otp) => {
+  // Try the dedicated type first, then fall back for older DB constraints.
+  for (const otpType of ADMIN_PROFILE_OTP_TYPES) {
+    const result = await saveOTP(email, otp, otpType);
+    if (result.success) {
+      return { success: true, otpType };
+    }
+  }
+
+  return {
+    success: false,
+    error: 'Failed to generate verification code',
+  };
+};
+
+const verifyAdminProfileOTP = async (email, otp) => {
+  for (const otpType of ADMIN_PROFILE_OTP_TYPES) {
+    const result = await verifyOTP(email, otp, otpType);
+    if (result.success) {
+      return result;
+    }
+  }
+
+  return {
+    success: false,
+    error: 'Invalid or expired OTP',
+  };
+};
+
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
 const getAuthUserById = async (userId) => {
@@ -890,7 +921,7 @@ export const requestAdminProfileChange = async (req, res) => {
         expiresAt: expiresAt.toISOString(),
       });
 
-      const otpResult = await saveOTP(normalizedNewEmail, otp, 'admin_profile_change');
+      const otpResult = await saveAdminProfileOTP(normalizedNewEmail, otp);
       if (!otpResult.success) {
         await supabase
           .from('admin_profile_change_requests')
@@ -1013,10 +1044,14 @@ export const verifyAdminProfileChange = async (req, res) => {
     }
 
     const verificationResult = await verifyOTP(pendingChange.new_email, otp, 'admin_profile_change');
-    if (!verificationResult.success) {
+    // Support both dedicated and legacy OTP types.
+    const fallbackVerificationResult = verificationResult.success
+      ? verificationResult
+      : await verifyAdminProfileOTP(pendingChange.new_email, otp);
+    if (!fallbackVerificationResult.success) {
       return res.status(400).json({
         success: false,
-        error: verificationResult.error,
+        error: fallbackVerificationResult.error,
       });
     }
 
