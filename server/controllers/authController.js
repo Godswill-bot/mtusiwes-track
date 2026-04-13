@@ -779,19 +779,12 @@ export const resetPassword = async (req, res) => {
 export const requestAdminProfileChange = async (req, res) => {
   try {
     const adminUserId = req.user?.sub || req.user?.id;
-    const { currentPassword, newEmail, newPassword, confirmNewPassword } = req.body;
+    const { newEmail, newPassword, confirmNewPassword } = req.body;
 
     if (!adminUserId) {
       return res.status(401).json({
         success: false,
         error: 'Unauthorized',
-      });
-    }
-
-    if (!currentPassword) {
-      return res.status(400).json({
-        success: false,
-        error: 'Current password is required',
       });
     }
 
@@ -839,13 +832,6 @@ export const requestAdminProfileChange = async (req, res) => {
     }
 
     const currentEmail = normalizeEmail(authUser.email || adminRecord.email);
-    const passwordMatches = await bcrypt.compare(currentPassword, adminRecord.hashed_password || '');
-    if (!passwordMatches) {
-      return res.status(400).json({
-        success: false,
-        error: 'Current password is incorrect',
-      });
-    }
 
     const normalizedNewEmail = newEmail ? normalizeEmail(newEmail) : currentEmail;
     const emailChangeRequested = Boolean(newEmail) && normalizedNewEmail !== currentEmail;

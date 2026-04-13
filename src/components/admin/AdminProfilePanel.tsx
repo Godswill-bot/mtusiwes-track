@@ -87,11 +87,6 @@ export const AdminProfilePanel = () => {
     e.preventDefault();
     setError(null);
 
-    if (!currentPassword) {
-      setError("Enter your current password to continue.");
-      return;
-    }
-
     if (!hasEmailChange && !hasPasswordChange) {
       setError("Provide a new email or a new password.");
       return;
@@ -117,7 +112,7 @@ export const AdminProfilePanel = () => {
           ...headers,
         },
         body: JSON.stringify({
-          currentPassword,
+          currentPassword: currentPassword || undefined,
           newEmail: hasEmailChange ? newEmail.trim() : undefined,
           newPassword: hasPasswordChange ? newPassword : undefined,
           confirmNewPassword: hasPasswordChange ? confirmNewPassword : undefined,
