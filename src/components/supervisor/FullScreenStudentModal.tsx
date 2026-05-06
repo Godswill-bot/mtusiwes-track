@@ -9,6 +9,7 @@ import {
   BookOpen, Loader2, User, Building, 
   GraduationCap, Calendar, Award
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { StudentGradingModal } from "./StudentGradingModal";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
@@ -39,6 +40,7 @@ interface StudentWithWeeks {
   organisation_name: string;
   user_id: string;
   full_name?: string;
+  profile_image_url?: string | null;
   profile: {
     full_name: string;
   };
@@ -181,9 +183,17 @@ export const FullScreenStudentModal = ({
         <DialogHeader className="px-4 sm:px-6 py-4 border-b flex-shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-              </div>
+              {student.profile_image_url ? (
+                <img 
+                  src={student.profile_image_url} 
+                  alt={student.profile.full_name}
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover shrink-0 border-2 border-primary/20"
+                />
+              ) : (
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                </div>
+              )}
               <div>
                 <DialogTitle className="text-lg sm:text-xl">{student.profile.full_name}</DialogTitle>
                 <p className="text-xs sm:text-sm text-muted-foreground break-words">
